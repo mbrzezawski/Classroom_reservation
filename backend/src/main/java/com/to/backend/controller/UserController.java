@@ -1,35 +1,53 @@
 package com.to.backend.controller;
 
 import com.to.backend.model.User;
-import com.to.backend.repository.UserRepository;
+import com.to.backend.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
-    private final UserRepository repo;
+    private final UserService service;
 
-    public UserController(UserRepository repo) {
-        this.repo = repo;
+    public UserController(UserService service) {
+        this.service = service;
     }
 
-    @PostMapping("/create")
+    // POST /users – creates new user, returns 201 + Location
+    @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
-        return ResponseEntity.ok(repo.save(user));
+        User saved = service.create(user);
+        URI location = URI.create("/users/" + saved.getId());
+        return ResponseEntity.created(location).body(saved);
     }
 
-    @GetMapping("/all")
+    // GET /users – retrieves all users
+    @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(repo.findAll());
+        return ResponseEntity.ok(service.findAll());
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable String id) {
-        repo.deleteById(id);
-        return ResponseEntity.ok("Użytkownik usunięty");
+    // GET /users/{id} – retrieves user by id or returns 404
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUser(@PathVariable String id) {
+        return service.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // DELETE /users/{id – deletes user by id, returns 204 or 404
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
+        if (service.findById(id).isPresent()) {
+            service.delete(id);
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
