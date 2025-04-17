@@ -2,8 +2,10 @@ package com.to.backend.controller;
 
 import com.to.backend.model.Room;
 import com.to.backend.service.RoomService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
@@ -21,33 +23,33 @@ public class RoomController {
     // POST / – creates new room, returns 201 + Location
     @PostMapping
     public ResponseEntity<Room> createRoom(@RequestBody Room room) {
-        Room saved = service.create(room);
-        URI location = URI.create("/rooms/" + saved.getId());
+        Room saved = service.createRoom(room);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(saved.getId())
+                .toUri();
         return ResponseEntity.created(location).body(saved);
     }
 
     // GET /rooms – retrieves all rooms
     @GetMapping
     public ResponseEntity<List<Room>> getAllRooms() {
-        return ResponseEntity.ok(service.findAll());
+        return ResponseEntity.ok(service.getAllRooms());
     }
 
     // GET /rooms/{id} – retrieves room by id or returns 404
     @GetMapping("/{id}")
     public ResponseEntity<Room> getRoomById(@PathVariable String id) {
-        return service.findById(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        Room room = service.getRoomById(id);
+        return ResponseEntity.ok(room);
     }
 
     // DELETE /rooms/{id} – deletes room by id, returns 204 or 404
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRoom(@PathVariable String id) {
-        if (service.findById(id).isPresent()) {
-            service.delete(id);
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteRoom(@PathVariable String id) {
+        service.deleteRoom(id);
     }
 }

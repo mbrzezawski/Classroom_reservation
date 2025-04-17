@@ -4,6 +4,8 @@ import com.to.backend.model.User;
 import com.to.backend.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.http.HttpStatus;
 
 import java.net.URI;
 import java.util.List;
@@ -21,33 +23,32 @@ public class UserController {
     // POST /users – creates new user, returns 201 + Location
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
-        User saved = service.create(user);
-        URI location = URI.create("/users/" + saved.getId());
+        User saved = service.createUser(user);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(saved.getId())
+                .toUri();
         return ResponseEntity.created(location).body(saved);
     }
 
     // GET /users – retrieves all users
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(service.findAll());
+        return ResponseEntity.ok(service.getAllUsers());
     }
 
-    // GET /users/{id} – retrieves user by id or returns 404
+    // GET /users/{id} – retrieves user by id or returns 404 via GlobalExceptionHandler
     @GetMapping("/{id}")
     public ResponseEntity<User> getUser(@PathVariable String id) {
-        return service.findById(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        User u = service.getUserById(id);
+        return ResponseEntity.ok(u);
     }
 
-    // DELETE /users/{id – deletes user by id, returns 204 or 404
+    // DELETE /users/{id} – deletes user by id, returns 204 No Content
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
-        if (service.findById(id).isPresent()) {
-            service.delete(id);
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable String id) {
+        service.deleteUser(id);
     }
 }
