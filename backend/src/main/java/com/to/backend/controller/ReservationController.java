@@ -1,15 +1,18 @@
 package com.to.backend.controller;
 
+import com.to.backend.dto.CalendarReservationDto;
 import com.to.backend.dto.ReservationRequest;
 import com.to.backend.dto.ReservationResponse;
 import com.to.backend.model.Reservation;
 import com.to.backend.service.ReservationService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -23,6 +26,7 @@ public class ReservationController {
     }
 
     // POST /reservations - creates new reservation, returns 201 + Location
+    // CRUD
     @PostMapping
     public ResponseEntity<Reservation> createReservation(@RequestBody Reservation reservation) {
         Reservation saved = service.createReservation(reservation);
@@ -53,7 +57,8 @@ public class ReservationController {
         service.deleteReservation(id);
     }
 
-    @PostMapping
+    // business logic: booking a room
+    @PostMapping("/book")
     public ResponseEntity<ReservationResponse> reserve(@RequestBody ReservationRequest req) {
         ReservationResponse resp = service.reserve(req);
 
@@ -68,4 +73,19 @@ public class ReservationController {
                 .created(location)
                 .body(resp);
     }
+
+    @GetMapping("/calendar")
+    public ResponseEntity<List<CalendarReservationDto>> getUserCalendar(
+            @RequestParam("userId") String userId,
+            @RequestParam(value="from", required=false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(value="to",   required=false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+    ) {
+        return ResponseEntity.ok(
+                service.getUserCalendar(userId, from, to)
+        );
+    }
+
+
 }

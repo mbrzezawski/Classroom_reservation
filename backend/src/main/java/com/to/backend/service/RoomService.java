@@ -42,4 +42,10 @@ public class RoomService {
         existing.setLocation(newRoom.getLocation());
 
         return repo.save(existing);
-    }}
+    }
+
+    public List<Room> getRoomsByIds(List<String> ids) {
+        return repo.findAllById(ids);
+    }
+}
+

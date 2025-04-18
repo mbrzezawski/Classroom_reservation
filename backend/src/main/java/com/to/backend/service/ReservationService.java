@@ -1,5 +1,6 @@
 package com.to.backend.service;
 
+import com.to.backend.dto.CalendarReservationDto;
 import com.to.backend.dto.ReservationRequest;
 import com.to.backend.dto.ReservationResponse;
 import com.to.backend.exception.NoRoomAvailableException;
@@ -11,8 +12,11 @@ import com.to.backend.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class ReservationService {
@@ -85,6 +89,54 @@ public class ReservationService {
         }
 
         throw new NoRoomAvailableException("Brak dostępnych sal w wybranym terminie");
+    }
 
+    @Transactional(readOnly = true)
+    public List<CalendarReservationDto> getUserCalendar(
+            String userId,
+            LocalDate from,
+            LocalDate to
+    ) {
+        List<Reservation> reservationList;
+
+        // no "from" and "to" params → all reservations
+        if (from == null && to == null) {
+            reservationList = reservationRepo.findByUserIdOrderByDateAscStartTimeAsc(userId);
+
+        } else {
+            LocalDate realFrom = from != null ? from : LocalDate.MIN;
+            LocalDate realTo   = to   != null ? to   : LocalDate.MAX;
+
+            reservationList = reservationRepo
+                    .findByUserIdAndDateBetweenOrderByDateAscStartTimeAsc(
+                            userId, realFrom, realTo
+                    );
+        }
+
+        // map to DTOs
+        List<String> roomIds = reservationList.stream()
+                .map(Reservation::getRoomId)
+                .distinct().toList();
+
+        Map<String, Room> roomMap = roomService.getRoomsByIds(roomIds).stream()
+                .collect(Collectors.toMap(Room::getId, Function.identity()));
+
+        return reservationList.stream()
+                .map(r -> {
+                    Room room = roomMap.get(r.getRoomId());
+                    return CalendarReservationDto.builder()
+                            .reservationId(r.getId())
+                            .roomId(room.getId())
+                            .roomName(room.getName())
+                            .roomLocation(room.getLocation())
+                            .title(r.getPurpose())
+                            .start(LocalDateTime.of(r.getDate(), r.getStartTime()))
+                            .end(LocalDateTime.of(r.getDate(), r.getEndTime()))
+                            .minCapacity(r.getMinCapacity())
+                            .softwareIds(r.getSoftwareIds())
+                            .equipmentIds(r.getEquipmentIds())
+                            .build();
+                })
+                .toList();
     }
 }

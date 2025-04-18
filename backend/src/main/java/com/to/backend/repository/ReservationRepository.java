@@ -16,4 +16,15 @@ public interface ReservationRepository extends MongoRepository<Reservation, Stri
             LocalTime endTime,
             LocalTime startTime
     );
+
+    // retrieves user's reservations sorted in ascending order in regard to time
+    List<Reservation> findByUserIdOrderByDateAscStartTimeAsc(String userId);
+
+    // retrieves user's reservations sorted in ascending order in regard to time
+    // between "from" and "to"
+    List<Reservation> findByUserIdAndDateBetweenOrderByDateAscStartTimeAsc(
+            String userId,
+            LocalDate from,
+            LocalDate to
+    );
 }
