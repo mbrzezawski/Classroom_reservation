@@ -1,5 +1,7 @@
 package com.to.backend.controller;
 
+import com.to.backend.dto.ReservationRequest;
+import com.to.backend.dto.ReservationResponse;
 import com.to.backend.model.Reservation;
 import com.to.backend.service.ReservationService;
 import org.springframework.http.HttpStatus;
@@ -49,5 +51,21 @@ public class ReservationController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteReservation(@PathVariable String id) {
         service.deleteReservation(id);
+    }
+
+    @PostMapping
+    public ResponseEntity<ReservationResponse> reserve(@RequestBody ReservationRequest req) {
+        ReservationResponse resp = service.reserve(req);
+
+        // jeśli nie ma błędu do tej pory, to jest okej
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(resp.reservationId())
+                .toUri();
+
+        return ResponseEntity
+                .created(location)
+                .body(resp);
     }
 }

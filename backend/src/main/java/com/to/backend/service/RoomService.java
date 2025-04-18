@@ -3,7 +3,6 @@ package com.to.backend.service;
 import com.to.backend.exception.NotFoundException;
 import com.to.backend.model.Room;
 import com.to.backend.repository.RoomRepository;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,4 +30,16 @@ public class RoomService {
         }
         repo.deleteById(id);
     }
-}
+
+    public Room updateRoom(String id, Room newRoom) {
+        Room existing = repo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Room", id));
+
+        existing.setName(newRoom.getName());
+        existing.setCapacity(newRoom.getCapacity());
+        existing.setSoftwareIds(newRoom.getSoftwareIds());
+        existing.setEquipmentIds(newRoom.getEquipmentIds());
+        existing.setLocation(newRoom.getLocation());
+
+        return repo.save(existing);
+    }}

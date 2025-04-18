@@ -1,5 +1,6 @@
 package com.to.backend.exception;
 
+import com.to.backend.dto.ReservationResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +37,15 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    // 409 Conflict - reservation
+    @ExceptionHandler(NoRoomAvailableException.class)
+    public ResponseEntity<ReservationResponse> handleNoRoom(NoRoomAvailableException ex) {
+        ReservationResponse resp = new ReservationResponse(null, null, ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(resp);
+    }
+
     // 500 Internal Server Error
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String,String>> handleOther(RuntimeException ex) {
@@ -43,4 +53,6 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", ex.getMessage()));
     }
+
+
 }
