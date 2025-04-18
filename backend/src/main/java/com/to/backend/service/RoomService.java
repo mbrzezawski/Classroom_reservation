@@ -1,22 +1,35 @@
 package com.to.backend.service;
 
+import com.to.backend.exception.NotFoundException;
 import com.to.backend.model.Room;
 import com.to.backend.repository.RoomRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class RoomService {
     private final RoomRepository repo;
     public RoomService(RoomRepository repo) { this.repo = repo; }
 
-    public Room create(Room room) { return repo.save(room); }
+    public Room createRoom(Room room) {
+        return repo.save(room);
+    }
 
-    public List<Room> findAll() { return repo.findAll(); }
+    public List<Room> getAllRooms() {
+        return repo.findAll();
+    }
 
-    public Optional<Room> findById(String id) { return repo.findById(id); }
+    public Room getRoomById(String id) {
+        return repo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Room", id));
+    }
 
-    public void delete(String id) { repo.deleteById(id); }
+    public void deleteRoom(String id) {
+        if (!repo.existsById(id)) {
+            throw new NotFoundException("Room", id);
+        }
+        repo.deleteById(id);
+    }
 }
