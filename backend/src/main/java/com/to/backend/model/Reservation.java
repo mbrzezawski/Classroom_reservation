@@ -2,23 +2,39 @@ package com.to.backend.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 
 @Document(collection = "reservations")
 public class Reservation {
-    @Id
-    private String id;
+    @Id private String id;
     private String userId;
     private String roomId;
     private LocalDate date;
-    private String startHour;
-    private String endHour;
+    private LocalTime startTime;
+    private LocalTime endTime;
     private String purpose;
     private int minCapacity;
-    private String[] requiredSoftware;
-    private String[] requiredEquipment;
-    private String status;
+    private List<String> softwareIds;
+    private List<String> equipmentIds;
+    private ReservationStatus status;
+
+    public Reservation() { }
+    public Reservation(String userId, String roomId, LocalDate date, LocalTime startTime,
+                       LocalTime endTime, String purpose, int minCapacity,
+                       List<String> softwareIds, List<String> equipmentIds, ReservationStatus status) {
+        this.userId = userId;
+        this.roomId = roomId;
+        this.date = date;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.purpose = purpose;
+        this.minCapacity = minCapacity;
+        this.softwareIds = softwareIds;
+        this.equipmentIds = equipmentIds;
+        this.status = status;
+    }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -32,11 +48,11 @@ public class Reservation {
     public LocalDate getDate() { return date; }
     public void setDate(LocalDate date) { this.date = date; }
 
-    public String getStartHour() { return startHour; }
-    public void setStartHour(String startHour) { this.startHour = startHour; }
+    public LocalTime getStartTime() { return startTime; }
+    public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
 
-    public String getEndHour() { return endHour; }
-    public void setEndHour(String endHour) { this.endHour = endHour; }
+    public LocalTime getEndTime() { return endTime; }
+    public void setEndTime(LocalTime endTime) { this.endTime = endTime; }
 
     public String getPurpose() { return purpose; }
     public void setPurpose(String purpose) { this.purpose = purpose; }
@@ -44,12 +60,12 @@ public class Reservation {
     public int getMinCapacity() { return minCapacity; }
     public void setMinCapacity(int minCapacity) { this.minCapacity = minCapacity; }
 
-    public String[] getRequiredSoftware() { return requiredSoftware; }
-    public void setRequiredSoftware(String[] requiredSoftware) { this.requiredSoftware = requiredSoftware; }
+    public List<String> getSoftwareIds() { return softwareIds; }
+    public void setSoftwareIds(List<String> softwareIds) { this.softwareIds = softwareIds; }
 
-    public String[] getRequiredEquipment() { return requiredEquipment; }
-    public void setRequiredEquipment(String[] requiredEquipment) { this.requiredEquipment = requiredEquipment; }
+    public List<String> getEquipmentIds() { return equipmentIds; }
+    public void setEquipmentIds(List<String> equipmentIds) { this.equipmentIds = equipmentIds; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public ReservationStatus getStatus() { return status; }
+    public void setStatus(ReservationStatus status) { this.status = status; }
 }
