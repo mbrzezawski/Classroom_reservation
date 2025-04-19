@@ -3,6 +3,7 @@ package com.to.backend.service;
 import com.to.backend.dto.CalendarReservationDto;
 import com.to.backend.dto.ReservationRequest;
 import com.to.backend.dto.ReservationResponse;
+import com.to.backend.exception.ForbiddenException;
 import com.to.backend.exception.NoRoomAvailableException;
 import com.to.backend.exception.NotFoundException;
 import com.to.backend.model.Reservation;
@@ -138,5 +139,23 @@ public class ReservationService {
                             .build();
                 })
                 .toList();
+    }
+
+    // cancel reservation if you are the owner
+    // TODO update the method so that admin can cancel every reservation
+    @Transactional
+    public void cancelReservation(String reservationId, String userId) {
+        Reservation reservation = reservationRepo.findById(reservationId)
+                .orElseThrow(() -> new NotFoundException("Reservation", reservationId));
+
+        if (!reservation.getUserId().equals(userId)) {
+            throw new ForbiddenException("Nie masz uprawnień do anulowania tej " +
+                    "rezerwacji");
+        }
+
+        if (reservation.getStatus() != ReservationStatus.CANCELLED) {
+            reservation.setStatus(ReservationStatus.CANCELLED);
+            reservationRepo.save(reservation);
+        }
     }
 }

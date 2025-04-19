@@ -87,5 +87,14 @@ public class ReservationController {
         );
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cancelReservation(
+            @PathVariable("id") String reservationId,
+            String userId
+    ) {
+        service.cancelReservation(reservationId, userId);
+    }
+
 
 }
