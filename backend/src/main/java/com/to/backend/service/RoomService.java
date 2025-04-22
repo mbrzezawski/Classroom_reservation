@@ -3,7 +3,6 @@ package com.to.backend.service;
 import com.to.backend.exception.NotFoundException;
 import com.to.backend.model.Room;
 import com.to.backend.repository.RoomRepository;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

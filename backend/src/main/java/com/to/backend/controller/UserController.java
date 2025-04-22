@@ -1,8 +1,10 @@
 package com.to.backend.controller;
 
 import com.to.backend.model.User;
+import com.to.backend.model.utils.RoleType;
 import com.to.backend.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.http.HttpStatus;
@@ -34,15 +36,23 @@ public class UserController {
 
     // GET /users – retrieves all users
     @GetMapping
+    @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name())")
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(service.getAllUsers());
     }
 
     // GET /users/{id} – retrieves user by id or returns 404 via GlobalExceptionHandler
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name())")
     public ResponseEntity<User> getUser(@PathVariable String id) {
         User u = service.getUserById(id);
         return ResponseEntity.ok(u);
+    }
+
+    @GetMapping("/{email}")
+    public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
+        User user = service.getUserByEmail(email);
+        return ResponseEntity.ok(user);
     }
 
     // DELETE /users/{id} – deletes user by id, returns 204 No Content
@@ -50,5 +60,15 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable String id) {
         service.deleteUser(id);
+    }
+
+    @PutMapping("/{id}/role")
+    @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name())")
+    public ResponseEntity<Void> setUserRole(
+            @PathVariable String id,
+            @RequestParam RoleType roleType
+    ) {
+        service.setUserRole(id, roleType);
+        return ResponseEntity.noContent().build();
     }
 }
