@@ -5,5 +5,4 @@ public enum RoleType {
     DEANS_OFFICE,
     TEACHER,
     STUDENT;
-
 }

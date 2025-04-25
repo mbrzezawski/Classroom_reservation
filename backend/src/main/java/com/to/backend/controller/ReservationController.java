@@ -1,14 +1,21 @@
 package com.to.backend.controller;
 
+import com.to.backend.dto.CalendarReservationDto;
+import com.to.backend.dto.ReservationRequest;
+import com.to.backend.dto.ReservationResponse;
 import com.to.backend.model.Reservation;
 import com.to.backend.service.ReservationService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/reservations")
@@ -21,6 +28,7 @@ public class ReservationController {
     }
 
     // POST /reservations - creates new reservation, returns 201 + Location
+    // CRUD
     @PostMapping
     public ResponseEntity<Reservation> createReservation(@RequestBody Reservation reservation) {
         Reservation saved = service.createReservation(reservation);
@@ -50,4 +58,45 @@ public class ReservationController {
     public void deleteReservation(@PathVariable String id) {
         service.deleteReservation(id);
     }
+
+    // business logic: booking a room
+    @PostMapping("/book")
+    public ResponseEntity<ReservationResponse> reserve(@RequestBody ReservationRequest req) {
+        ReservationResponse resp = service.reserve(req);
+
+        // jeśli nie ma błędu do tej pory, to jest okej
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(resp.reservationId())
+                .toUri();
+
+        return ResponseEntity
+                .created(location)
+                .body(resp);
+    }
+
+    @GetMapping("/calendar")
+    public ResponseEntity<List<CalendarReservationDto>> getCalendar(
+            @RequestParam("userId") String userId,
+            @RequestParam(name = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(name = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+    ) {
+        List<CalendarReservationDto> events = service.getUserCalendar(userId, Optional.ofNullable(from), Optional.ofNullable(to));
+        return ResponseEntity.ok(events);
+    }
+
+
+
+    // TODO walidacja czy ten co wysyła request jest ownerem lub adminem
+    @DeleteMapping("/{id}/cancel")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cancelReservation(
+            @PathVariable("id") String reservationId,
+            String userId
+    ) {
+        service.cancelReservation(reservationId, userId);
+    }
+
+
 }

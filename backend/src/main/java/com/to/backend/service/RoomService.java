@@ -30,4 +30,22 @@ public class RoomService {
         }
         repo.deleteById(id);
     }
+
+    public Room updateRoom(String id, Room newRoom) {
+        Room existing = repo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Room", id));
+
+        existing.setName(newRoom.getName());
+        existing.setCapacity(newRoom.getCapacity());
+        existing.setSoftwareIds(newRoom.getSoftwareIds());
+        existing.setEquipmentIds(newRoom.getEquipmentIds());
+        existing.setLocation(newRoom.getLocation());
+
+        return repo.save(existing);
+    }
+
+    public List<Room> getRoomsByIds(List<String> ids) {
+        return repo.findAllById(ids);
+    }
 }
+

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
@@ -70,4 +71,17 @@ public class RoomController {
     public void deleteRoom(@PathVariable String id) {
         service.deleteRoom(id);
     }
+
+    // PUT /rooms/{id} - update a room, only admin or deans_office
+    @PutMapping("/{id}")
+//    @PreAuthorize("hasAnyRole(T(com.to.backend.model.utils.RoleType).ADMIN.name(), "
+//            + "T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name())")
+    public ResponseEntity<Room> updateRoom(
+            @PathVariable String id,
+            @RequestBody Room room
+    ) {
+        Room updated = service.updateRoom(id, room);
+        return ResponseEntity.ok(updated);
+    }
+
 }

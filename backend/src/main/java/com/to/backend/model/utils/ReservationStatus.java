@@ -1,4 +1,4 @@
-package com.to.backend.model;
+package com.to.backend.model.utils;
 
 public enum ReservationStatus {
     PENDING,
