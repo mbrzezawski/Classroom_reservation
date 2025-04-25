@@ -13,8 +13,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.BDDMockito.*;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -30,7 +32,6 @@ class ReservationControllerTest {
 
     @Test
     void givenParams_whenGetCalendar_thenReturnsDtoList() throws Exception {
-        // example DTO
         CalendarReservationDto dto = CalendarReservationDto.builder()
                 .reservationId("res-1")
                 .roomId("room-1")
@@ -44,11 +45,13 @@ class ReservationControllerTest {
                 .equipmentIds(List.of("equipA"))
                 .build();
 
-        // service stub
+        Optional<LocalDate> from = Optional.of(LocalDate.of(2025,5,1));
+        Optional<LocalDate> to   = Optional.of(LocalDate.of(2025,5,31));
+
         given(service.getUserCalendar(
                 eq("jakub123"),
-                eq(LocalDate.of(2025,5,1)),
-                eq(LocalDate.of(2025,5,31))
+                eq(from),
+                eq(to)
         )).willReturn(List.of(dto));
 
         // perform GET with parameters
@@ -66,18 +69,19 @@ class ReservationControllerTest {
                 .andExpect(jsonPath("$[0].start").value("2025-05-10T10:00:00"))
                 .andExpect(jsonPath("$[0].end").value("2025-05-10T12:00:00"));
 
-        // verify that service was called with expected arguments
+        // verify that service was called with expected Optionals
         then(service).should().getUserCalendar(
                 "jakub123",
-                LocalDate.of(2025,5,1),
-                LocalDate.of(2025,5,31)
+                Optional.of(LocalDate.of(2025,5,1)),
+                Optional.of(LocalDate.of(2025,5,31))
         );
     }
 
     @Test
-    void givenOnlyUserId_whenGetCalendar_thenServiceCalledWithNullDates() throws Exception {
-        // stub
-        given(service.getUserCalendar(eq("u1"), isNull(), isNull()))
+    void givenOnlyUserId_whenGetCalendar_thenServiceCalledWithEmptyOptionals() throws Exception {
+        // stub for empty Optionals
+        Optional<LocalDate> empty = Optional.empty();
+        given(service.getUserCalendar(eq("u1"), eq(empty), eq(empty)))
                 .willReturn(List.of());
 
         mockMvc.perform(get("/reservations/calendar")
@@ -86,7 +90,7 @@ class ReservationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]"));
 
-        // verify call with nulls
-        then(service).should().getUserCalendar("u1", null, null);
+        // verify call with Optional.empty()
+        then(service).should().getUserCalendar("u1", Optional.empty(), Optional.empty());
     }
 }

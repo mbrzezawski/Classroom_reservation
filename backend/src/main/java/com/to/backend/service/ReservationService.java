@@ -95,18 +95,16 @@ public class ReservationService {
     @Transactional(readOnly = true)
     public List<CalendarReservationDto> getUserCalendar(
             String userId,
-            LocalDate from,
-            LocalDate to
+            Optional<LocalDate> fromOpt,
+            Optional<LocalDate> toOpt
     ) {
         List<Reservation> reservationList;
 
-        // no "from" and "to" params → all reservations
-        if (from == null && to == null) {
+        if (fromOpt.isEmpty() && toOpt.isEmpty()) {
             reservationList = reservationRepo.findByUserIdOrderByDateAscStartTimeAsc(userId);
-
         } else {
-            LocalDate realFrom = from != null ? from : LocalDate.MIN;
-            LocalDate realTo   = to   != null ? to   : LocalDate.MAX;
+            LocalDate realFrom = fromOpt.orElse(LocalDate.MIN);
+            LocalDate realTo   = toOpt.orElse(LocalDate.MAX);
 
             reservationList = reservationRepo
                     .findByUserIdAndDateBetweenOrderByDateAscStartTimeAsc(
@@ -114,10 +112,10 @@ public class ReservationService {
                     );
         }
 
-        // map to DTOs
         List<String> roomIds = reservationList.stream()
                 .map(Reservation::getRoomId)
-                .distinct().toList();
+                .distinct()
+                .toList();
 
         Map<String, Room> roomMap = roomService.getRoomsByIds(roomIds).stream()
                 .collect(Collectors.toMap(Room::getId, Function.identity()));
@@ -132,7 +130,7 @@ public class ReservationService {
                             .roomLocation(room.getLocation())
                             .title(r.getPurpose())
                             .start(LocalDateTime.of(r.getDate(), r.getStartTime()))
-                            .end(LocalDateTime.of(r.getDate(), r.getEndTime()))
+                            .end(  LocalDateTime.of(r.getDate(), r.getEndTime()))
                             .minCapacity(r.getMinCapacity())
                             .softwareIds(r.getSoftwareIds())
                             .equipmentIds(r.getEquipmentIds())
@@ -140,6 +138,7 @@ public class ReservationService {
                 })
                 .toList();
     }
+
 
     // cancel reservation if you are the owner
     // TODO update the method so that admin can cancel every reservation

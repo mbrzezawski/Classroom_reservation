@@ -10,10 +10,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/reservations")
@@ -75,19 +77,19 @@ public class ReservationController {
     }
 
     @GetMapping("/calendar")
-    public ResponseEntity<List<CalendarReservationDto>> getUserCalendar(
+    public ResponseEntity<List<CalendarReservationDto>> getCalendar(
             @RequestParam("userId") String userId,
-            @RequestParam(value="from", required=false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(value="to",   required=false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+            @RequestParam(name = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(name = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
     ) {
-        return ResponseEntity.ok(
-                service.getUserCalendar(userId, from, to)
-        );
+        List<CalendarReservationDto> events = service.getUserCalendar(userId, Optional.ofNullable(from), Optional.ofNullable(to));
+        return ResponseEntity.ok(events);
     }
 
-    @DeleteMapping("/{id}")
+
+
+    // TODO walidacja czy ten co wysyła request jest ownerem lub adminem
+    @DeleteMapping("/{id}/cancel")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cancelReservation(
             @PathVariable("id") String reservationId,

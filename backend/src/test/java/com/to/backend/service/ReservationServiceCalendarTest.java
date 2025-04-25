@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
@@ -31,9 +32,9 @@ class ReservationServiceCalendarTest {
     @InjectMocks
     private ReservationService service;
 
-    private final String USER = "instr-1";
-    private final LocalDate FROM = LocalDate.of(2025, 5, 1);
-    private final LocalDate TO   = LocalDate.of(2025, 5, 31);
+    private static final String USER = "instr-1";
+    private static final Optional<LocalDate> FROM = Optional.of(LocalDate.of(2025, 5, 1));
+    private static final Optional<LocalDate> TO   = Optional.of(LocalDate.of(2025, 5, 31));
 
     private Reservation r1, r2;
     private Room room1, room2;
@@ -78,7 +79,11 @@ class ReservationServiceCalendarTest {
     @Test
     void whenCalendarRequested_thenReturnsMappedDtoList() {
         given(reservationRepo
-                .findByUserIdAndDateBetweenOrderByDateAscStartTimeAsc(USER, FROM, TO))
+                .findByUserIdAndDateBetweenOrderByDateAscStartTimeAsc(
+                        USER,
+                        FROM.orElse(LocalDate.MIN),
+                        TO.orElse(LocalDate.MAX)
+                ))
                 .willReturn(List.of(r1, r2));
 
         given(roomService.getRoomsByIds(List.of("room-1","room-2")))
@@ -103,14 +108,19 @@ class ReservationServiceCalendarTest {
     @Test
     void whenNoReservations_thenReturnsEmptyList() {
         given(reservationRepo
-                .findByUserIdAndDateBetweenOrderByDateAscStartTimeAsc(USER, FROM, TO))
+                .findByUserIdAndDateBetweenOrderByDateAscStartTimeAsc(
+                        USER,
+                        FROM.orElse(LocalDate.MIN),
+                        TO.orElse(LocalDate.MAX)
+                ))
                 .willReturn(List.of());
 
-        given(roomService.getRoomsByIds(anyList())).willReturn(List.of());
+        given(roomService.getRoomsByIds(List.of())).willReturn(List.of());
 
         List<CalendarReservationDto> events = service.getUserCalendar(USER, FROM, TO);
 
         assertThat(events).isEmpty();
+
         then(roomService).should().getRoomsByIds(List.of());
     }
 }
