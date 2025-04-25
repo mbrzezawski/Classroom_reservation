@@ -19,6 +19,7 @@ import static org.mockito.BDDMockito.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.springframework.security.test.context.support.WithMockUser;
 
 @WebMvcTest(ReservationController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -31,6 +32,7 @@ class ReservationControllerTest {
     private ReservationService service;
 
     @Test
+    @WithMockUser(username = "jakub123", roles = "USER")
     void givenParams_whenGetCalendar_thenReturnsDtoList() throws Exception {
         CalendarReservationDto dto = CalendarReservationDto.builder()
                 .reservationId("res-1")
@@ -54,7 +56,6 @@ class ReservationControllerTest {
                 eq(to)
         )).willReturn(List.of(dto));
 
-        // perform GET with parameters
         mockMvc.perform(get("/reservations/calendar")
                         .param("userId", "jakub123")
                         .param("from", "2025-05-01")
@@ -62,14 +63,12 @@ class ReservationControllerTest {
                 )
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                // sprawdź elementy JSON-a
                 .andExpect(jsonPath("$[0].reservationId").value("res-1"))
                 .andExpect(jsonPath("$[0].roomName").value("Sala A"))
                 .andExpect(jsonPath("$[0].title").value("Testowe zajęcia"))
                 .andExpect(jsonPath("$[0].start").value("2025-05-10T10:00:00"))
                 .andExpect(jsonPath("$[0].end").value("2025-05-10T12:00:00"));
 
-        // verify that service was called with expected Optionals
         then(service).should().getUserCalendar(
                 "jakub123",
                 Optional.of(LocalDate.of(2025,5,1)),
@@ -77,7 +76,9 @@ class ReservationControllerTest {
         );
     }
 
+
     @Test
+    @WithMockUser(username = "someUser", roles = "USER")
     void givenOnlyUserId_whenGetCalendar_thenServiceCalledWithEmptyOptionals() throws Exception {
         // stub for empty Optionals
         Optional<LocalDate> empty = Optional.empty();
@@ -93,4 +94,6 @@ class ReservationControllerTest {
         // verify call with Optional.empty()
         then(service).should().getUserCalendar("u1", Optional.empty(), Optional.empty());
     }
+
+
 }
