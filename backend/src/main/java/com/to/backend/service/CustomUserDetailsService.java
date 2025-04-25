@@ -3,6 +3,7 @@ package com.to.backend.service;
 import com.to.backend.exception.NotFoundException;
 import com.to.backend.model.User;
 import com.to.backend.repository.UserRepository;
+import com.to.backend.service.helper.CustomUserDetails;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,13 +24,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User", email));
-        List<GrantedAuthority> auth = List.of(
-                new SimpleGrantedAuthority(user.getRole().name())
-        );
-        return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
-                user.getPassword(),
-                auth
-        );
+        return new CustomUserDetails(user);
     }
 }
