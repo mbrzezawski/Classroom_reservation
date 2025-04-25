@@ -1,40 +1,45 @@
 package com.to.backend.controller;
 
+import com.to.backend.dto.ChangePasswordDto;
+import com.to.backend.dto.UpdateEmailDto;
 import com.to.backend.model.User;
 import com.to.backend.service.UserService;
 import com.to.backend.service.helper.CustomUserDetails;
-import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
-import java.util.Optional;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/users/me")
+@Validated
+@PreAuthorize("isAuthenticated()")    // require any logged-in user
 public class UserProfileController {
     private final UserService userService;
 
     public UserProfileController(UserService userService){
         this.userService = userService;
     }
+
     @GetMapping
     public User getMyProfile(@AuthenticationPrincipal CustomUserDetails principal) {
-        return principal.getUser();
+        User me = principal.getUser();
+        me.setPassword(null);
+        return me;
     }
+
     @PutMapping
     public ResponseEntity<User> updateProfile(
             @AuthenticationPrincipal CustomUserDetails principal,
-            @RequestBody Map<String, String> body
-    ) throws BadRequestException {
-        String newEmail = Optional.ofNullable(body.get("email"))
-                .filter(s -> !s.isBlank())
-                .orElseThrow(() -> new BadRequestException("email is required"));
-
+            @Valid @RequestBody UpdateEmailDto dto
+    ) {
         User updated = userService.updateProfile(
-                principal.getUser().getEmail(), newEmail);
+                principal.getUser().getEmail(),
+                dto.getEmail()
+        );
         updated.setPassword(null);
         return ResponseEntity.ok(updated);
     }
@@ -43,14 +48,12 @@ public class UserProfileController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void changePassword(
             @AuthenticationPrincipal CustomUserDetails principal,
-            @RequestBody Map<String, String> body
-    ) throws BadRequestException {
-        String current = Optional.ofNullable(body.get("currentPassword"))
-                .orElseThrow(() -> new BadRequestException("currentPassword is required"));
-        String next    = Optional.ofNullable(body.get("newPassword"))
-                .orElseThrow(() -> new BadRequestException("newPassword is required"));
-
-        userService.changePassword(principal.getUser().getEmail(), current, next);
+            @Valid @RequestBody ChangePasswordDto dto
+    ) {
+        userService.changePassword(
+                principal.getUser().getEmail(),
+                dto.getCurrentPassword(),
+                dto.getNewPassword()
+        );
     }
-
 }

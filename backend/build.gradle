@@ -25,6 +25,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     testImplementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo:4.20.0'
+    implementation 'org.springframework.boot:spring-boot-starter-validation:3.4.5'
 }
 
 tasks.named('test') {

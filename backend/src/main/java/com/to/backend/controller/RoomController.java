@@ -14,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rooms")
+@PreAuthorize("isAuthenticated()")
 public class RoomController {
 
     private final RoomService service;
@@ -23,7 +24,14 @@ public class RoomController {
     }
 
     // POST / – creates new room, returns 201 + Location
+    // FOR: ADMIN AND DEANS_OFFICE
     @PostMapping
+    @PreAuthorize(
+            "hasAnyRole(" +
+                    "T(com.to.backend.model.utils.RoleType).ADMIN.name(), " +
+                    "T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()" +
+                    ")"
+    )
     public ResponseEntity<Room> createRoom(@RequestBody Room room) {
         Room saved = service.createRoom(room);
 
@@ -36,6 +44,7 @@ public class RoomController {
     }
 
     // GET /rooms – retrieves all rooms
+    // FOR: EVERYONE LOGGED IN
     @GetMapping
     @PreAuthorize(
             "hasAnyRole(" +
@@ -50,6 +59,7 @@ public class RoomController {
     }
 
     // GET /rooms/{id} – retrieves room by id or returns 404
+    // FOR: EVERYONE LOGGED IN
     @GetMapping("/{id}")
     @PreAuthorize(
             "hasAnyRole(" +
@@ -65,17 +75,27 @@ public class RoomController {
     }
 
     // DELETE /rooms/{id} – deletes room by id, returns 204 or 404
+    // FOR: ADMIN AND DEANS_OFFICE
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name())")
+    @PreAuthorize(
+            "hasAnyRole(" +
+                    "T(com.to.backend.model.utils.RoleType).ADMIN.name(), " +
+                    "T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()" +
+                    ")"
+    )
     public void deleteRoom(@PathVariable String id) {
         service.deleteRoom(id);
     }
 
-    // PUT /rooms/{id} - update a room, only admin or deans_office
+    // PUT /rooms/{id} - update a room,
+    // FOR: admin and deans_office
     @PutMapping("/{id}")
-//    @PreAuthorize("hasAnyRole(T(com.to.backend.model.utils.RoleType).ADMIN.name(), "
-//            + "T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name())")
+    @PreAuthorize("hasAnyRole(" +
+                    "T(com.to.backend.model.utils.RoleType).ADMIN.name(), " +
+                    "T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()" +
+                    ")"
+    )
     public ResponseEntity<Room> updateRoom(
             @PathVariable String id,
             @RequestBody Room room

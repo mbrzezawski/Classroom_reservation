@@ -8,6 +8,7 @@ import com.to.backend.exception.NoRoomAvailableException;
 import com.to.backend.exception.NotFoundException;
 import com.to.backend.model.Reservation;
 import com.to.backend.model.Room;
+import com.to.backend.model.User;
 import com.to.backend.model.utils.ReservationStatus;
 import com.to.backend.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
@@ -23,10 +24,12 @@ import java.util.stream.Collectors;
 public class ReservationService {
     private final ReservationRepository reservationRepo;
     private final RoomService roomService;
+    private final UserService userService;
 
-    public ReservationService(ReservationRepository reservationRepo, RoomService roomService) {
+    public ReservationService(ReservationRepository reservationRepo, RoomService roomService, UserService userService) {
         this.reservationRepo = reservationRepo;
         this.roomService = roomService;
+        this.userService = userService;
     }
 
     public Reservation createReservation(Reservation reservation) {
@@ -157,4 +160,14 @@ public class ReservationService {
             reservationRepo.save(reservation);
         }
     }
+
+    public boolean isOwner(String reservationId, String email) {
+        Reservation reservation = reservationRepo.findById(reservationId)
+                .orElseThrow(() -> new NotFoundException("Reservation", reservationId));
+
+        User currentUser = userService.getUserByEmail(email);
+
+        return reservation.getUserId().equals(currentUser.getId());
+    }
+
 }
