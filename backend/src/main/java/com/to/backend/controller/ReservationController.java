@@ -1,11 +1,13 @@
 package com.to.backend.controller;
 
 import com.to.backend.dto.CalendarReservationDto;
+import com.to.backend.dto.RecurringReservationRequestDto;
 import com.to.backend.dto.ReservationRequest;
 import com.to.backend.dto.ReservationResponse;
 import com.to.backend.model.Reservation;
 import com.to.backend.service.ReservationService;
 import com.to.backend.service.helper.CustomUserDetails;
+import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -120,6 +122,23 @@ public class ReservationController {
             @AuthenticationPrincipal CustomUserDetails principal) {
         String userId = principal.getUser().getId();
         service.cancelReservation(reservationId, userId);
+    }
+
+
+    // FOR: everyone logged in
+    // create recurring reservation
+    @PostMapping("/recurring")
+    public ResponseEntity<List<ReservationResponse>> createRecurring(
+            @Valid @RequestBody RecurringReservationRequestDto dto,
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
+        dto.setUserId(principal.getUser().getId());
+
+        List<ReservationResponse> created = service.createRecurringReservations(dto);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(created);
     }
 
 

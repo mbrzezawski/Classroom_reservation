@@ -1,15 +1,18 @@
 package com.to.backend.service;
 
 import com.to.backend.dto.CalendarReservationDto;
+import com.to.backend.dto.RecurringReservationRequestDto;
 import com.to.backend.dto.ReservationRequest;
 import com.to.backend.dto.ReservationResponse;
 import com.to.backend.exception.ForbiddenException;
 import com.to.backend.exception.NoRoomAvailableException;
 import com.to.backend.exception.NotFoundException;
+import com.to.backend.model.RecurringReservation;
 import com.to.backend.model.Reservation;
 import com.to.backend.model.Room;
 import com.to.backend.model.User;
 import com.to.backend.model.utils.ReservationStatus;
+import com.to.backend.repository.RecurringReservationRepository;
 import com.to.backend.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,11 +26,13 @@ import java.util.stream.Collectors;
 @Service
 public class ReservationService {
     private final ReservationRepository reservationRepo;
+    private final RecurringReservationRepository recurringRepo;
     private final RoomService roomService;
     private final UserService userService;
 
-    public ReservationService(ReservationRepository reservationRepo, RoomService roomService, UserService userService) {
+    public ReservationService(ReservationRepository reservationRepo, RecurringReservationRepository recurringRepo, RoomService roomService, UserService userService) {
         this.reservationRepo = reservationRepo;
+        this.recurringRepo = recurringRepo;
         this.roomService = roomService;
         this.userService = userService;
     }
@@ -52,8 +57,9 @@ public class ReservationService {
         reservationRepo.deleteById(id);
     }
 
-    // attempts to reserve a room - returns a response indicating the assigned roomId
-    // or an exception
+
+//     attempts to reserve a room - returns a response indicating the assigned roomId
+//     or an exception
     public ReservationResponse reserve(ReservationRequest req) {
         List<Room> candidates = roomService.getAllRooms().stream()
                 .filter(r -> r.getCapacity() >= req.getMinCapacity())
@@ -94,6 +100,96 @@ public class ReservationService {
 
         throw new NoRoomAvailableException("Brak dostępnych sal w wybranym terminie");
     }
+
+    @Transactional
+    public List<ReservationResponse> createRecurringReservations(RecurringReservationRequestDto dto) {
+        // 1) Zapisz wzorzec
+        RecurringReservation pattern = RecurringReservation.builder()
+                .userId(dto.getUserId())
+                .roomId(dto.getRoomId())
+                .startDate(dto.getStartDate())
+                .endDate(dto.getEndDate())
+                .startTime(dto.getStartTime())
+                .endTime(dto.getEndTime())
+                .purpose(dto.getPurpose())
+                .minCapacity(dto.getMinCapacity())
+                .softwareIds(dto.getSoftwareIds())
+                .equipmentIds(dto.getEquipmentIds())
+                .frequency(dto.getFrequency())
+                .interval(dto.getInterval())
+                .byDays(dto.getByDays())
+                .status(ReservationStatus.CONFIRMED)
+                .build();
+        pattern = recurringRepo.save(pattern);
+
+        // 2) Wygeneruj listę dat
+        List<LocalDate> dates = new ArrayList<>();
+        LocalDate d = pattern.getStartDate();
+        while (pattern.getEndDate() == null || !d.isAfter(pattern.getEndDate())) {
+            boolean take = switch (pattern.getFrequency()) {
+                case DAILY   -> true;
+                case WEEKLY  -> pattern.getByDays().contains(d.getDayOfWeek());
+                case MONTHLY -> d.getDayOfMonth() == pattern.getStartDate().getDayOfMonth();
+            };
+            if (take) dates.add(d);
+            d = switch (pattern.getFrequency()) {
+                case DAILY   -> d.plusDays(pattern.getInterval());
+                case WEEKLY  -> d.plusWeeks(pattern.getInterval());
+                case MONTHLY -> d.plusMonths(pattern.getInterval());
+            };
+        }
+
+        // 3) Wylicz kandydatów i posortuj po pojemności rosnąco
+        List<Room> candidates = roomService.getAllRooms().stream()
+                .filter(r -> r.getCapacity() >= dto.getMinCapacity())
+                .filter(r -> new HashSet<>(r.getSoftwareIds()).containsAll(dto.getSoftwareIds()))
+                .filter(r -> new HashSet<>(r.getEquipmentIds()).containsAll(dto.getEquipmentIds()))
+                .sorted(Comparator.comparingInt(Room::getCapacity))
+                .toList();
+
+        // 4) Dla każdej sali sprawdź, czy wszystkie daty są wolne
+        for (Room room : candidates) {
+            RecurringReservation finalPattern = pattern;
+            boolean allFree = dates.stream().allMatch(date ->
+                    reservationRepo
+                            .findByRoomIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
+                                    room.getId(), date,
+                                    finalPattern.getEndTime(), finalPattern.getStartTime()
+                            ).isEmpty()
+            );
+            if (allFree) {
+                // 5) Rezerwuj tę salę na wszystkie daty
+                List<ReservationResponse> responses = new ArrayList<>();
+                for (LocalDate date : dates) {
+                    Reservation r = new Reservation(
+                            dto.getUserId(),
+                            room.getId(),
+                            date,
+                            pattern.getStartTime(),
+                            pattern.getEndTime(),
+                            dto.getPurpose(),
+                            dto.getMinCapacity(),
+                            dto.getSoftwareIds(),
+                            dto.getEquipmentIds(),
+                            ReservationStatus.CONFIRMED
+                    );
+                    r.setRecurrenceId(pattern.getId());
+                    reservationRepo.save(r);
+
+                    responses.add(new ReservationResponse(
+                            r.getId(),
+                            r.getRoomId(),
+                            "Sala przydzielona: " + room.getName() + " (data: " + date + ")"
+                    ));
+                }
+                return responses;
+            }
+        }
+
+        // 6) Jeżeli żadna sala nie przeszła w całości → błąd
+        throw new NoRoomAvailableException("Brak jednej spójnej sali dla wszystkich terminów");
+    }
+
 
     @Transactional(readOnly = true)
     public List<CalendarReservationDto> getUserCalendar(
