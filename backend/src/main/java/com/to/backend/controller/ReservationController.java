@@ -63,7 +63,6 @@ public class ReservationController {
 
     // DELETE /reservations/{id} – deletes reservation by id, returns 204 or 404
     // FOR: ADMIN, DEANS_OFFICE AND OWNER
-    // DELETE /reservations/{id} – deletes reservation by id, returns 204 or 404
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize(
@@ -122,23 +121,6 @@ public class ReservationController {
             @AuthenticationPrincipal CustomUserDetails principal) {
         String userId = principal.getUser().getId();
         service.cancelReservation(reservationId, userId);
-    }
-
-
-    // FOR: everyone logged in
-    // create recurring reservation
-    @PostMapping("/recurring")
-    public ResponseEntity<List<ReservationResponse>> createRecurring(
-            @Valid @RequestBody RecurringReservationRequestDto dto,
-            @AuthenticationPrincipal CustomUserDetails principal
-    ) {
-        dto.setUserId(principal.getUser().getId());
-
-        List<ReservationResponse> created = service.createRecurringReservations(dto);
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(created);
     }
 
 

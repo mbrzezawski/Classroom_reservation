@@ -13,9 +13,6 @@ import java.util.List;
 public class RecurringReservationRequestDto {
     private String userId;
 
-    @NotBlank
-    private String roomId;
-
     @NotNull
     private LocalDate startDate;
 
@@ -47,15 +44,6 @@ public class RecurringReservationRequestDto {
 
     public RecurringReservationRequestDto() {}
 
-
-
-    public String getRoomId() {
-        return roomId;
-    }
-
-    public void setRoomId(String roomId) {
-        this.roomId = roomId;
-    }
 
     public LocalDate getStartDate() {
         return startDate;
