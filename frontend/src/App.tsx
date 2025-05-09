@@ -1,8 +1,22 @@
-import { useState } from "react";
-import "./App.css";
+import LoginForm from "./components/auth/login-form";
+import SignUpForm from "./components/auth/sign-up-form";
 
 function App() {
-  return <h1 className="text-amber-300">AAAAAABBBBBCCCCCC</h1>;
+  return (
+    <div
+      className="flex flex-row gap-6"
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        width: "100vh",
+      }}
+    >
+      <LoginForm />
+      <SignUpForm />
+    </div>
+  );
 }
 
 export default App;
