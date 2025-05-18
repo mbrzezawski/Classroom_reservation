@@ -1,5 +1,5 @@
 import { FormProvider, useForm } from "react-hook-form";
-import InputTextBox from "./input-textbox";
+import InputTextBox from "../utils/input-textbox";
 import PasswordTextBox from "./password-textbox";
 import AtIcon from "../icons/at";
 import { useNavigate } from "react-router-dom";
