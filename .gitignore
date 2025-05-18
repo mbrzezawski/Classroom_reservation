@@ -34,6 +34,7 @@ out/
 /.nb-gradle/
 
 ### Node ###
+frontend/package-lock.json
 node_modules
 
 ### VS Code ###

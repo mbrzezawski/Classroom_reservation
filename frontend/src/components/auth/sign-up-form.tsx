@@ -1,68 +1,37 @@
-// import type { FC } from "react";
-// import TextBox from "./input-textbox";
-// import AtIcon from "../icons/at";
-// import PasswordTextBox from "./password-textbox";
-
-// const SignUpForm: FC = () => {
-//   return (
-//     <form className="flex flex-col border *:px-6 py-8 gap-[30px] rounded-[8px] ">
-//       <h2 className="text-[42px] text-center">Sign up</h2>
-//       <TextBox
-//         label="Email"
-//         type="email"
-//         placeholder="Type your email"
-//         icon={<AtIcon></AtIcon>}
-//       />
-//       <PasswordTextBox />
-//       <PasswordTextBox confirmPassword={true} />
-//       <div className="flex justify-center">
-//         <button
-//           type="submit"
-//           className="btn w-[274px] py-2 border rounded-[12px]"
-//         >
-//           Sign up
-//         </button>
-//       </div>
-//     </form>
-//   );
-// };
-
-// export default SignUpForm;
-
-import { useForm } from "react-hook-form";
-import TextBox from "./input-textbox";
-import PasswordTextBox from "./password-textbox";
+import type { FC } from "react";
+import InputTextBox from "./input-textbox";
 import AtIcon from "../icons/at";
+import PasswordTextBox from "./password-textbox";
+import { FormProvider, useForm } from "react-hook-form";
 
 type SignUpFormValues = {
   email: string;
   password: string;
-  confirmPassword: string;
+  repeatedPassword: string;
 };
 
-const SignUpForm = () => {
+const SignUpForm: FC = () => {
+  const methods = useForm({
+    defaultValues: { email: "", password: "", repeatedPassword: "" },
+  });
+  const onSubmit = (data: SignUpFormValues) => {
+    console.log("Form submitted:", data);
+  };
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<SignUpFormValues>();
-
-  const onSubmit = (data: SignUpFormValues) => {
-    console.log("Sign up data:", data);
-  };
-
+  } = methods;
   const password = watch("password");
-
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-col border *:px-6 py-8 gap-[30px] rounded-[8px]"
-    >
-      <h2 className="text-[42px] text-center">Sign up</h2>
-
-      <div>
-        <TextBox
+    <FormProvider {...methods}>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col border *:px-6 py-8 gap-[30px] rounded-[8px] "
+      >
+        <h2 className="text-[42px] text-center">Sign up</h2>
+        <InputTextBox
           label="Email"
           type="email"
           placeholder="Type your email"
@@ -76,42 +45,34 @@ const SignUpForm = () => {
             },
           })}
         />
-      </div>
-
-      <div>
         <PasswordTextBox
           error={errors.password?.message}
           {...register("password", {
             required: "Password is required",
             minLength: {
               value: 6,
-              message: "Password must be at least 6 characters",
+              message: "Password must be at least 6 characters long",
             },
           })}
         />
-      </div>
-
-      <div>
         <PasswordTextBox
-          confirmPassword
-          error={errors.confirmPassword?.message}
-          {...register("confirmPassword", {
-            required: "Please repeat your password",
+          confirmPassword={true}
+          error={errors.repeatedPassword?.message}
+          {...register("repeatedPassword", {
+            required: "Please confirm your password",
             validate: (value) => value === password || "Passwords do not match",
           })}
         />
-      </div>
-
-      <div className="flex justify-center">
-        <button
-          type="submit"
-          className="btn w-[274px] py-2 border rounded-[12px]"
-        >
-          Sign up
-        </button>
-      </div>
-    </form>
+        <div className="flex justify-center">
+          <button
+            type="submit"
+            className="btn w-[274px] py-2 border rounded-[12px]"
+          >
+            Sign up
+          </button>
+        </div>
+      </form>
+    </FormProvider>
   );
 };
-
 export default SignUpForm;
