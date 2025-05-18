@@ -12,6 +12,7 @@ public class Reservation {
     @Id private String id;
     private String userId;
     private String roomId;
+    private String recurringReservationId;
     private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
@@ -45,6 +46,9 @@ public class Reservation {
 
     public String getRoomId() { return roomId; }
     public void setRoomId(String roomId) { this.roomId = roomId; }
+
+    public String getRecurrenceId() { return recurringReservationId; }
+    public void setRecurrenceId(String recurrenceId) { this.recurringReservationId = recurrenceId; }
 
     public LocalDate getDate() { return date; }
     public void setDate(LocalDate date) { this.date = date; }

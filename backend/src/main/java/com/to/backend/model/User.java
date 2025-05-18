@@ -11,6 +11,7 @@ public class User {
     private String email;
     private String password;
     private RoleType role;
+    private Boolean enabled;
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -23,4 +24,7 @@ public class User {
 
     public RoleType getRole() { return role; }
     public void setRole(RoleType role) { this.role = role; }
+
+    public boolean isEnabled() { return enabled; }
+    public void setEnabled(Boolean enabled) { this.enabled = enabled; }
 }

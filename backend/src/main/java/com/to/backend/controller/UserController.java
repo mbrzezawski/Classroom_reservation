@@ -14,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/users")
+@PreAuthorize("isAuthenticated()")
 public class UserController {
 
     private final UserService service;
@@ -23,10 +24,16 @@ public class UserController {
     }
 
     // POST /users – creates new user, returns 201 + Location
+    // FOR: ADMIN and DEANS_OFFICE
     @PostMapping
+    @PreAuthorize(
+            "hasAnyRole(" +
+                    "T(com.to.backend.model.utils.RoleType).ADMIN.name(), " +
+                    "T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()" +
+                    ")"
+    )
     public ResponseEntity<User> createUser(@RequestBody User user) {
         User saved = service.createUser(user);
-
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(saved.getId())
@@ -35,6 +42,7 @@ public class UserController {
     }
 
     // GET /users – retrieves all users
+    // FOR: ADMIN only
     @GetMapping
     @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name())")
     public ResponseEntity<List<User>> getAllUsers() {
@@ -42,6 +50,7 @@ public class UserController {
     }
 
     // GET /users/{id} – retrieves user by id or returns 404 via GlobalExceptionHandler
+    // FOR: ADMIN only
     @GetMapping("/{id}")
     @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name())")
     public ResponseEntity<User> getUser(@PathVariable String id) {
@@ -49,19 +58,31 @@ public class UserController {
         return ResponseEntity.ok(u);
     }
 
-    @GetMapping("/{email}")
+    // GET /users/{email} – retrieves user by email
+    // FOR: ADMIN only
+    @GetMapping("/by-email/{email}")
+    @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name())")
     public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
         User user = service.getUserByEmail(email);
         return ResponseEntity.ok(user);
     }
 
     // DELETE /users/{id} – deletes user by id, returns 204 No Content
+    // FOR: ADMIN and DEANS_OFFICE
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize(
+            "hasAnyRole(" +
+                    "T(com.to.backend.model.utils.RoleType).ADMIN.name(), " +
+                    "T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()" +
+                    ")"
+    )
     public void deleteUser(@PathVariable String id) {
         service.deleteUser(id);
     }
 
+    // PUT /users/{id}/role – sets user role
+    // FOR: ADMIN only
     @PutMapping("/{id}/role")
     @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name())")
     public ResponseEntity<Void> setUserRole(

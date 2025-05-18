@@ -1,24 +1,30 @@
 package com.to.backend.controller;
 
 import com.to.backend.dto.CalendarReservationDto;
+import com.to.backend.dto.RecurringReservationRequestDto;
 import com.to.backend.dto.ReservationRequest;
 import com.to.backend.dto.ReservationResponse;
 import com.to.backend.model.Reservation;
 import com.to.backend.service.ReservationService;
+import com.to.backend.service.helper.CustomUserDetails;
+import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.net.URI;
+import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/reservations")
+@PreAuthorize("isAuthenticated()")
 public class ReservationController {
 
     private final ReservationService service;
@@ -28,8 +34,9 @@ public class ReservationController {
     }
 
     // POST /reservations - creates new reservation, returns 201 + Location
-    // CRUD
+    // FOR: ADMIN
     @PostMapping
+    @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name())")
     public ResponseEntity<Reservation> createReservation(@RequestBody Reservation reservation) {
         Reservation saved = service.createReservation(reservation);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -40,12 +47,14 @@ public class ReservationController {
     }
 
     // GET /reservations - retrieves all reservations
+    // FOR: EVERYONE LOGGED IN
     @GetMapping
     public ResponseEntity<List<Reservation>> getAllReservations() {
         return ResponseEntity.ok(service.getAllReservations());
     }
 
     // GET /reservations/{id} – retrieves reservation by id or returns 404
+    // FOR: EVERYONE LOGGED IN
     @GetMapping("/{id}")
     public ResponseEntity<Reservation> getReservationById(@PathVariable String id) {
         Reservation reservation = service.getReservationById(id);
@@ -53,13 +62,24 @@ public class ReservationController {
     }
 
     // DELETE /reservations/{id} – deletes reservation by id, returns 204 or 404
+    // FOR: ADMIN, DEANS_OFFICE AND OWNER
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteReservation(@PathVariable String id) {
+    @PreAuthorize(
+            "hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name()) or " +
+                    "hasRole(T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()) or " +
+                    "@reservationService.isOwner(#id, principal.username)"
+    )
+    public void deleteReservation(
+            @PathVariable String id,
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
         service.deleteReservation(id);
     }
 
+
     // business logic: booking a room
+    // FOR: EVERYONE LOGGED IN
     @PostMapping("/book")
     public ResponseEntity<ReservationResponse> reserve(@RequestBody ReservationRequest req) {
         ReservationResponse resp = service.reserve(req);
@@ -76,6 +96,7 @@ public class ReservationController {
                 .body(resp);
     }
 
+    // FOR: EVERYONE LOGGED IN
     @GetMapping("/calendar")
     public ResponseEntity<List<CalendarReservationDto>> getCalendar(
             @RequestParam("userId") String userId,
@@ -88,13 +109,17 @@ public class ReservationController {
 
 
 
-    // TODO walidacja czy ten co wysyła request jest ownerem lub adminem
+    // FOR: ADMIN AND OWNER
     @DeleteMapping("/{id}/cancel")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize(
+            "hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name()) or " +
+                    "@reservationService.isOwner(#reservationId, principal.username)"
+    )
     public void cancelReservation(
             @PathVariable("id") String reservationId,
-            String userId
-    ) {
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        String userId = principal.getUser().getId();
         service.cancelReservation(reservationId, userId);
     }
 

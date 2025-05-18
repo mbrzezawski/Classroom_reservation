@@ -27,4 +27,8 @@ public interface ReservationRepository extends MongoRepository<Reservation, Stri
             LocalDate from,
             LocalDate to
     );
+
+    void deleteReservationsByRecurringReservationId(
+            String recurringReservationId
+    );
 }

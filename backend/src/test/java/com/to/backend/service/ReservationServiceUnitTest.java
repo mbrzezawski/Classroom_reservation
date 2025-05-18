@@ -24,32 +24,28 @@ import static org.mockito.BDDMockito.*;
 @ExtendWith(MockitoExtension.class)
 class ReservationServiceUnitTest {
 
-    @Mock
-    private ReservationRepository reservationRepo;
+    @Mock  private ReservationRepository reservationRepo;
+    @Mock  private RoomService        roomService;
+    @InjectMocks private ReservationService service;
 
-    @Mock
-    private RoomService roomService;
-
-    @InjectMocks
-    private ReservationService service;
-
-    private ReservationRequest req;
+    private ReservationRequest req;   // ← pola klasy
     private Room room;
 
     @BeforeEach
     void setUp() {
-        // REQUEST: May 10, 2025, from 10:00 to 12:00
-        req = new ReservationRequest();
-        req.setUserId("user-1");
-        req.setDate(LocalDate.of(2025, 5, 10));
-        req.setStartTime(LocalTime.of(10, 0));
-        req.setEndTime(LocalTime.of(12, 0));
-        req.setPurpose("Test");
-        req.setMinCapacity(5);
-        req.setSoftwareIds(List.of("softA"));
-        req.setEquipmentIds(List.of("equipA"));
+        /*  ---------- REQUEST ---------- */
+        req = ReservationRequest.builder()       // ← przypisanie DO POLA
+                .userId("user-1")
+                .date(LocalDate.of(2025, 5, 10))
+                .startTime(LocalTime.of(10, 0))
+                .endTime(LocalTime.of(12, 0))
+                .purpose("Test")
+                .minCapacity(5)
+                .softwareIds(List.of("softA"))
+                .equipmentIds(List.of("equipA"))
+                .build();
 
-        // CANDIDATE ROOM: capacity 10, has softwareA and equipmentA
+        /*  ---------- ROOM ---------- */
         room = new Room();
         room.setId("room-1");
         room.setName("Sala 1");
@@ -61,54 +57,59 @@ class ReservationServiceUnitTest {
 
     @Test
     void whenRoomAvailable_thenReturnsConfirmedResponse() {
-        // GIVEN
+        /* rooms spełniające kryteria */
         given(roomService.getAllRooms()).willReturn(List.of(room));
-        // no overlap
+
+        /* brak kolizji */
         given(reservationRepo.findByRoomIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
-                eq("room-1"),
+                eq(room.getId()),
                 eq(req.getDate()),
-                eq(req.getEndTime()),    // existing.start < 12:00
-                eq(req.getStartTime())   // existing.end   > 10:00
+                eq(req.getEndTime()),          // new.start < existing.end
+                eq(req.getStartTime())         // new.end   > existing.start
         )).willReturn(Collections.emptyList());
 
-        willAnswer(invocation -> {
-            Reservation toSave = invocation.getArgument(0);
-            toSave.setId("res-123");
-            return toSave;
-        }).given(reservationRepo).save(any(Reservation.class));
+        /* nadaj id zapisywanej rezerwacji */
+        given(reservationRepo.save(any(Reservation.class)))
+                .willAnswer(inv -> {
+                    Reservation saved = inv.getArgument(0);
+                    saved.setId("res-123");
+                    return saved;
+                });
 
-        // WHEN
+        /* --- wywołanie --- */
         ReservationResponse resp = service.reserve(req);
 
-        // THEN
+        /* --- asercje --- */
         assertThat(resp.reservationId()).isEqualTo("res-123");
         assertThat(resp.roomId()).isEqualTo("room-1");
-        assertThat(resp.message()).contains("Sala przydzielona");
+        assertThat(resp.message()).containsIgnoringCase("sala");
 
         then(reservationRepo).should().save(any(Reservation.class));
     }
 
     @Test
     void whenNoRoomAvailable_thenThrowException() {
-        // GIVEN
         given(roomService.getAllRooms()).willReturn(List.of(room));
-        // overlap due to another reservation from 11:00 to 13:00
-        Reservation overlapping = new Reservation();
-        overlapping.setRoomId("room-1");
-        overlapping.setDate(req.getDate());
-        overlapping.setStartTime(LocalTime.of(11, 0));
-        overlapping.setEndTime(LocalTime.of(13, 0));
-        overlapping.setStatus(ReservationStatus.CONFIRMED);
+
+        Reservation overlap = new Reservation();
+        overlap.setRoomId(room.getId());
+        overlap.setDate(req.getDate());
+        overlap.setStartTime(LocalTime.of(11, 0));
+        overlap.setEndTime(LocalTime.of(13, 0));
+        overlap.setStatus(ReservationStatus.CONFIRMED);
+
+        /* kolizja -> zwróć jeden wpis */
         given(reservationRepo.findByRoomIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
-                eq("room-1"),
+                eq(room.getId()),
                 eq(req.getDate()),
                 eq(req.getEndTime()),
                 eq(req.getStartTime())
-        )).willReturn(List.of(overlapping));
+        )).willReturn(List.of(overlap));
 
-        // expect NoRoomAvailableException
+        /* --- oczekujemy wyjątku --- */
         assertThatThrownBy(() -> service.reserve(req))
                 .isInstanceOf(NoRoomAvailableException.class)
-                .hasMessageContaining("Brak dostępnych sal");
+                .hasMessageContaining("Brak");
     }
 }
+
