@@ -1,73 +1,71 @@
-import { useState } from 'react';
-import {
-    Icon2fa,
-    IconBellRinging,
-    IconDatabaseImport,
-    IconFingerprint,
-    IconCalendarEvent,
-    IconFileSpreadsheet,
-    IconChalkboard,
-    IconPlus,
-    IconUser,
-    IconSchool,
-    IconKey,
-    IconLogout,
-    IconReceipt2,
-    IconSettings,
-    IconSwitchHorizontal,
-} from '@tabler/icons-react';
-import { Code, Group } from '@mantine/core';
+// src/components/NavbarSimple.tsx
 import { useMantineTheme } from '@mantine/core';
+import type { Dispatch, SetStateAction } from 'react';
+import {
+  IconCalendarEvent,
+  IconFileSpreadsheet,
+  IconChalkboard,
+  IconPlus,
+  IconUser,
+  IconLogout,
+} from '@tabler/icons-react';
+import { Group } from '@mantine/core';
 import classes from './NavbarSimple.module.css';
 
-const data = [
-    { link: '', label: 'Kalendarz', icon: IconCalendarEvent },
-    { link: '', label: 'Moje rezerwacje', icon: IconFileSpreadsheet },
-    { link: '', label: 'Sale', icon: IconChalkboard },
-    { link: '', label: 'Dodaj rezerwacje', icon: IconPlus },
+export type NavOption = 'Kalendarz' | 'Moje rezerwacje' | 'Sale' | 'Dodaj rezerwacje';
 
+interface NavbarSimpleProps {
+  active: NavOption;
+  setActive: Dispatch<SetStateAction<NavOption>>;
+}
+
+const data: { label: NavOption; icon: React.FC<any> }[] = [
+  { label: 'Kalendarz', icon: IconCalendarEvent },
+  { label: 'Moje rezerwacje', icon: IconFileSpreadsheet },
+  { label: 'Sale', icon: IconChalkboard },
+  { label: 'Dodaj rezerwacje', icon: IconPlus },
 ];
 
-export function NavbarSimple() {
-    const [active, setActive] = useState('Billing');
-    const theme = useMantineTheme();
-    const links = data.map((item) => (
-        <a
+function NavbarSimple({ active, setActive }: NavbarSimpleProps) {
+  const theme = useMantineTheme();
+
+  return (
+    <nav className={classes.navbar}>
+      <div className={classes.navbarMain}>
+        <Group className={classes.header} justify="space-between">
+          <IconChalkboard size={28} color={theme.colors.orange[6]} />
+          <span>Nazwa aplikacji</span>
+        </Group>
+
+        {data.map(({ label, icon: Icon }) => (
+          <a
+            key={label}
+            href="#"
             className={classes.link}
-            data-active={item.label === active || undefined}
-            href={item.link}
-            key={item.label}
-            onClick={(event) => {
-                event.preventDefault();
-                setActive(item.label);
+            data-active={label === active || undefined}
+            onClick={(e) => {
+              e.preventDefault();
+              setActive(label);
             }}
-        >
-            <item.icon className={classes.linkIcon} stroke={1.5} />
-            <span>{item.label}</span>
+          >
+            <Icon className={classes.linkIcon} stroke={1.5} />
+            <span>{label}</span>
+          </a>
+        ))}
+      </div>
+
+      <div className={classes.footer}>
+        <a href="#" className={classes.link} onClick={(e) => e.preventDefault()}>
+          <IconUser className={classes.linkIcon} stroke={1.5} />
+          <span>Moje konto</span>
         </a>
-    ));
-
-    return (
-        <nav className={classes.navbar}>
-            <div className={classes.navbarMain}>
-                <Group className={classes.header} justify="space-between">
-                    <IconSchool size={28} color={theme.colors.orange[6]}/>
-                    <span>Nazwa aplikacji</span>
-                </Group>
-                {links}
-            </div>
-
-            <div className={classes.footer}>
-                <a href="#" className={classes.link} onClick={(event) => event.preventDefault()}>
-                    <IconUser className={classes.linkIcon} stroke={1.5} />
-                    <span>Moje konto</span>
-                </a>
-
-                <a href="#" className={classes.link} onClick={(event) => event.preventDefault()}>
-                    <IconLogout className={classes.linkIcon} stroke={1.5} />
-                    <span>Wyloguj</span>
-                </a>
-            </div>
-        </nav>
-    );
+        <a href="#" className={classes.link} onClick={(e) => e.preventDefault()}>
+          <IconLogout className={classes.linkIcon} stroke={1.5} />
+          <span>Wyloguj</span>
+        </a>
+      </div>
+    </nav>
+  );
 }
+
+export default NavbarSimple;
