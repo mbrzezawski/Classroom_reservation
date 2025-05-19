@@ -14,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rooms")
+@CrossOrigin(origins = "http://localhost:5137")
 //@PreAuthorize("isAuthenticated()")
 public class RoomController {
 
