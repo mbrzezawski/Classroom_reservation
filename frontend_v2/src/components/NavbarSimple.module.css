@@ -1,0 +1,64 @@
+/* NavbarSimple.module.css */
+
+.navbar {
+    /* Pełna wysokość widoku przeglądarki */
+    height: 100vh;
+    /* Możesz też użyć min-height: 100vh dla większej elastyczności */
+    /* min-height: 100vh; */
+    width: 300px;
+    padding: var(--mantine-spacing-md);
+    display: flex;
+    flex-direction: column;
+    /* Rozłóż w pionie główną część i stopkę */
+    justify-content: space-between;
+    border-right: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+.navbarMain {
+    /* Dzięki justify-content: space-between nie potrzeba tu flex:1,
+       ale możesz go zostawić, by główna część faktycznie się rozciągała */
+    flex: 1;
+}
+
+.header {
+    padding-bottom: var(--mantine-spacing-md);
+    margin-bottom: calc(var(--mantine-spacing-md) * 1.5);
+    border-bottom: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+.footer {
+    /* Usuń margin-top – pozycja jest kontrolowana przez justify-content */
+    /* padding i border-top możesz zostawić, żeby odseparować wizualnie */
+    padding-top: var(--mantine-spacing-md);
+    border-top: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+    /* Możesz też wyrównać elementy w stopce w pionie lub poziomie, jeśli potrzebujesz */
+    display: flex;
+    flex-direction: column;
+    gap: var(--mantine-spacing-sm);
+}
+
+.link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    font-size: var(--mantine-font-size-sm);
+    color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+    padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+    border-radius: var(--mantine-radius-sm);
+    font-weight: 500;
+}
+.link:hover {
+    background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+    color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+}
+.link[data-active],
+.link[data-active]:hover {
+    background-color: var(--mantine-color-blue-light);
+    color: var(--mantine-color-blue-light-color);
+}
+.linkIcon {
+    color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+    margin-right: var(--mantine-spacing-sm);
+    width: 25px;
+    height: 25px;
+}
