@@ -57,46 +57,87 @@ public class ReservationService {
 
 //     attempts to reserve a room - returns a response indicating the assigned roomId
 //     or an exception
-    public ReservationResponse reserve(ReservationRequest req) {
-        List<Room> candidates = roomService.getAllRooms().stream()
-                .filter(r -> r.getCapacity() >= req.getMinCapacity())
-                .filter(r -> new HashSet<>(r.getSoftwareIds()).containsAll(req.getSoftwareIds()))
-                .filter(r -> new HashSet<>(r.getEquipmentIds()).containsAll(req.getEquipmentIds()))
-                .toList();
+public ReservationResponse reserve(ReservationRequest req) {
+    List<String> requestedSoftware = Optional.ofNullable(req.getSoftwareIds())
+            .orElse(Collections.emptyList());
+    List<String> requestedEquipment = Optional.ofNullable(req.getEquipmentIds())
+            .orElse(Collections.emptyList());
 
-        for (Room r : candidates) {
-            List<Reservation> overlaps = reservationRepo.
-                    findByRoomIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
-                            r.getId(),
-                            req.getDate(),
-                            req.getEndTime(),
-                            req.getStartTime()
-                    );
-            if (overlaps.isEmpty()) {
-                // success -> save reservation
-                Reservation entity = new Reservation(
-                        req.getUserId(),
+    // filtruj po pojemności
+    List<Room> byCapacity = roomService.getAllRooms().stream()
+            .filter(r -> r.getCapacity() >= req.getMinCapacity())
+            .toList();
+    if (byCapacity.isEmpty()) {
+        throw new NoRoomAvailableException(
+                "Brak sal o minimalnej pojemności " + req.getMinCapacity());
+    }
+
+    // filtruj dalej po oprogramowaniu
+    List<Room> bySoftware = byCapacity.stream()
+            .filter(r -> {
+                List<String> roomSoftware = Optional.ofNullable(r.getSoftwareIds())
+                        .orElse(Collections.emptyList());
+                return new HashSet<>(roomSoftware).containsAll(requestedSoftware);
+            })
+            .toList();
+    if (bySoftware.isEmpty()) {
+        throw new NoRoomAvailableException(
+                "Brak sal wyposażonych we wszystkie programy: " + requestedSoftware);
+    }
+
+    // filtruj dalej po sprzęcie
+    List<Room> byEquipment = bySoftware.stream()
+            .filter(r -> {
+                List<String> roomEquipment = Optional.ofNullable(r.getEquipmentIds())
+                        .orElse(Collections.emptyList());
+                return new HashSet<>(roomEquipment).containsAll(requestedEquipment);
+            })
+            .toList();
+    if (byEquipment.isEmpty()) {
+        throw new NoRoomAvailableException(
+                "Brak sal posiadających cały wymagany sprzęt: " + requestedEquipment);
+    }
+
+    // spośród pozostałych pokoi sprawdź nakładające się rezerwacje
+    for (Room r : byEquipment) {
+        List<Reservation> overlaps = reservationRepo
+                .findByRoomIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
                         r.getId(),
                         req.getDate(),
-                        req.getStartTime(),
                         req.getEndTime(),
-                        req.getPurpose(),
-                        req.getMinCapacity(),
-                        req.getSoftwareIds(),
-                        req.getEquipmentIds(),
-                        ReservationStatus.CONFIRMED
+                        req.getStartTime()
                 );
-                reservationRepo.save(entity);
-                return new ReservationResponse(
-                        entity.getId(),
-                        entity.getRoomId(),
-                        "Sala przydzielona: " + r.getName()
-                );
-            }
-        }
 
-        throw new NoRoomAvailableException("Brak dostępnych sal w wybranym terminie");
+        if (overlaps.isEmpty()) {
+            // zapis i zwrot sukcesu
+            Reservation entity = new Reservation(
+                    req.getUserId(),
+                    r.getId(),
+                    req.getDate(),
+                    req.getStartTime(),
+                    req.getEndTime(),
+                    req.getPurpose(),
+                    req.getMinCapacity(),
+                    requestedSoftware,
+                    requestedEquipment,
+                    ReservationStatus.CONFIRMED
+            );
+            reservationRepo.save(entity);
+
+            return new ReservationResponse(
+                    entity.getId(),
+                    entity.getRoomId(),
+                    "Sala przydzielona: " + r.getName()
+            );
+        }
     }
+
+    // Jeśli wszystkie spełniają wymogi wyposażenia i pojemności, ale są zajęte
+    throw new NoRoomAvailableException(
+            "Brak wolnych terminów w wybranych salach w dniu " +
+                    req.getDate() + " od " + req.getStartTime() + " do " + req.getEndTime()
+    );
+}
 
 //    @Transactional
 //    public RecurringReservationResponseDto createRecurringReservations(RecurringReservationRequestDto dto) {

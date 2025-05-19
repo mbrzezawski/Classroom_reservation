@@ -24,7 +24,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/reservations")
-@PreAuthorize("isAuthenticated()")
+//@PreAuthorize("isAuthenticated()")
 public class ReservationController {
 
     private final ReservationService service;
@@ -36,7 +36,7 @@ public class ReservationController {
     // POST /reservations - creates new reservation, returns 201 + Location
     // FOR: ADMIN
     @PostMapping
-    @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name())")
+//    @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name())")
     public ResponseEntity<Reservation> createReservation(@RequestBody Reservation reservation) {
         Reservation saved = service.createReservation(reservation);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -65,11 +65,11 @@ public class ReservationController {
     // FOR: ADMIN, DEANS_OFFICE AND OWNER
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize(
-            "hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name()) or " +
-                    "hasRole(T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()) or " +
-                    "@reservationService.isOwner(#id, principal.username)"
-    )
+//    @PreAuthorize(
+//            "hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name()) or " +
+//                    "hasRole(T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()) or " +
+//                    "@reservationService.isOwner(#id, principal.username)"
+//    )
     public void deleteReservation(
             @PathVariable String id,
             @AuthenticationPrincipal CustomUserDetails principal
@@ -112,16 +112,18 @@ public class ReservationController {
     // FOR: ADMIN AND OWNER
     @DeleteMapping("/{id}/cancel")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize(
-            "hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name()) or " +
-                    "@reservationService.isOwner(#reservationId, principal.username)"
-    )
+//    @PreAuthorize(
+//            "hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name()) or " +
+//                    "@reservationService.isOwner(#reservationId, principal.username)"
+//    )
     public void cancelReservation(
             @PathVariable("id") String reservationId,
             @AuthenticationPrincipal CustomUserDetails principal) {
         String userId = principal.getUser().getId();
         service.cancelReservation(reservationId, userId);
     }
+
+
 
 
 }

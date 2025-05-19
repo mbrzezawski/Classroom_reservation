@@ -31,17 +31,36 @@ public class SecurityConfig {
         return authConfig.getAuthenticationManager();
     }
 
+//    @Bean
+//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+//        http
+//                .csrf(AbstractHttpConfigurer::disable)
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers("/auth/**").permitAll()
+//                        .anyRequest().authenticated()
+//                )
+//                .sessionManagement(session -> session
+//                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+//                )
+//                .logout(LogoutConfigurer::permitAll);
+//
+//        return http.build();
+//    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // wyłącz CSRF
                 .csrf(AbstractHttpConfigurer::disable)
+                // pozwól na wszystkie żądania bez uwierzytelniania
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
+                // domyślna polityka sesji (nie wymusza JWT ani innego mechanizmu)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
+                // zezwól na logout bez uwierzytelniania
                 .logout(LogoutConfigurer::permitAll);
 
         return http.build();

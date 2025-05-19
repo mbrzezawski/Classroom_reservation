@@ -2,6 +2,7 @@ package com.to.backend.dto;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ReservationRequest {
@@ -11,8 +12,10 @@ public class ReservationRequest {
     private LocalTime endTime;
     private String purpose;
     private int minCapacity;
-    private List<String> softwareIds;
-    private List<String> equipmentIds;
+    private List<String> softwareIds = new ArrayList<>();
+    private List<String> equipmentIds = new ArrayList<>();
+
+    public ReservationRequest() { }
 
     protected ReservationRequest(Builder b) {
         this.userId      = b.userId;

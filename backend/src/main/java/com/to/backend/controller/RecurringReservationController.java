@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/recurring-reservations")
-@PreAuthorize("isAuthenticated()")
+//@PreAuthorize("isAuthenticated()")
 public class RecurringReservationController {
 
     private final RecurringReservationService service;
@@ -25,19 +25,34 @@ public class RecurringReservationController {
         this.service = service;
     }
 
-    /**
-     * Create a new recurring reservation pattern and associated reservations.
-     */
+//    /**
+//     * Create a new recurring reservation pattern and associated reservations.
+//     */
+//    @PostMapping
+//    public ResponseEntity<RecurringReservationResponseDto> create(
+//            @AuthenticationPrincipal CustomUserDetails principal,
+//            @Valid @RequestBody RecurringReservationRequestDto dto
+//    ) {
+//        // ensure userId comes from authenticated principal
+//        dto.setUserId(principal.getUser().getId());
+//        RecurringReservationResponseDto result = service.createRecurringReservations(dto);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+//    }
+
+    // WERSJA BEZ PRINCIPAL DO TESTÓW
     @PostMapping
     public ResponseEntity<RecurringReservationResponseDto> create(
-            @AuthenticationPrincipal CustomUserDetails principal,
             @Valid @RequestBody RecurringReservationRequestDto dto
     ) {
-        // ensure userId comes from authenticated principal
-        dto.setUserId(principal.getUser().getId());
+        // teraz wymagamy, żeby DTO miało ustawione userId
+        if (dto.getUserId() == null || dto.getUserId().isBlank()) {
+            // możesz tu rzucić BadRequest albo domyślnie pobrać konta testowego
+            throw new IllegalArgumentException("Pole userId jest wymagane");
+        }
         RecurringReservationResponseDto result = service.createRecurringReservations(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
+
 
     /**
      * Get all recurring reservation patterns for the current user.

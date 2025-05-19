@@ -16,7 +16,7 @@ import jakarta.validation.Valid;
 import java.net.URI;
 
 @RestController
-@RequestMapping("/auth")
+//@RequestMapping("/auth")
 public class RegistrationController {
 
     private final UserService userService;
