@@ -1,22 +1,31 @@
-import LoginForm from "./components/auth/login-form";
-import SignUpForm from "./components/auth/sign-up-form";
+import { Routes, Route, Navigate } from "react-router-dom";
 
-function App() {
+import SignUpPage from "./pages/signup-page";
+import LoginPage from "./pages/login-page";
+
+const App = () => {
+  // return (
+  //   <div
+  //     className="flex flex-row gap-6"
+  //     style={{
+  //       display: "flex",
+  //       justifyContent: "center",
+  //       alignItems: "center",
+  //       height: "100vh",
+  //       width: "100vh",
+  //     }}
+  //   >
+  //     <LoginForm />
+  //     <SignUpForm />
+  //   </div>
+  // );
   return (
-    <div
-      className="flex flex-row gap-6"
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        width: "100vh",
-      }}
-    >
-      <LoginForm />
-      <SignUpForm />
-    </div>
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignUpPage />} />
+    </Routes>
   );
-}
+};
 
 export default App;
