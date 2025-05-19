@@ -18,7 +18,7 @@ const InputTextBox: FC<InputTextBoxProps> = ({
 }) => {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[12px]">{label}</label>
+      <label className="text-[12px] self-start">{label}</label>
       <div className="flex flex-row border-b py-2 gap-2">
         {icon}
         <input
@@ -27,7 +27,7 @@ const InputTextBox: FC<InputTextBoxProps> = ({
         />
         {secondaryIcon}
       </div>
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      {error && <p className="text-red-500 text-xs mt-1 self-start">{error}</p>}
     </div>
   );
 };

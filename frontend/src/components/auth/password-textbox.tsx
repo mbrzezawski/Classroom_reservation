@@ -1,8 +1,8 @@
 import { useState } from "react";
 import type { FC, InputHTMLAttributes } from "react";
 import Lock from "../icons/lock";
-import InputTextBox from "./input-textbox";
-import PasswordHider from "./password_hider";
+import InputTextBox from "../utils/input-textbox";
+import PasswordHider from "./password-hider";
 
 interface PasswordTextBoxProps extends InputHTMLAttributes<HTMLInputElement> {
   confirmPassword?: boolean;

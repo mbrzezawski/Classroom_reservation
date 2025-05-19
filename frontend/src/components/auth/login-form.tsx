@@ -1,5 +1,5 @@
 import { FormProvider, useForm } from "react-hook-form";
-import InputTextBox from "./input-textbox";
+import InputTextBox from "../utils/input-textbox";
 import PasswordTextBox from "./password-textbox";
 import AtIcon from "../icons/at";
 import { useNavigate } from "react-router-dom";
@@ -27,7 +27,7 @@ const LoginForm = () => {
     <FormProvider {...methods}>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col border *:px-6 py-8 gap-[30px] rounded-[8px]"
+        className="flex flex-col border px-6 py-8 gap-[30px] rounded-[8px]"
       >
         <h2 className="text-[42px] text-center">Login</h2>
 
