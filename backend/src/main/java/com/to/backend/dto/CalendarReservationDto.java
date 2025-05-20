@@ -1,6 +1,7 @@
 package com.to.backend.dto;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -11,8 +12,8 @@ public class CalendarReservationDto {
     private final String roomName;
     private final String roomLocation;
     private final String title;
-    private final LocalDateTime start;
-    private final LocalDateTime end;
+    private final ZonedDateTime start;
+    private final ZonedDateTime end;
     private final int minCapacity;
     private final List<String> softwareIds;
     private final List<String> equipmentIds;
@@ -50,11 +51,11 @@ public class CalendarReservationDto {
         return title;
     }
 
-    public LocalDateTime getStart() {
+    public ZonedDateTime getStart() {
         return start;
     }
 
-    public LocalDateTime getEnd() {
+    public ZonedDateTime getEnd() {
         return end;
     }
 
@@ -82,8 +83,8 @@ public class CalendarReservationDto {
         private String roomName;
         private String roomLocation;
         private String title;
-        private LocalDateTime start;
-        private LocalDateTime end;
+        private ZonedDateTime start;
+        private ZonedDateTime end;
         private int minCapacity;
         private List<String> softwareIds;
         private List<String> equipmentIds;
@@ -116,12 +117,12 @@ public class CalendarReservationDto {
             return this;
         }
 
-        public Builder start(LocalDateTime start) {
+        public Builder start(ZonedDateTime start) {
             this.start = start;
             return this;
         }
 
-        public Builder end(LocalDateTime end) {
+        public Builder end(ZonedDateTime end) {
             this.end = end;
             return this;
         }

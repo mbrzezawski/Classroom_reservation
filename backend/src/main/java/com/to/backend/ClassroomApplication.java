@@ -7,6 +7,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.TimeZone;
+
 // do testowania lokalnego wyłączam logowanie do serwera
 @SpringBootApplication(exclude = SecurityAutoConfiguration.class)
 @RestController
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ClassroomApplication {
 
     public static void main(String[] args) {
+        TimeZone.setDefault(TimeZone.getTimeZone("GMT+02:00"));
         SpringApplication.run(ClassroomApplication.class, args);
     }
 

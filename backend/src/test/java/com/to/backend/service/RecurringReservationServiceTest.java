@@ -94,7 +94,7 @@ class RecurringReservationServiceTest {
         when(roomService.getAllRooms()).thenReturn(List.of(room));
 
         // Mock: wszystkie daty są wolne
-        when(reservationRepo.findByRoomIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
+        when(reservationRepo.findByRoomIdAndStartLessThanAndEndGreaterThan(
                 anyString(), any(LocalDate.class), any(), any()))
                 .thenReturn(List.of());
 

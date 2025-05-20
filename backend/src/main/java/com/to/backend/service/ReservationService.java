@@ -14,8 +14,7 @@ import com.to.backend.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -100,12 +99,18 @@ public ReservationResponse reserve(ReservationRequest req) {
 
     // spośród pozostałych pokoi sprawdź nakładające się rezerwacje
     for (Room r : byEquipment) {
+        // zbuduj LocalDateTime
+        ZoneId zone = ZoneId.of("Europe/Warsaw");
+        ZonedDateTime start = ZonedDateTime.of(req.getDate(), req.getStartTime(), zone);
+        ZonedDateTime end   = ZonedDateTime.of(req.getDate(), req.getEndTime(), zone);
+
+
+        // znajdź nakładające się rezerwacje
         List<Reservation> overlaps = reservationRepo
-                .findByRoomIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
+                .findByRoomIdAndStartLessThanAndEndGreaterThan(
                         r.getId(),
-                        req.getDate(),
-                        req.getEndTime(),
-                        req.getStartTime()
+                        end,
+                        start
                 );
 
         if (overlaps.isEmpty()) {
@@ -113,9 +118,8 @@ public ReservationResponse reserve(ReservationRequest req) {
             Reservation entity = new Reservation(
                     req.getUserId(),
                     r.getId(),
-                    req.getDate(),
-                    req.getStartTime(),
-                    req.getEndTime(),
+                    start,
+                    end,
                     req.getPurpose(),
                     req.getMinCapacity(),
                     requestedSoftware,
@@ -252,39 +256,45 @@ public ReservationResponse reserve(ReservationRequest req) {
             Optional<LocalDate> fromOpt,
             Optional<LocalDate> toOpt
     ) {
-        List<Reservation> reservationList;
+        ZoneId zone = ZoneId.of("Europe/Warsaw");
 
-        if (fromOpt.isEmpty() && toOpt.isEmpty()) {
-            reservationList = reservationRepo.findByUserIdOrderByDateAscStartTimeAsc(userId);
-        } else {
-            LocalDate realFrom = fromOpt.orElse(LocalDate.MIN);
-            LocalDate realTo   = toOpt.orElse(LocalDate.MAX);
+        // zakres czasowy od początku dnia do końca dnia w odpowiedniej strefie
+        ZonedDateTime realFrom = fromOpt
+                .map(d -> d.atStartOfDay(zone))
+                .orElse(ZonedDateTime.of(LocalDate.MIN, LocalTime.MIN, zone));
 
-            reservationList = reservationRepo
-                    .findByUserIdAndDateBetweenOrderByDateAscStartTimeAsc(
-                            userId, realFrom, realTo
-                    );
-        }
+        ZonedDateTime realTo = toOpt
+                .map(d -> d.atTime(LocalTime.MAX).atZone(zone))
+                .orElse(ZonedDateTime.of(LocalDate.MAX, LocalTime.MAX, zone));
 
+        // pobierz rezerwacje użytkownika
+        List<Reservation> reservationList = (fromOpt.isEmpty() && toOpt.isEmpty())
+                ? reservationRepo.findByUserIdOrderByStartAsc(userId)
+                : reservationRepo.findByUserIdAndStartBetweenOrderByStartAsc(
+                userId, realFrom, realTo
+        );
+
+        // zbuduj mapę sal
         List<String> roomIds = reservationList.stream()
                 .map(Reservation::getRoomId)
                 .distinct()
                 .toList();
-
         Map<String, Room> roomMap = roomService.getRoomsByIds(roomIds).stream()
                 .collect(Collectors.toMap(Room::getId, Function.identity()));
 
+        // zmapuj na DTO
         return reservationList.stream()
                 .map(r -> {
-                    Room room = roomMap.get(r.getRoomId());
+                    Room room = Optional.ofNullable(roomMap.get(r.getRoomId()))
+                            .orElseThrow(() -> new NotFoundException("Sala", r.getRoomId()));
                     return CalendarReservationDto.builder()
                             .reservationId(r.getId())
                             .roomId(room.getId())
                             .roomName(room.getName())
                             .roomLocation(room.getLocation())
                             .title(r.getPurpose())
-                            .start(LocalDateTime.of(r.getDate(), r.getStartTime()))
-                            .end(  LocalDateTime.of(r.getDate(), r.getEndTime()))
+                            .start(r.getStart())  // r.getStart() musi być ZonedDateTime
+                            .end(r.getEnd())
                             .minCapacity(r.getMinCapacity())
                             .softwareIds(r.getSoftwareIds())
                             .equipmentIds(r.getEquipmentIds())
@@ -292,6 +302,8 @@ public ReservationResponse reserve(ReservationRequest req) {
                 })
                 .toList();
     }
+
+
 
 
     // cancel reservation if you are the owner
