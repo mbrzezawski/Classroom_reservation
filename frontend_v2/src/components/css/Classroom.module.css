@@ -1,0 +1,54 @@
+.th {
+    padding: 0;
+    background-color: var(--mantine-color-blue-light);
+    color: var(--mantine-color-blue-light-color);
+}
+
+.control {
+    width: 100%;
+    padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+}
+.control\:hover {
+    background-color: var(--mantine-color-gray-0);
+}
+
+.icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--mantine-color-blue-light);
+    color: var(--mantine-color-blue-light-color);
+}
+
+tbody tr\:nth-of-type {
+    background-color: var(--mantine-color-gray-0);
+}
+
+.equipmentCell,
+.softwareCell {
+    padding: 2px 6px;
+    border: 1px solid var(--mantine-color-orange-light);
+    border-radius: var(--mantine-radius-sm);
+    background-color: var(--mantine-color-orange-light);
+    color: var(--mantine-color-orange-light-color);
+    display: inline-block;
+    margin: 1px 3px;
+    font-size: var(--mantine-font-size-xs);
+}
+
+table {
+    border-collapse: separate;
+    border-spacing: 0 4px;
+}
+
+.searchBar {
+    border: 2px solid var(--mantine-color-blue-light);
+    border-radius: var(--mantine-radius-sm);
+    padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+    background-color: var(--mantine-color-gray-0);
+}
+
+.emptyRow td {
+    text-align: center;
+    padding: var(--mantine-spacing-md);
+}
