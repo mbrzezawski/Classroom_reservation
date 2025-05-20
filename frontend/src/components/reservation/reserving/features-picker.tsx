@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useFormContext } from "react-hook-form";
-import { roomEquipment } from "../../data/reservation/room-features";
-import { roomSoftware } from "../../data/reservation/room-features";
+import { roomEquipment } from "../../../data/reservation/room-features";
+import { roomSoftware } from "../../../data/reservation/room-features";
 
 const FeaturesPicker: FC = () => {
   const { register } = useFormContext();

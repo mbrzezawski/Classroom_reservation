@@ -1,10 +1,12 @@
 import InputTextBox from "../utils/input-textbox";
 import Letter from "../icons/letter";
 import { FormProvider, useForm } from "react-hook-form";
-import DateHourPicker from "./date-hour-picker";
-import RepeatsAtendeesPicker from "./repeats-atendees-picker";
-import FeaturesPicker from "./features-picker";
-type ReservationFormValues = {
+import DateHourPicker from "./reserving/date-hour-picker";
+import RepeatsAtendeesPicker from "./reserving/repeats-atendees-picker";
+import FeaturesPicker from "./reserving/features-picker";
+import { postReservation } from "./reserving/post-reservation";
+
+export type ReservationFormValues = {
   title: string;
   date: string; // ISO format: "2024-06-10"
   hour: string; // to jest godzina początkowa (zakladam ze zajecia zawsze trwaja 1,5h ale to mozna i tak latwo zmienic)
@@ -26,32 +28,7 @@ const ReservationForm = () => {
       software: [],
     },
   });
-  const onSubmit = (data: ReservationFormValues) => {
-    const startHour = data.hour;
-    const [hours, minutes] = startHour.split(":").map(Number);
-    const endTime = new Date();
-    endTime.setHours(hours);
-    endTime.setMinutes(minutes + 90);
-    const endHour = endTime.toTimeString().slice(0, 5);
-    const body = {
-      userId: "1234",
-      date: data.date,
-      startTime: startHour,
-      endTime: endHour,
-      purpose: data.title,
-      minCapacity: data.atendees,
-      softwareIds: data.software,
-      equipmentIds: data.equipment,
-    };
-    console.log(body);
-    fetch("http://localhost:8080/reservations", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-  };
+  const onSubmit = (data: ReservationFormValues) => postReservation(data)
   const { register, handleSubmit } = methods;
   return (
     <FormProvider {...methods}>

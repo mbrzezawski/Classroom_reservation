@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { meetingHours } from "../../data/reservation/meeting-hours";
+import { meetingHours } from "../../../data/reservation/meeting-hours";
 import { useFormContext } from "react-hook-form";
 const DateHourPicker: FC = () => {
     const { register } = useFormContext()
