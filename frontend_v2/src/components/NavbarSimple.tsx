@@ -71,3 +71,4 @@ export function NavbarSimple({ children }: NavbarSimpleProps) {
         </div>
     );
 }
+

@@ -14,7 +14,7 @@ import com.to.backend.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -81,7 +81,9 @@ public class RecurringReservationService {
 
     @Transactional
     public RecurringReservationResponseDto createRecurringReservations(RecurringReservationRequestDto dto) {
-        // 1) Zapisz wzorzec
+        ZoneId zone = ZoneId.of("Europe/Warsaw");
+
+        // 1) Zapisz wzorzec bez roomId
         RecurringReservation pattern = RecurringReservation.builder()
                 .userId(dto.getUserId())
                 .startDate(dto.getStartDate())
@@ -99,11 +101,10 @@ public class RecurringReservationService {
                 .build();
         pattern = recurringRepo.save(pattern);
 
-        // 2) Wygeneruj listę dat
+        // 2) Wygeneruj daty
         List<LocalDate> dates = generateDates(pattern);
 
-
-        // 3) Wylicz kandydatów i posortuj po pojemności rosnąco
+        // 3) Kandydaci sal
         List<Room> candidates = roomService.getAllRooms().stream()
                 .filter(r -> r.getCapacity() >= dto.getMinCapacity())
                 .filter(r -> new HashSet<>(r.getSoftwareIds()).containsAll(dto.getSoftwareIds()))
@@ -111,26 +112,29 @@ public class RecurringReservationService {
                 .sorted(Comparator.comparingInt(Room::getCapacity))
                 .toList();
 
-        // 4) Dla każdej sali sprawdź, czy wszystkie daty są wolne
+        // 4) Sprawdź dostępność
         for (Room room : candidates) {
-            RecurringReservation finalPattern = pattern;
-            boolean allFree = dates.stream().allMatch(date ->
-                    reservationRepo
-                            .findByRoomIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
-                                    room.getId(), date,
-                                    finalPattern.getEndTime(), finalPattern.getStartTime()
-                            ).isEmpty()
-            );
+            LocalTime sTime = pattern.getStartTime();
+            LocalTime eTime = pattern.getEndTime();
+            boolean allFree = dates.stream().allMatch(date -> {
+                ZonedDateTime start = ZonedDateTime.of(date, sTime, zone);
+                ZonedDateTime end   = ZonedDateTime.of(date, eTime, zone);
+                return reservationRepo
+                        .findByRoomIdAndStartLessThanAndEndGreaterThan(room.getId(), end, start)
+                        .isEmpty();
+            });
+
             if (allFree) {
-                // 5) Rezerwuj tę salę na wszystkie daty
+                // 5) Zarezerwuj
                 List<ReservationResponse> reservations = new ArrayList<>();
                 for (LocalDate date : dates) {
+                    ZonedDateTime start = ZonedDateTime.of(date, sTime, zone);
+                    ZonedDateTime end   = ZonedDateTime.of(date, eTime, zone);
                     Reservation r = new Reservation(
                             dto.getUserId(),
                             room.getId(),
-                            date,
-                            pattern.getStartTime(),
-                            pattern.getEndTime(),
+                            start,
+                            end,
                             dto.getPurpose(),
                             dto.getMinCapacity(),
                             dto.getSoftwareIds(),
@@ -147,12 +151,13 @@ public class RecurringReservationService {
                     ));
                 }
 
-                // dodaj salę do rezerwacji, skoro została już wybrana
+                // 6) Uzupełnij roomId i zapisz
                 pattern = pattern.toBuilder()
                         .roomId(room.getId())
                         .build();
                 recurringRepo.save(pattern);
 
+                // 7) Zwróć
                 return RecurringReservationResponseDto.builder()
                         .recurringReservationId(pattern.getId())
                         .roomId(room.getId())
@@ -173,9 +178,9 @@ public class RecurringReservationService {
             }
         }
 
-        // 6) Jeżeli żadna sala nie przeszła w całości → błąd
         throw new NoRoomAvailableException("Brak jednej spójnej sali dla wszystkich terminów");
     }
+
 
 
     /**

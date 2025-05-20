@@ -1,10 +1,13 @@
 package com.to.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.to.backend.model.utils.ReservationStatus;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Document(collection = "reservations")
@@ -13,9 +16,13 @@ public class Reservation {
     private String userId;
     private String roomId;
     private String recurringReservationId;
-    private LocalDate date;
-    private LocalTime startTime;
-    private LocalTime endTime;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private ZonedDateTime start;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private ZonedDateTime end;
+
     private String purpose;
     private int minCapacity;
     private List<String> softwareIds;
@@ -23,14 +30,13 @@ public class Reservation {
     private ReservationStatus status;
 
     public Reservation() { }
-    public Reservation(String userId, String roomId, LocalDate date, LocalTime startTime,
-                       LocalTime endTime, String purpose, int minCapacity,
+    public Reservation(String userId, String roomId, ZonedDateTime start,
+                       ZonedDateTime end, String purpose, int minCapacity,
                        List<String> softwareIds, List<String> equipmentIds, ReservationStatus status) {
         this.userId = userId;
         this.roomId = roomId;
-        this.date = date;
-        this.startTime = startTime;
-        this.endTime = endTime;
+        this.start = start;
+        this.end = end;
         this.purpose = purpose;
         this.minCapacity = minCapacity;
         this.softwareIds = softwareIds;
@@ -50,14 +56,11 @@ public class Reservation {
     public String getRecurrenceId() { return recurringReservationId; }
     public void setRecurrenceId(String recurrenceId) { this.recurringReservationId = recurrenceId; }
 
-    public LocalDate getDate() { return date; }
-    public void setDate(LocalDate date) { this.date = date; }
+    public ZonedDateTime getStart() { return this.start; }
+    public void setStart(ZonedDateTime start) { this.start = start; }
 
-    public LocalTime getStartTime() { return startTime; }
-    public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
-
-    public LocalTime getEndTime() { return endTime; }
-    public void setEndTime(LocalTime endTime) { this.endTime = endTime; }
+    public ZonedDateTime getEnd() { return this.end; }
+    public void setEnd(ZonedDateTime end) { this.end = end; }
 
     public String getPurpose() { return purpose; }
     public void setPurpose(String purpose) { this.purpose = purpose; }
