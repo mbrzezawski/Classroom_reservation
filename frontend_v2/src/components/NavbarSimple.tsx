@@ -1,71 +1,75 @@
-// src/components/NavbarSimple.tsx
-import { useMantineTheme } from '@mantine/core';
-import type { Dispatch, SetStateAction } from 'react';
+import React, { ReactNode } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {
-  IconCalendarEvent,
-  IconFileSpreadsheet,
-  IconChalkboard,
-  IconPlus,
-  IconUser,
-  IconLogout,
+    IconCalendarEvent,
+    IconFileSpreadsheet,
+    IconChalkboard,
+    IconPlus,
+    IconUser,
+    IconSchool,
+    IconLogout,
 } from '@tabler/icons-react';
-import { Group } from '@mantine/core';
+import { Group, useMantineTheme } from '@mantine/core';
 import classes from './NavbarSimple.module.css';
 
-export type NavOption = 'Kalendarz' | 'Moje rezerwacje' | 'Sale' | 'Dodaj rezerwacje';
-
-interface NavbarSimpleProps {
-  active: NavOption;
-  setActive: Dispatch<SetStateAction<NavOption>>;
+export interface NavbarSimpleProps {
+    children: ReactNode;
 }
 
-const data: { label: NavOption; icon: React.FC<any> }[] = [
-  { label: 'Kalendarz', icon: IconCalendarEvent },
-  { label: 'Moje rezerwacje', icon: IconFileSpreadsheet },
-  { label: 'Sale', icon: IconChalkboard },
-  { label: 'Dodaj rezerwacje', icon: IconPlus },
+// Dodaj odpowiednie ścieżki do linków
+const navItems = [
+    { link: '/', label: 'Kalendarz', icon: IconCalendarEvent },
+    { link: '/reservations', label: 'Moje rezerwacje', icon: IconFileSpreadsheet },
+    { link: '/classrooms', label: 'Sale', icon: IconChalkboard },
+    { link: '/create', label: 'Dodaj rezerwację', icon: IconPlus },
 ];
 
-function NavbarSimple({ active, setActive }: NavbarSimpleProps) {
-  const theme = useMantineTheme();
+export function NavbarSimple({ children }: NavbarSimpleProps) {
+    const location = useLocation();
+    const theme = useMantineTheme();
 
-  return (
-    <nav className={classes.navbar}>
-      <div className={classes.navbarMain}>
-        <Group className={classes.header} justify="space-between">
-          <IconChalkboard size={28} color={theme.colors.orange[6]} />
-          <span>Nazwa aplikacji</span>
-        </Group>
+    const links = navItems.map((item) => {
+        const isActive = location.pathname === item.link;
+        return (
+            <Link
+                key={item.label}
+                to={item.link}
+                className={classes.link}
+                data-active={isActive || undefined}
+            >
+                <item.icon
+                    className={classes.linkIcon}
+                    stroke={1.5}
+                    color={isActive ? theme.colors.orange[6] : undefined}
+                />
+                <span>{item.label}</span>
+            </Link>
+        );
+    });
 
-        {data.map(({ label, icon: Icon }) => (
-          <a
-            key={label}
-            href="#"
-            className={classes.link}
-            data-active={label === active || undefined}
-            onClick={(e) => {
-              e.preventDefault();
-              setActive(label);
-            }}
-          >
-            <Icon className={classes.linkIcon} stroke={1.5} />
-            <span>{label}</span>
-          </a>
-        ))}
-      </div>
-
-      <div className={classes.footer}>
-        <a href="#" className={classes.link} onClick={(e) => e.preventDefault()}>
-          <IconUser className={classes.linkIcon} stroke={1.5} />
-          <span>Moje konto</span>
-        </a>
-        <a href="#" className={classes.link} onClick={(e) => e.preventDefault()}>
-          <IconLogout className={classes.linkIcon} stroke={1.5} />
-          <span>Wyloguj</span>
-        </a>
-      </div>
-    </nav>
-  );
+    return (
+        <div className={classes.layout}>
+            <nav className={classes.navbar}>
+                <div className={classes.navbarMain}>
+                    <Group className={classes.header} justify="space-between">
+                        <IconSchool size={28} color={theme.colors.orange[6]} />
+                        <span>Nazwa aplikacji</span>
+                    </Group>
+                    {links}
+                </div>
+                <div className={classes.footer}>
+                    <Link to="#" className={classes.link} onClick={(e) => e.preventDefault()}>
+                        <IconUser className={classes.linkIcon} stroke={1.5} />
+                        <span>Moje konto</span>
+                    </Link>
+                    <Link to="#" className={classes.link} onClick={(e) => e.preventDefault()}>
+                        <IconLogout className={classes.linkIcon} stroke={1.5} />
+                        <span>Wyloguj</span>
+                    </Link>
+                </div>
+            </nav>
+            <main className={classes.content}>{children}</main>
+        </div>
+    );
 }
 
-export default NavbarSimple;
