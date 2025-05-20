@@ -91,6 +91,7 @@ public ReservationResponse reserve(ReservationRequest req) {
                         .orElse(Collections.emptyList());
                 return new HashSet<>(roomEquipment).containsAll(requestedEquipment);
             })
+            .sorted(Comparator.comparing(Room::getCapacity))
             .toList();
     if (byEquipment.isEmpty()) {
         throw new NoRoomAvailableException(
