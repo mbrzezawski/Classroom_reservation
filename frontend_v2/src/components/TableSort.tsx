@@ -108,7 +108,7 @@ export function TableSort() {
         setSortBy(field);
     };
 
-    if (loading) return <Text>Loading...</Text>;
+    if (loading) return <Text>Ładowanie...</Text>;
     if (error) return <Text color="red">{error}</Text>;
 
     const rows = sortedData.map((room) => (
@@ -136,21 +136,21 @@ export function TableSort() {
                             reversed={reverseSortDirection}
                             onSort={() => setSorting('name')}
                         >
-                            Name
+                            Nazwa
                         </Th>
                         <Th
                             sorted={sortBy === 'capacity'}
                             reversed={reverseSortDirection}
                             onSort={() => setSorting('capacity')}
                         >
-                            Capacity
+                            Pojemność
                         </Th>
                         <Th
                             sorted={sortBy === 'location'}
                             reversed={reverseSortDirection}
                             onSort={() => setSorting('location')}
                         >
-                            Location
+                            Lokalizacja
                         </Th>
                     </Table.Tr>
                 </Table.Tbody>
@@ -161,7 +161,7 @@ export function TableSort() {
                         <Table.Tr>
                             <Table.Td colSpan={3}>
                                 <Text fw={500} ta="center">
-                                    Nothing found
+                                    Nic nie znaleziono
                                 </Text>
                             </Table.Td>
                         </Table.Tr>

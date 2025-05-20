@@ -16,7 +16,6 @@ export interface NavbarSimpleProps {
     children: ReactNode;
 }
 
-// Dodaj odpowiednie ścieżki do linków
 const navItems = [
     { link: '/', label: 'Kalendarz', icon: IconCalendarEvent },
     { link: '/reservations', label: 'Moje rezerwacje', icon: IconFileSpreadsheet },

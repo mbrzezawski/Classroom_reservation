@@ -4,6 +4,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { formatDate } from '@fullcalendar/core';
+import plLocale from '@fullcalendar/core/locales/pl';
 
 import type {
   EventApi,
@@ -104,14 +105,16 @@ const CalendarView: React.FC<CalendarViewProps> = ({ userId }) => {
 
   return (
     <div style={{ display: 'flex' }}>
-      <aside style={{ width: '20%', padding: '1rem', backgroundColor: '#f8f9fa' }}>
+      {/* <aside style={{ width: '20%', padding: '1rem', backgroundColor: '#f8f9fa' }}>
         <h2>Wszystkie wydarzenia ({currentEvents.length})</h2>
         <ul>{currentEvents.map(renderSidebarEvent)}</ul>
-      </aside>
+      </aside> */}
 
       <main style={{ flex: 1, padding: '1rem' }}>
         <FullCalendar
           ref={calendarRef}
+          firstDay={1}
+          locale={plLocale}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           headerToolbar={{
             left: 'prev,next today',
