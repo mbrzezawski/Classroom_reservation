@@ -45,9 +45,8 @@ class ReservationServiceCalendarTest {
         r1.setId("res-1");
         r1.setUserId(USER);
         r1.setRoomId("room-1");
-        r1.setDate(LocalDate.of(2025,5,10));
-        r1.setStartTime(LocalTime.of(10,0));
-        r1.setEndTime(LocalTime.of(12,0));
+        r1.setStart(LocalDateTime.of(LocalDate.of(2025,5,10), LocalTime.of(10, 0)));
+        r1.setEnd(LocalDateTime.of(LocalDate.of(2025,5,10), LocalTime.of(12, 0)));
         r1.setPurpose("Zajęcia A");
         r1.setStatus(ReservationStatus.CONFIRMED);
 
@@ -55,9 +54,8 @@ class ReservationServiceCalendarTest {
         r2.setId("res-2");
         r2.setUserId(USER);
         r2.setRoomId("room-2");
-        r2.setDate(LocalDate.of(2025,5,15));
-        r2.setStartTime(LocalTime.of(14,0));
-        r2.setEndTime(LocalTime.of(16,30));
+        r1.setStart(LocalDateTime.of(LocalDate.of(2025,5,15), LocalTime.of(14, 0)));
+        r1.setEnd(LocalDateTime.of(LocalDate.of(2025,5,15), LocalTime.of(16, 30)));
         r2.setPurpose("Ćwiczenia B");
         r2.setStatus(ReservationStatus.CONFIRMED);
 

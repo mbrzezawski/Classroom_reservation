@@ -4,31 +4,34 @@ import com.to.backend.model.Reservation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 public interface ReservationRepository extends MongoRepository<Reservation, String> {
 
     // find overlapping reservations
-    List<Reservation> findByRoomIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
+    List<Reservation> findByRoomIdAndStartLessThanAndEndGreaterThan(
             String roomId,
-            LocalDate date,
-            LocalTime endTime,
-            LocalTime startTime
+            ZonedDateTime end,
+            ZonedDateTime start
     );
 
     // retrieves user's reservations sorted in ascending order in regard to time
-    List<Reservation> findByUserIdOrderByDateAscStartTimeAsc(String userId);
+    List<Reservation> findByUserIdOrderByStartAscStartAsc(String userId);
 
     // retrieves user's reservations sorted in ascending order in regard to time
     // between "from" and "to"
-    List<Reservation> findByUserIdAndDateBetweenOrderByDateAscStartTimeAsc(
+    List<Reservation> findByUserIdAndStartBetweenOrderByStartAsc(
             String userId,
-            LocalDate from,
-            LocalDate to
+            ZonedDateTime from,
+            ZonedDateTime to
     );
 
     void deleteReservationsByRecurringReservationId(
             String recurringReservationId
     );
+
+    List<Reservation> findByUserIdOrderByStartAsc(String userId);
 }
