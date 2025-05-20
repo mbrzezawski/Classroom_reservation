@@ -1,7 +1,7 @@
 import React from 'react';
 import '@mantine/core/styles.css';
-import { TableSort } from './components/TableSort';
+import { ClassroomTable } from './components/ClassroomTable.tsx';
 
 export default function Classrooms() {
-    return <TableSort />;
+    return <ClassroomTable />;
 }

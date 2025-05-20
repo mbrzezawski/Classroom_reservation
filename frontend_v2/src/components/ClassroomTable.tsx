@@ -9,7 +9,7 @@ import {
     TextInput,
     UnstyledButton,
 } from '@mantine/core';
-import classes from './TableSort.module.css';
+import classes from './Classroom.module.css';
 
 interface RoomData {
     id: string;
@@ -73,7 +73,7 @@ function sortData(
     });
 }
 
-export function TableSort() {
+export function ClassroomTable() {
     const [data, setData] = useState<RoomData[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -122,7 +122,7 @@ export function TableSort() {
     return (
         <ScrollArea>
             <TextInput
-                placeholder="Wyszukaj"
+                placeholder="Wyszukaj sale"
                 mb="md"
                 leftSection={<IconSearch size={16} stroke={1.5} />}
                 value={search}
