@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { IconChevronDown, IconChevronUp, IconSearch, IconSelector } from '@tabler/icons-react';
+import { IconChevronDown, IconChevronUp, IconSearch, IconSelector, IconTrash, IconPencil } from '@tabler/icons-react';
 import {
     Center,
     Group,
@@ -8,8 +8,10 @@ import {
     Text,
     TextInput,
     UnstyledButton,
+    Button,
+    Stack,
 } from '@mantine/core';
-import classes from './Classroom.module.css';
+import classes from './css/Classroom.module.css';
 
 interface ReservationEntry {
     reservationId: string;
@@ -89,6 +91,7 @@ export const ReservationsTable: React.FC<ReservationsTableProps> = ({ userId }) 
     const [reverseSortDirection, setReverseSortDirection] = useState(false);
     const [sortedData, setSortedData] = useState<ReservationEntry[]>([]);
 
+    // Fetch data
     useEffect(() => {
         async function fetchReservations() {
             try {
@@ -106,6 +109,7 @@ export const ReservationsTable: React.FC<ReservationsTableProps> = ({ userId }) 
         fetchReservations();
     }, [userId]);
 
+    // Update sorted
     useEffect(() => {
         setSortedData(sortData(data, { sortBy, reversed: reverseSortDirection, search }));
     }, [data, sortBy, reverseSortDirection, search]);
@@ -114,6 +118,24 @@ export const ReservationsTable: React.FC<ReservationsTableProps> = ({ userId }) 
         const reversed = field === sortBy ? !reverseSortDirection : false;
         setReverseSortDirection(reversed);
         setSortBy(field);
+    };
+
+    const handleDelete = async (reservationId: string) => {
+        if (!window.confirm('Na pewno chcesz usunąć tę rezerwację?')) return;
+        try {
+            const res = await fetch(`http://localhost:8080/reservations/${reservationId}`, {
+                method: 'DELETE',
+            });
+            if (!res.ok) throw new Error('Usuwanie nie powiodło się');
+            setData(prev => prev.filter(r => r.reservationId !== reservationId));
+        } catch (e: any) {
+            alert(e.message);
+        }
+    };
+
+    const handleEdit = (reservationId: string) => {
+        // Przykład: przekierowanie na stronę edycji
+        window.location.href = `/reservations/edit/${reservationId}`;
     };
 
     if (loading) return <Text>Ładowanie rezerwacji...</Text>;
@@ -127,39 +149,64 @@ export const ReservationsTable: React.FC<ReservationsTableProps> = ({ userId }) 
             <Table.Td>{new Date(item.start).toLocaleString()}</Table.Td>
             <Table.Td>{new Date(item.end).toLocaleString()}</Table.Td>
             <Table.Td>{item.minCapacity}</Table.Td>
+            <Table.Td>
+                <Group spacing="xs">
+                    <Button
+                        size="xs"
+                        variant="outline"
+                        leftIcon={<IconPencil size={14} />}
+                        onClick={() => handleEdit(item.reservationId)}
+                    >
+                        Edytuj
+                    </Button>
+                    <Button
+                        size="xs"
+                        color="red"
+                        variant="outline"
+                        leftIcon={<IconTrash size={14} />}
+                        onClick={() => handleDelete(item.reservationId)}
+                    >
+                        Usuń
+                    </Button>
+                </Group>
+            </Table.Td>
         </Table.Tr>
     ));
 
     return (
         <ScrollArea>
-            <TextInput
-                placeholder="Wyszukaj rezerwacje"
-                mb="md"
-                leftSection={<IconSearch size={16} stroke={1.5} />}
-                value={search}
-                onChange={e => setSearch(e.currentTarget.value)}
-            />
-            <Table horizontalSpacing="md" verticalSpacing="xs" miw={700}>
-                <Table.Thead>
-                    <Table.Tr>
-                        <Th sorted={sortBy === 'roomName'} reversed={reverseSortDirection} onSort={() => setSorting('roomName')}>Sala</Th>
-                        <Th sorted={sortBy === 'roomLocation'} reversed={reverseSortDirection} onSort={() => setSorting('roomLocation')}>Lokalizacja</Th>
-                        <Th sorted={sortBy === 'title'} reversed={reverseSortDirection} onSort={() => setSorting('title')}>Cel</Th>
-                        <Th sorted={sortBy === 'start'} reversed={reverseSortDirection} onSort={() => setSorting('start')}>Start</Th>
-                        <Th sorted={sortBy === 'end'} reversed={reverseSortDirection} onSort={() => setSorting('end')}>Koniec</Th>
-                        <Th sorted={sortBy === 'minCapacity'} reversed={reverseSortDirection} onSort={() => setSorting('minCapacity')}>Pojemność</Th>
-                    </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                    {rows.length > 0 ? rows : (
+            <Stack spacing="md">
+                <TextInput
+                    className={classes.searchBar}
+                    placeholder="Wyszukaj rezerwacje"
+                    mb="md"
+                    leftSection={<IconSearch size={16} stroke={1.5} />}
+                    value={search}
+                    onChange={(e) => setSearch(e.currentTarget.value)}
+                />
+                <Table horizontalSpacing="md" verticalSpacing="xs" miw={800}>
+                    <Table.Thead>
                         <Table.Tr>
-                            <Table.Td colSpan={6}>
-                                <Text weight={500} align="center">Brak rezerwacji</Text>
-                            </Table.Td>
+                            <Th sorted={sortBy === 'roomName'} reversed={reverseSortDirection} onSort={() => setSorting('roomName')}>Sala</Th>
+                            <Th sorted={sortBy === 'roomLocation'} reversed={reverseSortDirection} onSort={() => setSorting('roomLocation')}>Lokalizacja</Th>
+                            <Th sorted={sortBy === 'title'} reversed={reverseSortDirection} onSort={() => setSorting('title')}>Cel</Th>
+                            <Th sorted={sortBy === 'start'} reversed={reverseSortDirection} onSort={() => setSorting('start')}>Start</Th>
+                            <Th sorted={sortBy === 'end'} reversed={reverseSortDirection} onSort={() => setSorting('end')}>Koniec</Th>
+                            <Th sorted={sortBy === 'minCapacity'} reversed={reverseSortDirection} onSort={() => setSorting('minCapacity')}>Pojemność</Th>
+                            <Th>Akcje</Th>
                         </Table.Tr>
-                    )}
-                </Table.Tbody>
-            </Table>
+                    </Table.Thead>
+                    <Table.Tbody>
+                        {rows.length > 0 ? rows : (
+                            <Table.Tr>
+                                <Table.Td colSpan={7}>
+                                    <Text weight={500} align="center">Brak rezerwacji</Text>
+                                </Table.Td>
+                            </Table.Tr>
+                        )}
+                    </Table.Tbody>
+                </Table>
+            </Stack>
         </ScrollArea>
     );
 };

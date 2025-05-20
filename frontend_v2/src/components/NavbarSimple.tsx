@@ -10,7 +10,7 @@ import {
     IconLogout,
 } from '@tabler/icons-react';
 import { Group, useMantineTheme } from '@mantine/core';
-import classes from './NavbarSimple.module.css';
+import classes from './css/NavbarSimple.module.css';
 
 export interface NavbarSimpleProps {
     children: ReactNode;

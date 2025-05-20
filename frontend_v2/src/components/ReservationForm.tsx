@@ -1,5 +1,6 @@
 import React, { useEffect, useState, ChangeEvent, FormEvent } from 'react';
 import axios from 'axios';
+import classes from './css/ReservationForm.module.css';
 
 interface Software {
     id: string;
@@ -17,8 +18,7 @@ interface ReservationResponse {
     message: string;
 }
 
-interface ReservationRequest {
-    userId: string;
+interface ReservationRequestPayload {
     date: string;        // YYYY-MM-DD
     startTime: string;   // HH:mm
     endTime: string;     // HH:mm
@@ -26,13 +26,17 @@ interface ReservationRequest {
     minCapacity: number;
     softwareIds: string[];
     equipmentIds: string[];
+    userId: string;
 }
 
-const ReservationForm: React.FC = () => {
+interface ReservationFormProps {
+    userId: string;
+}
+
+const ReservationForm: React.FC<ReservationFormProps> = ({ userId }) => {
     const [softwareList, setSoftwareList] = useState<Software[]>([]);
     const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
-    const [formData, setFormData] = useState<ReservationRequest>({
-        userId: '',
+    const [formData, setFormData] = useState<Omit<ReservationRequestPayload, 'userId'>>({
         date: '',
         startTime: '',
         endTime: '',
@@ -45,73 +49,6 @@ const ReservationForm: React.FC = () => {
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     const API_BASE = 'http://localhost:8080';
-
-    const styles: Record<string, React.CSSProperties> = {
-        container: {
-            maxWidth: 600,
-            margin: '40px auto',
-            padding: 20,
-            borderRadius: 8,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-            backgroundColor: '#fff',
-            fontFamily: 'Arial, sans-serif'
-        },
-        header: {
-            textAlign: 'center' as const,
-            marginBottom: 20,
-            color: '#333'
-        },
-        formGroup: {
-            marginBottom: 15
-        },
-        label: {
-            display: 'block',
-            marginBottom: 5,
-            fontWeight: 500
-        },
-        input: {
-            width: '100%',
-            padding: '8px 10px',
-            borderRadius: 4,
-            border: '1px solid #ccc'
-        },
-        checkboxGroup: {
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
-            gap: 10
-        },
-        checkboxItem: {
-            display: 'flex',
-            alignItems: 'center',
-            padding: '5px 8px',
-            border: '1px solid #ddd',
-            borderRadius: 4,
-            cursor: 'pointer'
-        },
-        checkboxInput: {
-            marginRight: 6
-        },
-        button: {
-            width: '100%',
-            padding: '10px',
-            border: 'none',
-            borderRadius: 4,
-            backgroundColor: '#007bff',
-            color: '#fff',
-            fontSize: '16px',
-            cursor: 'pointer'
-        },
-        messageSuccess: {
-            marginTop: 15,
-            color: 'green',
-            textAlign: 'center' as const
-        },
-        messageError: {
-            marginTop: 15,
-            color: 'red',
-            textAlign: 'center' as const
-        }
-    };
 
     useEffect(() => {
         axios.get<Software[]>(`${API_BASE}/software`)
@@ -134,10 +71,10 @@ const ReservationForm: React.FC = () => {
     ) => {
         const { value, checked } = e.target;
         setFormData(prev => {
-            const list = new Set(prev[field]);
-            if (checked) list.add(value);
-            else list.delete(value);
-            return { ...prev, [field]: Array.from(list) } as any;
+            const setIds = new Set(prev[field]);
+            if (checked) setIds.add(value);
+            else setIds.delete(value);
+            return { ...prev, [field]: Array.from(setIds) } as any;
         });
     };
 
@@ -146,7 +83,12 @@ const ReservationForm: React.FC = () => {
         setResponseMsg(null);
         setErrorMsg(null);
 
-        axios.post<ReservationResponse>(`${API_BASE}/reservations/book`, formData)
+        const payload: ReservationRequestPayload = {
+            ...formData,
+            userId,
+        };
+
+        axios.post<ReservationResponse>(`${API_BASE}/reservations/book`, payload)
             .then(res => setResponseMsg(res.data.message))
             .catch(err => {
                 setErrorMsg(err.response?.data?.message || 'Błąd podczas rezerwacji.');
@@ -154,24 +96,13 @@ const ReservationForm: React.FC = () => {
     };
 
     return (
-        <div style={styles.container}>
-            <h2 style={styles.header}>Nowa rezerwacja</h2>
+        <div className={classes.container}>
+            <h2 className={classes.header}>Nowa rezerwacja</h2>
             <form onSubmit={handleSubmit}>
-                <div style={styles.formGroup}>
-                    <label style={styles.label}>User ID:</label>
+                <div className={classes.formGroup}>
+                    <label className={classes.label}>Data:</label>
                     <input
-                        style={styles.input}
-                        type="text"
-                        name="userId"
-                        value={formData.userId}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-                <div style={styles.formGroup}>
-                    <label style={styles.label}>Data:</label>
-                    <input
-                        style={styles.input}
+                        className={classes.input}
                         type="date"
                         name="date"
                         value={formData.date}
@@ -179,10 +110,10 @@ const ReservationForm: React.FC = () => {
                         required
                     />
                 </div>
-                <div style={styles.formGroup}>
-                    <label style={styles.label}>Godzina rozpoczęcia:</label>
+                <div className={classes.formGroup}>
+                    <label className={classes.label}>Godzina rozpoczęcia:</label>
                     <input
-                        style={styles.input}
+                        className={classes.input}
                         type="time"
                         name="startTime"
                         value={formData.startTime}
@@ -190,10 +121,10 @@ const ReservationForm: React.FC = () => {
                         required
                     />
                 </div>
-                <div style={styles.formGroup}>
-                    <label style={styles.label}>Godzina zakończenia:</label>
+                <div className={classes.formGroup}>
+                    <label className={classes.label}>Godzina zakończenia:</label>
                     <input
-                        style={styles.input}
+                        className={classes.input}
                         type="time"
                         name="endTime"
                         value={formData.endTime}
@@ -201,10 +132,10 @@ const ReservationForm: React.FC = () => {
                         required
                     />
                 </div>
-                <div style={styles.formGroup}>
-                    <label style={styles.label}>Cel rezerwacji:</label>
+                <div className={classes.formGroup}>
+                    <label className={classes.label}>Cel rezerwacji:</label>
                     <input
-                        style={styles.input}
+                        className={classes.input}
                         type="text"
                         name="purpose"
                         value={formData.purpose}
@@ -212,10 +143,10 @@ const ReservationForm: React.FC = () => {
                         required
                     />
                 </div>
-                <div style={styles.formGroup}>
-                    <label style={styles.label}>Minimalna pojemność:</label>
+                <div className={classes.formGroup}>
+                    <label className={classes.label}>Minimalna pojemność:</label>
                     <input
-                        style={styles.input}
+                        className={classes.input}
                         type="number"
                         name="minCapacity"
                         min={1}
@@ -224,13 +155,13 @@ const ReservationForm: React.FC = () => {
                         required
                     />
                 </div>
-                <div style={styles.formGroup}>
-                    <label style={styles.label}>Oprogramowanie:</label>
-                    <div style={styles.checkboxGroup}>
+                <div className={classes.formGroup}>
+                    <label className={classes.label}>Oprogramowanie:</label>
+                    <div className={classes.checkboxGroup}>
                         {softwareList.map(sw => (
-                            <label key={sw.id} style={styles.checkboxItem}>
+                            <label key={sw.id} className={classes.checkboxItem}>
                                 <input
-                                    style={styles.checkboxInput}
+                                    className={classes.checkboxInput}
                                     type="checkbox"
                                     value={sw.id}
                                     checked={formData.softwareIds.includes(sw.id)}
@@ -241,13 +172,13 @@ const ReservationForm: React.FC = () => {
                         ))}
                     </div>
                 </div>
-                <div style={styles.formGroup}>
-                    <label style={styles.label}>Sprzęt:</label>
-                    <div style={styles.checkboxGroup}>
+                <div className={classes.formGroup}>
+                    <label className={classes.label}>Sprzęt:</label>
+                    <div className={classes.checkboxGroup}>
                         {equipmentList.map(eq => (
-                            <label key={eq.id} style={styles.checkboxItem}>
+                            <label key={eq.id} className={classes.checkboxItem}>
                                 <input
-                                    style={styles.checkboxInput}
+                                    className={classes.checkboxInput}
                                     type="checkbox"
                                     value={eq.id}
                                     checked={formData.equipmentIds.includes(eq.id)}
@@ -258,10 +189,10 @@ const ReservationForm: React.FC = () => {
                         ))}
                     </div>
                 </div>
-                <button style={styles.button} type="submit">Rezerwuj</button>
+                <button className={classes.button} type="submit">Rezerwuj</button>
             </form>
-            {responseMsg && <p style={styles.messageSuccess}>{responseMsg}</p>}
-            {errorMsg && <p style={styles.messageError}>{errorMsg}</p>}
+            {responseMsg && <p className={classes.messageSuccess}>{responseMsg}</p>}
+            {errorMsg && <p className={classes.messageError}>{errorMsg}</p>}
         </div>
     );
 };
