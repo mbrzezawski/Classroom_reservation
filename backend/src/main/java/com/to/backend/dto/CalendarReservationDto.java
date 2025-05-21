@@ -1,13 +1,12 @@
 package com.to.backend.dto;
 
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Objects;
 
 public class CalendarReservationDto {
 
     private final String reservationId;
+    private final String recurrenceId;    // <- nowe pole
     private final String roomId;
     private final String roomName;
     private final String roomLocation;
@@ -18,67 +17,37 @@ public class CalendarReservationDto {
     private final List<String> softwareIds;
     private final List<String> equipmentIds;
 
-    private CalendarReservationDto(Builder builder) {
-        this.reservationId = builder.reservationId;
-        this.roomId        = builder.roomId;
-        this.roomName      = builder.roomName;
-        this.roomLocation  = builder.roomLocation;
-        this.title         = builder.title;
-        this.start         = builder.start;
-        this.end           = builder.end;
-        this.minCapacity   = builder.minCapacity;
-        this.softwareIds   = builder.softwareIds;
-        this.equipmentIds  = builder.equipmentIds;
+    private CalendarReservationDto(Builder b) {
+        this.reservationId  = b.reservationId;
+        this.recurrenceId   = b.recurrenceId;
+        this.roomId         = b.roomId;
+        this.roomName       = b.roomName;
+        this.roomLocation   = b.roomLocation;
+        this.title          = b.title;
+        this.start          = b.start;
+        this.end            = b.end;
+        this.minCapacity    = b.minCapacity;
+        this.softwareIds    = b.softwareIds;
+        this.equipmentIds   = b.equipmentIds;
     }
 
-    public String getReservationId() {
-        return reservationId;
-    }
+    public String getReservationId() { return reservationId; }
+    public String getRecurrenceId()  { return recurrenceId; }
+    public String getRoomId()        { return roomId; }
+    public String getRoomName()      { return roomName; }
+    public String getRoomLocation()  { return roomLocation; }
+    public String getTitle()         { return title; }
+    public ZonedDateTime getStart()  { return start; }
+    public ZonedDateTime getEnd()    { return end; }
+    public int getMinCapacity()      { return minCapacity; }
+    public List<String> getSoftwareIds()   { return softwareIds; }
+    public List<String> getEquipmentIds()  { return equipmentIds; }
 
-    public String getRoomId() {
-        return roomId;
-    }
-
-    public String getRoomName() {
-        return roomName;
-    }
-
-    public String getRoomLocation() {
-        return roomLocation;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public ZonedDateTime getStart() {
-        return start;
-    }
-
-    public ZonedDateTime getEnd() {
-        return end;
-    }
-
-    public int getMinCapacity() {
-        return minCapacity;
-    }
-
-    public List<String> getSoftwareIds() {
-        return softwareIds;
-    }
-
-    public List<String> getEquipmentIds() {
-        return equipmentIds;
-    }
-
-
-    /** building new instance of  CalendarReservationDto*/
-    public static Builder builder() {
-        return new Builder();
-    }
+    public static Builder builder() { return new Builder(); }
 
     public static class Builder {
         private String reservationId;
+        private String recurrenceId;
         private String roomId;
         private String roomName;
         private String roomLocation;
@@ -89,62 +58,18 @@ public class CalendarReservationDto {
         private List<String> softwareIds;
         private List<String> equipmentIds;
 
-        private Builder() {
-        }
+        public Builder reservationId(String id)   { this.reservationId = id; return this; }
+        public Builder recurrenceId(String id)    { this.recurrenceId = id; return this; }
+        public Builder roomId(String id)          { this.roomId = id; return this; }
+        public Builder roomName(String n)         { this.roomName = n; return this; }
+        public Builder roomLocation(String l)     { this.roomLocation = l; return this; }
+        public Builder title(String t)            { this.title = t; return this; }
+        public Builder start(ZonedDateTime s)     { this.start = s; return this; }
+        public Builder end(ZonedDateTime e)       { this.end = e; return this; }
+        public Builder minCapacity(int c)         { this.minCapacity = c; return this; }
+        public Builder softwareIds(List<String> s){ this.softwareIds = s; return this; }
+        public Builder equipmentIds(List<String> e){ this.equipmentIds = e; return this; }
 
-        public Builder reservationId(String reservationId) {
-            this.reservationId = reservationId;
-            return this;
-        }
-
-        public Builder roomId(String roomId) {
-            this.roomId = roomId;
-            return this;
-        }
-
-        public Builder roomName(String roomName) {
-            this.roomName = roomName;
-            return this;
-        }
-
-        public Builder roomLocation(String roomLocation) {
-            this.roomLocation = roomLocation;
-            return this;
-        }
-
-        public Builder title(String title) {
-            this.title = title;
-            return this;
-        }
-
-        public Builder start(ZonedDateTime start) {
-            this.start = start;
-            return this;
-        }
-
-        public Builder end(ZonedDateTime end) {
-            this.end = end;
-            return this;
-        }
-
-        public Builder minCapacity(int minCapacity) {
-            this.minCapacity = minCapacity;
-            return this;
-        }
-
-        public Builder softwareIds(List<String> softwareIds) {
-            this.softwareIds = softwareIds;
-            return this;
-        }
-
-        public Builder equipmentIds(List<String> equipmentIds) {
-            this.equipmentIds = equipmentIds;
-            return this;
-        }
-
-        /** Kończy budowanie i zwraca nową instancję DTO. */
-        public CalendarReservationDto build() {
-            return new CalendarReservationDto(this);
-        }
+        public CalendarReservationDto build()    { return new CalendarReservationDto(this); }
     }
 }

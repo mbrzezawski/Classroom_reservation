@@ -1,6 +1,7 @@
 package com.to.backend.dto;
 
 import com.to.backend.model.utils.Frequency;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -36,6 +37,8 @@ public class RecurringReservationRequestDto {
 
     @Min(1)
     private int interval;
+
+    private List<Integer> byMonthDays;
 
     private List<DayOfWeek> byDays;
 
@@ -117,6 +120,21 @@ public class RecurringReservationRequestDto {
         this.interval = interval;
     }
 
+    public List<Integer> getByMonthDays() {
+        return byMonthDays;
+    }
+    public void setByMonthDays(List<Integer> byMonthDays) {
+        this.byMonthDays = byMonthDays;
+    }
+
+    @AssertTrue(message = "Musisz podać przynajmniej jeden dzień miesiąca, gdy frequency=MONTHLY")
+    private boolean isByMonthDaysValid() {
+        if (this.frequency == Frequency.MONTHLY) {
+            return this.byMonthDays != null && !this.byMonthDays.isEmpty();
+        }
+        return true;
+    }
+
     public List<DayOfWeek> getByDays() {
         return byDays;
     }
@@ -140,4 +158,6 @@ public class RecurringReservationRequestDto {
     public void setUserId(String userId) {
         this.userId = userId;
     }
+
+
 }

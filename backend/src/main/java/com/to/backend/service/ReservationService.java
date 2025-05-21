@@ -290,6 +290,7 @@ public ReservationResponse reserve(ReservationRequest req) {
                             .orElseThrow(() -> new NotFoundException("Sala", r.getRoomId()));
                     return CalendarReservationDto.builder()
                             .reservationId(r.getId())
+                            .recurrenceId(r.getRecurrenceId())
                             .roomId(room.getId())
                             .roomName(room.getName())
                             .roomLocation(room.getLocation())
@@ -332,6 +333,14 @@ public ReservationResponse reserve(ReservationRequest req) {
         User currentUser = userService.getUserByEmail(email);
 
         return reservation.getUserId().equals(currentUser.getId());
+    }
+
+    @Transactional
+    public ReservationResponse updateReservation(String existingId, ReservationRequest req) {
+        ReservationResponse resp = reserve(req);
+        deleteReservation(existingId);
+
+        return resp;
     }
 
 }
