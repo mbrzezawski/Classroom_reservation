@@ -15,7 +15,7 @@ const API_BASE = 'http://localhost:8080';
 export default function App() {
   const userId = '682b8bc9811311363ff183d0';
 
-  const handleCreate = (
+  const handleCreate = async (
     payload: SinglePayload | RecurringPayload,
     type: 'single' | 'recurring'
   ) => {
