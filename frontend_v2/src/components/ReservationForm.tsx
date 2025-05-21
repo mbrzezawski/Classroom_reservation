@@ -137,31 +137,38 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ userId, initialData, 
   setResponseMsg(null);
   setErrorMsg(null);
 
-  if (reservationType === 'single') {
-    const payload: SinglePayload = {
-      ...formData,
-      userId,
-    };
-    onSubmit(payload, 'single');
-  } else {
-    const payload: RecurringPayload = {
-      startDate:    formData.startDate,
-      endDate:      formData.endDate,
-      startTime:    formData.startTime,
-      endTime:      formData.endTime,
-      purpose:      formData.purpose,
-      minCapacity:  formData.minCapacity,
-      softwareIds:  formData.softwareIds,
-      equipmentIds: formData.equipmentIds,
-      frequency:    formData.frequency,
-      interval:     formData.interval,
-      byMonthDays:  formData.byMonthDays,
-      byDays:       formData.byDays,
-      userId,
-    };
-    onSubmit(payload, 'recurring');
+  try {
+    if (reservationType === 'single') {
+      const payload: SinglePayload = {
+        ...formData,
+        userId,
+      };
+      onSubmit(payload, 'single');
+      setResponseMsg('Rezerwacja pojedyncza zakończona pomyślnie!');
+    } else {
+      const payload: RecurringPayload = {
+        startDate:    formData.startDate,
+        endDate:      formData.endDate,
+        startTime:    formData.startTime,
+        endTime:      formData.endTime,
+        purpose:      formData.purpose,
+        minCapacity:  formData.minCapacity,
+        softwareIds:  formData.softwareIds,
+        equipmentIds: formData.equipmentIds,
+        frequency:    formData.frequency,
+        interval:     formData.interval,
+        byMonthDays:  formData.byMonthDays,
+        byDays:       formData.byDays,
+        userId,
+      };
+      onSubmit(payload, 'recurring');
+      setResponseMsg('Rezerwacja cykliczna została utworzona pomyślnie!');
+    }
+  } catch (err: any) {
+    setErrorMsg(err.response?.data?.message || 'Coś poszło nie tak przy rezerwacji');
   }
-};
+}
+
 
 
   return (
