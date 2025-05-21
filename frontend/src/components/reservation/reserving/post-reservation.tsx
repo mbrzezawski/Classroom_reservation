@@ -21,7 +21,7 @@ export const postReservation = async (data: ReservationFormValues) => {
       equipmentIds: data.equipment,
     };
     console.log(body);
-    const res = await fetch("http://localhost:8080/reservations", {
+    const res = await fetch("http://localhost:8080/reservations/book", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -31,5 +31,8 @@ export const postReservation = async (data: ReservationFormValues) => {
     if (res.ok) {
         const responseBody = await res.json();
         console.log("Response body:", responseBody);
+    } else {
+        const errorBody = await res.json();
+        console.log("Error:", errorBody.message || errorBody);
     }
   };
