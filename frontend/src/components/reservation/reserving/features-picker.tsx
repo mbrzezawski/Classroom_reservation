@@ -1,10 +1,13 @@
 import type { FC } from "react";
 import { useFormContext } from "react-hook-form";
-import { roomEquipment } from "../../../data/reservation/room-features";
-import { roomSoftware } from "../../../data/reservation/room-features";
+import { useRoomEquipment, useSoftwareEquipment } from "../../../data/reservation/room-features";
+// import { roomSoftware } from "../../../data/reservation/room-features";
 
 const FeaturesPicker: FC = () => {
   const { register } = useFormContext();
+  const roomEquipment = useRoomEquipment();
+  const roomSoftware = useSoftwareEquipment();
+  // console.log(roomEquipment)
   return (
     <div className="flex flex-row justify-center gap-4 w-full">
       <fieldset className="fieldset bg-base-100 border-base-300 rounded-box border p-4">
