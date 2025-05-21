@@ -65,8 +65,10 @@ public class RecurringReservationService {
                 case MONTHLY -> {
                     long months = ChronoUnit.MONTHS.between(
                             start.withDayOfMonth(1), d.withDayOfMonth(1));
+
                     yield months % pattern.getInterval() == 0
-                            && d.getDayOfMonth() == start.getDayOfMonth();
+                            && pattern.getByMonthDays().contains(d.getDayOfMonth());
+
                 }
             };
 
@@ -97,6 +99,7 @@ public class RecurringReservationService {
                 .frequency(dto.getFrequency())
                 .interval(dto.getInterval())
                 .byDays(dto.getByDays())
+                .byMonthDays(dto.getByMonthDays())
                 .status(ReservationStatus.CONFIRMED)
                 .build();
         pattern = recurringRepo.save(pattern);

@@ -20,6 +20,8 @@ public class RecurringReservation {
     @Id
     private String id;
 
+    private List<Integer> byMonthDays;
+
     private String userId;
     private String roomId;
 

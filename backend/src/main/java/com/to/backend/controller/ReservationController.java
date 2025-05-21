@@ -124,6 +124,15 @@ public class ReservationController {
         service.cancelReservation(reservationId, userId);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ReservationResponse> updateReservation(
+            @PathVariable("id") String oldReservationId,
+            @Valid @RequestBody ReservationRequest updatedRequest
+    ) {
+        ReservationResponse newResp = service.updateReservation(oldReservationId, updatedRequest);
+        return ResponseEntity.ok(newResp);
+    }
+
 
 
 
