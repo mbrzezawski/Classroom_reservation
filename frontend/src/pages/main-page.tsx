@@ -1,6 +1,7 @@
 import MyCalendar from "../components/calendar/my-calendar";
 import Layout from "../components/layout/layout";
 import ReservationForm from "../components/reservation/reservation-form";
+import { Toaster } from 'sonner';
 
 const MainPage = () => {
   return (
@@ -11,6 +12,7 @@ const MainPage = () => {
         </div>
         <ReservationForm />
       </div>
+        <Toaster position="top-right" richColors closeButton />
     </Layout>
   );
 };
