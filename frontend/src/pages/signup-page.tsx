@@ -1,10 +1,13 @@
 import SignUpForm from "../components/auth/sign-up-form";
+import Layout from "../components/layout/layout";
 
 const SignUpPage = () => {
   return (
-    <div className="flex justify-center items-center min-w-screen min-h-screen">
-      <SignUpForm />
-    </div>
+    <Layout>
+      <div className="flex justify-center items-center min-w-screen min-h-screen">
+        <SignUpForm />
+      </div>
+    </Layout>
   );
 };
 

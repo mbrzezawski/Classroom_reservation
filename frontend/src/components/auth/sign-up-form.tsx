@@ -4,7 +4,6 @@ import AtIcon from "../icons/at";
 import PasswordTextBox from "./password-textbox";
 import { FormProvider, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-
 type SignUpFormValues = {
   email: string;
   password: string;
@@ -78,7 +77,7 @@ const SignUpForm: FC = () => {
           <button
             type="button"
             className="flex self-center btn-link no-underline cursor-pointer text-[12px] font-bold hover:underline"
-            onClick={() => navigate("/login")}
+            onClick={() => navigate(`/login`)}
           >
             Login
           </button>

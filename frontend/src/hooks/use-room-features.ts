@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-
+import { API_URL } from "../api";
 export type EquipmentOption = { value: string; label: string };
 
 export function useEquipment() {
   const [roomEquipment, setRoomEquipment] = useState<EquipmentOption[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:8080/equipment")
+    fetch(`${API_URL}/equipment`)
       .then(res => res.json())
       .then((data) => {
         setRoomEquipment(
@@ -25,7 +25,7 @@ export function useSoftware() {
   const [softwareEquipment, setSoftwareEquipment] = useState<EquipmentOption[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:8080/software")
+    fetch(`${API_URL}/software`)
       .then(res => res.json())
       .then((data) => {
         setSoftwareEquipment(

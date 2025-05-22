@@ -1,12 +1,11 @@
 import type { FC } from "react";
 import { useFormContext } from "react-hook-form";
-import { useRoomEquipment, useSoftwareEquipment } from "../../../data/reservation/room-features";
-// import { roomSoftware } from "../../../data/reservation/room-features";
+import { useEquipment, useSoftware } from "../../../hooks/use-room-features";
 
 const FeaturesPicker: FC = () => {
   const { register } = useFormContext();
-  const roomEquipment = useRoomEquipment();
-  const roomSoftware = useSoftwareEquipment();
+  const roomEquipment = useEquipment();
+  const roomSoftware = useSoftware();
   // console.log(roomEquipment)
   return (
     <div className="flex flex-row justify-center gap-4 w-full">
