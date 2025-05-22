@@ -3,7 +3,6 @@ import InputTextBox from "../utils/input-textbox";
 import PasswordTextBox from "./password-textbox";
 import AtIcon from "../icons/at";
 import { useNavigate } from "react-router-dom";
-
 type LoginFormValues = {
   email: string;
   password: string;
@@ -75,7 +74,7 @@ const LoginForm = () => {
           <button
             type="button"
             className="flex self-center btn-link no-underline cursor-pointer text-[12px] font-bold hover:underline"
-            onClick={() => navigate("/signup")}
+            onClick={() => navigate(`/signup`)}
           >
             Sign up
           </button>
