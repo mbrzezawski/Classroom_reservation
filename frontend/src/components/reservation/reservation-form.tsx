@@ -4,14 +4,14 @@ import { FormProvider, useForm } from "react-hook-form";
 import DateHourPicker from "./reserving/date-hour-picker";
 import RepeatsAtendeesPicker from "./reserving/repeats-atendees-picker";
 import FeaturesPicker from "./reserving/features-picker";
-import { postReservation } from "./reserving/post-reservation";
+import postReservation from "./reserving/post-reservation.ts";
 import { useState, type FC } from "react";
-import { useToast } from "../../hooks/use-toast.ts";
+import showToast from "../utils/show-toast.ts";
 
 export type ReservationFormValues = {
   title: string;
   date: string; // ISO format: "2024-06-10"
-  hour: string; // HH:MM to jest godzina początkowa (zakladam ze zajecia zawsze trwaja 1,5h ale to mozna i tak latwo zmienic)
+  startHour: string; // HH:MM to jest godzina początkowa (zakladam ze zajecia zawsze trwaja 1,5h ale to mozna i tak latwo zmienic)
   repeats: string;
   atendees: number;
   equipment: string[];
@@ -24,13 +24,12 @@ interface ReservationFormProps {
 
 const ReservationForm: FC<ReservationFormProps> = ({ userId }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
 
   const methods = useForm({
     defaultValues: {
       title: "",
       date: "",
-      hour: "",
+      startHour: "",
       repeats: "None",
       atendees: 20,
       equipment: [],
@@ -46,7 +45,7 @@ const ReservationForm: FC<ReservationFormProps> = ({ userId }) => {
       const response = await postReservation(data, userId);
       console.log("response body: ", response);
       const [year, month, day] = data.date.split("-").map(Number);
-      const startHour = data.hour;
+      const startHour = data.startHour;
       const [hours, minutes] = startHour.split(":").map(Number);
       const startTime = new Date(year, month - 1, day, hours, minutes)
         .toTimeString()
@@ -55,7 +54,7 @@ const ReservationForm: FC<ReservationFormProps> = ({ userId }) => {
         .toTimeString()
         .slice(0, 5);
 
-      toast("Booking succed", {
+      showToast("Booking succed", {
         description: `Room ${
           response.message.split(":")[1]
         } booked for  ${startTime}-${endTime} ${data.date}`,
@@ -64,7 +63,7 @@ const ReservationForm: FC<ReservationFormProps> = ({ userId }) => {
 
       reset();
     } catch (error) {
-      toast("Booking failed", {
+      showToast("Booking failed", {
         description:
           error instanceof Error ? error.message : "Unknown error appeared",
         variant: "destructive",
@@ -80,7 +79,7 @@ const ReservationForm: FC<ReservationFormProps> = ({ userId }) => {
         onSubmit={handleSubmit(onSubmit)}
         className="flex flex-col border px-6 py-8 gap-[30px] rounded-[8px]"
       >
-        <h2 className="text-xl font-bold">Nowa rezerwacja</h2>
+        <h2 className="text-xl font-bold">New reservation</h2>
 
         <InputTextBox
           label="Title"
