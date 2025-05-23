@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { FC, InputHTMLAttributes } from "react";
 import Lock from "../icons/lock";
-import InputTextBox from "../utils/input-textbox";
+import InputTextBox from "../ui/input-textbox";
 import PasswordHider from "./password-hider";
 
 interface PasswordTextBoxProps extends InputHTMLAttributes<HTMLInputElement> {

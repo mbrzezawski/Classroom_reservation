@@ -1,12 +1,13 @@
-import InputTextBox from "../utils/input-textbox";
+import InputTextBox from "../ui/input-textbox.tsx";
 import Letter from "../icons/letter";
 import { FormProvider, useForm } from "react-hook-form";
 import DateHourPicker from "./reserving/date-hour-picker";
 import RepeatsAtendeesPicker from "./reserving/repeats-atendees-picker";
 import FeaturesPicker from "./reserving/features-picker";
 import postReservation from "./reserving/post-reservation.ts";
-import { useState, type FC } from "react";
-import showToast from "../utils/show-toast.ts";
+import { useState, type Dispatch, type FC } from "react";
+import showToast from "../../hooks/show-toast.ts";
+import type { Action } from "../../hooks/use-calendar-events.ts";
 
 export type ReservationFormValues = {
   title: string;
@@ -20,9 +21,10 @@ export type ReservationFormValues = {
 
 interface ReservationFormProps {
   userId: string;
+  dispatch: Dispatch<Action>;
 }
 
-const ReservationForm: FC<ReservationFormProps> = ({ userId }) => {
+const ReservationForm: FC<ReservationFormProps> = ({ userId, dispatch }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const methods = useForm({
@@ -60,6 +62,8 @@ const ReservationForm: FC<ReservationFormProps> = ({ userId }) => {
         } booked for  ${startTime}-${endTime} ${data.date}`,
         variant: "success",
       });
+
+      // dispatch({ type: "addEvent" }); TODO MAP response to FullCalendarEvent and add
 
       reset();
     } catch (error) {

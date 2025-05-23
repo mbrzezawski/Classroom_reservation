@@ -2,14 +2,14 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import type { FC } from "react";
-import useCalendarEvents from "../../hooks/use-calendar-events";
-import renderEventContent from "./renderEventContent";
-interface calendarProps {
-  userId: string;
+import renderEventContent from "./render-event-content";
+import type { FullCalendarEvent } from "../../types/calendar-event";
+
+interface CalendarProps {
+  events: FullCalendarEvent[];
 }
 
-const MyCalendar: FC<calendarProps> = ({ userId }) => {
-  const events = useCalendarEvents(userId);
+const MyCalendar: FC<CalendarProps> = ({ events }) => {
   return (
     <FullCalendar
       plugins={[dayGridPlugin, timeGridPlugin]}
