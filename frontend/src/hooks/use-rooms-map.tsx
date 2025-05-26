@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { API_URL } from "../api";
+import { API_URL } from "../api.ts";
 import type { Room } from "../types/room.ts";
 
 type RoomsMap = Record<string, Room>;
