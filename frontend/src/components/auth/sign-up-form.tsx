@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import InputTextBox from "../utils/input-textbox";
+import InputTextBox from "../ui/input-textbox";
 import AtIcon from "../icons/at";
 import PasswordTextBox from "./password-textbox";
 import { FormProvider, useForm } from "react-hook-form";

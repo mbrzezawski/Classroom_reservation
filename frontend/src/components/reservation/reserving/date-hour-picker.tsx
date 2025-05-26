@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { meetingHours } from "../../../data/reservation/meeting-hours";
 import { useFormContext } from "react-hook-form";
 const DateHourPicker: FC = () => {
-    const { register } = useFormContext()
+  const { register } = useFormContext();
   return (
     <div className="flex flex-row gap-2">
       <input
@@ -15,7 +15,7 @@ const DateHourPicker: FC = () => {
         className="select focus:outline-none"
         required
         defaultValue=""
-        {...register("hour", { required: "Hour is required" })}
+        {...register("startHour", { required: "Hour is required" })}
       >
         <option value="" disabled hidden>
           Pick an hour
@@ -29,4 +29,4 @@ const DateHourPicker: FC = () => {
     </div>
   );
 };
-export default DateHourPicker
+export default DateHourPicker;
