@@ -8,6 +8,8 @@ import postReservation from "./reserving/post-reservation.ts";
 import { useState, type Dispatch, type FC } from "react";
 import showToast from "../../hooks/show-toast.ts";
 import type { Action } from "../../hooks/use-calendar-events.ts";
+import { useRoomsMap } from "../../hooks/userRoomsMap.tsx";
+import type { Room } from "../../types/room.ts";
 
 export type ReservationFormValues = {
   title: string;
@@ -41,6 +43,8 @@ const ReservationForm: FC<ReservationFormProps> = ({ userId, dispatch }) => {
 
   const { register, handleSubmit, reset } = methods;
 
+  const roomsMap = useRoomsMap();
+
   const onSubmit = async (data: ReservationFormValues) => {
     setIsSubmitting(true);
     try {
@@ -55,11 +59,9 @@ const ReservationForm: FC<ReservationFormProps> = ({ userId, dispatch }) => {
       const endTime = new Date(year, month - 1, day, hours, minutes + 90)
         .toTimeString()
         .slice(0, 5);
-
+      const room: Room = roomsMap[response.roomId];
       showToast("Booking succed", {
-        description: `Room ${
-          response.message.split(":")[1]
-        } booked for  ${startTime}-${endTime} ${data.date}`,
+        description: `Room ${room.name} (${room.location}) booked for  ${startTime}-${endTime} ${data.date}`,
         variant: "success",
       });
 
