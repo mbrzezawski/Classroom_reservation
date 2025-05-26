@@ -26,7 +26,6 @@ async function postReservation  (
     softwareIds: data.software,
     equipmentIds: data.equipment,
   };
-  console.log("request body: ", body);
   const res = await fetch(`${API_URL}/reservations/book`, {
     method: "POST",
     headers: {

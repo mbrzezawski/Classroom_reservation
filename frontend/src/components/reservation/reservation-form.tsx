@@ -7,7 +7,7 @@ import FeaturesPicker from "./reserving/features-picker";
 import postReservation from "./reserving/post-reservation.ts";
 import { useState, type Dispatch, type FC } from "react";
 import showToast from "../../hooks/show-toast.ts";
-import type { Action } from "../../hooks/use-calendar-events.ts";
+import type { Action } from "../../store/events-reducer.ts";
 import { useRoomsMap } from "../../hooks/use-rooms-map.tsx";
 import type { Room } from "../../types/room.ts";
 
@@ -49,24 +49,35 @@ const ReservationForm: FC<ReservationFormProps> = ({ userId, dispatch }) => {
     setIsSubmitting(true);
     try {
       const response = await postReservation(data, userId);
-      console.log("response body: ", response);
       const [year, month, day] = data.date.split("-").map(Number);
       const startHour = data.startHour;
       const [hours, minutes] = startHour.split(":").map(Number);
-      const startTime = new Date(year, month - 1, day, hours, minutes)
-        .toTimeString()
-        .slice(0, 5);
-      const endTime = new Date(year, month - 1, day, hours, minutes + 90)
-        .toTimeString()
-        .slice(0, 5);
+      const startTime = new Date(year, month - 1, day, hours, minutes);
+      const endTime = new Date(year, month - 1, day, hours, minutes + 90);
 
       const room: Room = roomsMap[response.roomId];
       showToast("Booking succed", {
-        description: `Room ${room.name} (${room.location}) booked for  ${startTime}-${endTime} ${data.date}`,
+        description: `Room ${room.name} (${
+          room.location
+        }) booked for  ${startTime.toTimeString().slice(0, 5)}-${endTime
+          .toTimeString()
+          .slice(0, 5)} ${data.date}`,
         variant: "success",
       });
 
-      // dispatch({ type: "addEvent" }); TODO MAP response to FullCalendarEvent and add
+      dispatch({
+        type: "addEvent",
+        payload: {
+          id: response.reservationId,
+          title: data.title,
+          start: startTime.toISOString(),
+          end: endTime.toISOString(),
+          extendedProps: {
+            roomName: room.name,
+            roomLocation: room.location,
+          },
+        },
+      });
 
       reset();
     } catch (error) {

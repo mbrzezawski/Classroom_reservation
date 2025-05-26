@@ -12,6 +12,7 @@ interface CalendarProps {
 const MyCalendar: FC<CalendarProps> = ({ events }) => {
   return (
     <FullCalendar
+      key={events.length}
       plugins={[dayGridPlugin, timeGridPlugin]}
       weekends={false}
       events={events}
