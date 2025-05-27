@@ -1,12 +1,8 @@
-import {useUsers} from "../../hooks/use-users.ts";
-
-
-const EmployeesList = () => {
-
-    const { users, loading, error } = useUsers();
-
+const EmployeesList = ({ users, loading, error }: { users: any[], loading: boolean, error: any }) => {
     if (loading) return <div className="p-4">Loading...</div>;
-    if (error) return <div className="p-4 text-red-500">Error appear: {error}</div>;
+    if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
+
+    if (users.length === 0) return <div className="p-4">No users found.</div>;
 
     return (
         <div className="p-4 flex justify-center">
@@ -19,7 +15,7 @@ const EmployeesList = () => {
                     </tr>
                     </thead>
                     <tbody>
-                    {users.map((user) => (
+                    {users.map(user => (
                         <tr key={user.id}>
                             <td>{user.email}</td>
                             <td>{user.role}</td>

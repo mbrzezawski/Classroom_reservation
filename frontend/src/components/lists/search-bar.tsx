@@ -1,23 +1,15 @@
 import { ReactSearchAutocomplete } from 'react-search-autocomplete';
-import { useUsers } from '../../hooks/use-users.ts';
 
-function SearchBar() {
-    const { users, loading, error } = useUsers();
+function SearchBar({ users, onSelectUser }: { users: any[], onSelectUser: (id: string) => void }) {
 
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p>Error loading users</p>;
-
-    // Transform users to match expected format
     const items = users.map(user => ({
         id: user.id,
-        name: user.email,  // podpowiedzi są po polu name
-        role: user.role
+        name: `${user.email} | ${user.role}`,  // TODO: Można dodać też imię i nazwisko
     }));
-
-    console.log(items);
 
     const handleOnSelect = (item: any) => {
         console.log("Selected:", item);
+        onSelectUser(item.id);
     };
 
     return (
@@ -25,8 +17,9 @@ function SearchBar() {
             <ReactSearchAutocomplete
                 items={items}
                 onSelect={handleOnSelect}
+                onClear={() => onSelectUser("")}
                 autoFocus
-                placeholder="Search users by email"
+                placeholder="Search users"
             />
         </div>
     );
