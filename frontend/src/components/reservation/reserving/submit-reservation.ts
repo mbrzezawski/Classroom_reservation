@@ -1,6 +1,6 @@
 import { API_URL } from "../../../api";
-import type { ReservationRequestDTO } from "../../../types/reservations";
-import type { ReservationFormValues } from "../reservation-form";
+import type { ReservationFormValues, ReservationRequestDTO } from "../../../types/reservations";
+import buildStartEndDate from "../../../utils/build-start-end-date";
 
 async function submitReservation  (
   data: ReservationFormValues,
@@ -8,15 +8,7 @@ async function submitReservation  (
   mode: 'create' | 'edit',
   reservationId?: string
 )  {
-  const [year, month, day] = data.date.split("-").map(Number);
-  const startHour = data.startHour;
-  const [hours, minutes] = startHour.split(":").map(Number);
-  const startTime = new Date(year, month - 1, day, hours, minutes)
-    .toTimeString()
-    .slice(0, 5);
-  const endTime = new Date(year, month - 1, day, hours, minutes + 90)
-    .toTimeString()
-    .slice(0, 5);
+    const [startTime, endTime] = buildStartEndDate(data.date, data.startHour)
 
     const endpoint =
       mode === "edit"
@@ -27,8 +19,8 @@ async function submitReservation  (
   const body: ReservationRequestDTO = {
     userId: userId,
     date: data.date,
-    startTime: startTime,
-    endTime: endTime,
+    startTime: startTime.toTimeString().slice(0,5),
+    endTime: endTime.toTimeString().slice(0,5),
     purpose: data.title,
     minCapacity: data.atendees,
     softwareIds: data.software,

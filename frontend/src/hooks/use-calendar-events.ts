@@ -6,8 +6,9 @@ import eventsReducer from "../store/events-reducer";
 
   function useCalendarEvents(userId: string) {
     const [events, dispatch] = useReducer(eventsReducer, []);
-
-
+    useEffect(() => {
+    console.log("Aktualne eventy:", events);
+    }, [events]);
     useEffect(() =>{
         if(!userId) return
 
@@ -21,7 +22,10 @@ import eventsReducer from "../store/events-reducer";
                 end: event.end,
                 extendedProps: {
                     roomName: event.roomName,
-                    roomLocation: event.roomLocation
+                    roomLocation: event.roomLocation,
+                    atendees: event.minCapacity,
+                    equipment: event.equipmentIds,
+                    software: event.softwareIds
                 }
             }))
             dispatch({type: "setEvents", payload: mappedEvents});

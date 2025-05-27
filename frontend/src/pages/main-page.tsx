@@ -1,13 +1,10 @@
 import MyCalendar from "../components/calendar/my-calendar";
 import Layout from "../components/layout/layout";
-import ReservationForm, {
-  type ReservationFormValues,
-} from "../components/reservation/reservation-form";
+import ReservationForm from "../components/reservation/reservation-form";
 import { Toaster } from "sonner";
 import useCalendarEvents from "../hooks/use-calendar-events";
 import { useState } from "react";
-
-export type EditableReservation = ReservationFormValues & { id: string };
+import type { EditableReservation } from "../types/reservations";
 
 const MainPage = () => {
   const userId = "682b8bc9811311363ff183d0";
@@ -43,6 +40,7 @@ const MainPage = () => {
           mode={editEvent ? "edit" : "create"}
           reservationId={editEvent?.id}
           editValues={editEvent}
+          onFinishedEditing={() => {setEditEvent(null)}}
         />
       </div>
       <Toaster position="top-right" richColors closeButton />
