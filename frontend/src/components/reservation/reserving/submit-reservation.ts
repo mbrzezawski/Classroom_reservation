@@ -2,9 +2,11 @@ import { API_URL } from "../../../api";
 import type { ReservationRequestDTO } from "../../../types/reservations";
 import type { ReservationFormValues } from "../reservation-form";
 
-async function postReservation  (
+async function submitReservation  (
   data: ReservationFormValues,
-  userId: string
+  userId: string,
+  mode: 'create' | 'edit',
+  reservationId?: string
 )  {
   const [year, month, day] = data.date.split("-").map(Number);
   const startHour = data.startHour;
@@ -16,6 +18,12 @@ async function postReservation  (
     .toTimeString()
     .slice(0, 5);
 
+    const endpoint =
+      mode === "edit"
+        ? `${API_URL}/reservations/${reservationId}`
+        : `${API_URL}/reservations/book`;
+    const method = mode === "edit" ? "PUT" : "POST";
+
   const body: ReservationRequestDTO = {
     userId: userId,
     date: data.date,
@@ -26,8 +34,10 @@ async function postReservation  (
     softwareIds: data.software,
     equipmentIds: data.equipment,
   };
-  const res = await fetch(`${API_URL}/reservations/book`, {
-    method: "POST",
+
+
+  const res = await fetch(`${endpoint}`, {
+    method,
     headers: {
       "Content-Type": "application/json",
     },
@@ -41,4 +51,4 @@ async function postReservation  (
   return await res.json();
 };
 
-export default postReservation
+export default submitReservation

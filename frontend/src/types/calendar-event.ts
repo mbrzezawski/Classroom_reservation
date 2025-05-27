@@ -6,6 +6,9 @@ export type FullCalendarEvent = {
   extendedProps: {
     roomName: string;
     roomLocation: string;
+    atendees: Number;
+    equipment: string[];
+    software: string[];
   };
 };
 
