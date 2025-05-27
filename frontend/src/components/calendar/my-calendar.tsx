@@ -4,18 +4,20 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import type { FC } from "react";
 import renderEventContent from "./render-event-content";
 import type { FullCalendarEvent } from "../../types/calendar-event";
+import type { EventApi } from "@fullcalendar/core";
 
 interface CalendarProps {
   events: FullCalendarEvent[];
+  onEventClick: (event: EventApi) => void;
 }
 
-const MyCalendar: FC<CalendarProps> = ({ events }) => {
+const MyCalendar: FC<CalendarProps> = ({ events, onEventClick }) => {
   return (
     <FullCalendar
-      key={events.length}
       plugins={[dayGridPlugin, timeGridPlugin]}
       weekends={false}
       events={events}
+      eventClick={(arg) => onEventClick(arg.event)}
       slotMinTime="08:00:00"
       slotMaxTime="20:00:00"
       eventContent={renderEventContent}

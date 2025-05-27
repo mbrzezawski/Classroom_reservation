@@ -1,3 +1,15 @@
+export type ReservationFormValues = {
+  title: string;
+  date: string;
+  startHour: string;
+  repeats: string;
+  atendees: number;
+  equipment: string[];
+  software: string[];
+};
+
+export type EditableReservation = ReservationFormValues & { id: string };
+
 export interface ReservationRequestDTO {
   userId: string;
   date: string;        // YYYY-MM-DD
