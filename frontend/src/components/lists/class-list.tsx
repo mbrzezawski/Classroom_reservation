@@ -2,11 +2,12 @@ import {useEquipment, useSoftware} from "../../hooks/use-room-features.ts";
 
 
 const ClassList = ({ rooms, loading, error }: { rooms: any[], loading: boolean, error: any }) => {
-    if (loading) return <div className="p-4">Loading...</div>;
-    if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
     const roomEquipment = useEquipment();
     const roomSoftware = useSoftware();
+
+    if (loading) return <div className="p-4">Loading...</div>;
+    if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
     if (rooms.length === 0) return <div className="p-4">No users found.</div>;
 
