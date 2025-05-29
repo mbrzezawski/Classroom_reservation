@@ -3,8 +3,6 @@ import ClassList from "../components/lists/class-list.tsx";
 import {useRooms} from "../hooks/use-rooms.ts";
 
 
-
-
 const ClassListPage = () => {
 
     const { rooms, loading, error } = useRooms();

@@ -1,4 +1,14 @@
+import {useNavigate} from "react-router-dom";
+
+
 const EmployeesList = ({ users, loading, error }: { users: any[], loading: boolean, error: any }) => {
+
+    const navigate = useNavigate()
+
+    function handleClick(userId: number) {
+        navigate(`/main`, {state: {userId}})
+    }
+
     if (loading) return <div className="p-4">Loading...</div>;
     if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
@@ -12,6 +22,7 @@ const EmployeesList = ({ users, loading, error }: { users: any[], loading: boole
                     <tr>
                         <th>Email</th>
                         <th>Role</th>
+                        <th>Action</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -19,6 +30,13 @@ const EmployeesList = ({ users, loading, error }: { users: any[], loading: boole
                         <tr key={user.id}>
                             <td>{user.email}</td>
                             <td>{user.role}</td>
+                            <td>
+                                {user.role === "TEACHER" && (
+                                    <button className="btn" onClick={() => handleClick(user.id)}>
+                                        Go to calendar
+                                    </button>
+                                )}
+                            </td>
                         </tr>
                     ))}
                     </tbody>

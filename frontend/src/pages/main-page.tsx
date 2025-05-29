@@ -4,12 +4,19 @@ import ReservationForm from "../components/reservation/reservation-form";
 import SearchBar from "../components/lists/search-bar.tsx";
 import {useUsers} from "../hooks/use-users.ts";
 import {useState} from "react";
+import {useLocation} from "react-router-dom";
 
 
 const MainPage = () => {
 
-    const { users, loading, error } = useUsers();
+
+    const location = useLocation();
+    const { users } = useUsers();
+
+    const initialUserId = location.state?.userId ?? null;
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
+    const effectiveUserId = selectedUserId ?? initialUserId ?? "";
 
   return (
     <Layout>
@@ -19,7 +26,7 @@ const MainPage = () => {
                     <SearchBar users={users} onSelectUser={setSelectedUserId} />
                 </div>
                 <div className="relative z-0">
-                    <MyCalendar userId={selectedUserId ?? ""} />
+                    <MyCalendar userId={effectiveUserId} />
                 </div>
             </div>
             <ReservationForm/>
