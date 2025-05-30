@@ -1,6 +1,10 @@
 import MyCalendar from "../components/calendar/my-calendar";
 import Layout from "../components/layout/layout";
 import ReservationForm from "../components/reservation/reservation-form";
+import { Toaster } from "sonner";
+import useCalendarEvents from "../hooks/use-calendar-events";
+import { useState } from "react";
+import type { EditableReservation } from "../types/reservations";
 import SearchBar from "../components/lists/search-bar.tsx";
 import {useUsers} from "../hooks/use-users.ts";
 import {useState} from "react";
@@ -8,18 +12,21 @@ import {useLocation} from "react-router-dom";
 
 
 const MainPage = () => {
+  const userId = "682b8bc9811311363ff183d0";
+  const userRole = "TEACHER";
+        
+  const location = useLocation();
+  const { users } = useUsers();
+        
+  const initialUserId = location.state?.userId ?? null;
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+        
+  const effectiveUserId = selectedUserId ?? initialUserId ?? "";
+       
+  
+  const { events, dispatch } = useCalendarEvents({userRole === "DEANS_OFFICE" ? effectiveUserId : userId});
 
-    const userId = "682b8bc9811311363ff183d0"
-    const userRole = "TEACHER"
-
-    const location = useLocation();
-    const { users } = useUsers();
-
-    const initialUserId = location.state?.userId ?? null;
-    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-
-    const effectiveUserId = selectedUserId ?? initialUserId ?? "";
-
+  const [editEvent, setEditEvent] = useState<EditableReservation | null>(null);
 
   return (
     <Layout>
@@ -31,11 +38,35 @@ const MainPage = () => {
                     </div>)
                 }
                 <div className="relative z-0">
-                    <MyCalendar userId={userRole === "DEANS_OFFICE" ? effectiveUserId : userId} />
+                    <MyCalendar
+                      events={events}
+                      onEventClick={(event) => {
+                        if (!event.start) return;
+                        const startDate = new Date(event.start);
+                        setEditEvent({
+                          id: event.id,
+                          title: event.title,
+                          date: startDate.toISOString().split("T")[0],
+                          startHour: startDate.toTimeString().slice(0, 5),
+                          atendees: event.extendedProps.atendees,
+                          equipment: event.extendedProps.equipment,
+                          software: event.extendedProps.software,
+                          repeats: "None",
+                        });
+                      }}
+                    />
                 </div>
             </div>
-            <ReservationForm/>
+              <ReservationForm
+                userId={userRole === "DEANS_OFFICE" ? effectiveUserId : userId}
+                dispatch={dispatch}
+                mode={editEvent ? "edit" : "create"}
+                reservationId={editEvent?.id}
+                editValues={editEvent}
+                onFinishedEditing={() => {setEditEvent(null)}}
+              />
         </div>
+        <Toaster position="top-right" richColors closeButton />
     </Layout>
   );
 };
