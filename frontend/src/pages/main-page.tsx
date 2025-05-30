@@ -9,6 +9,8 @@ import {useLocation} from "react-router-dom";
 
 const MainPage = () => {
 
+    const userId = "682b8bc9811311363ff183d0"
+    const userRole = "TEACHER"
 
     const location = useLocation();
     const { users } = useUsers();
@@ -18,15 +20,18 @@ const MainPage = () => {
 
     const effectiveUserId = selectedUserId ?? initialUserId ?? "";
 
+
   return (
     <Layout>
         <div className="grid grid-cols-3 min-h-screen gap-4 p-4">
             <div className="col-span-2 flex flex-col gap-4">
-                <div className="relative z-10">
-                    <SearchBar users={users} onSelectUser={setSelectedUserId} />
-                </div>
+                { userRole === "DEANS_OFFICE" &&
+                    (<div className="relative z-10">
+                        <SearchBar users={users} onSelectUser={setSelectedUserId} />
+                    </div>)
+                }
                 <div className="relative z-0">
-                    <MyCalendar userId={effectiveUserId} />
+                    <MyCalendar userId={userRole === "DEANS_OFFICE" ? effectiveUserId : userId} />
                 </div>
             </div>
             <ReservationForm/>
