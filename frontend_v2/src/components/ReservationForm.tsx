@@ -143,7 +143,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ userId, initialData, 
         ...formData,
         userId,
       };
-      await onSubmit(payload, 'single');
+      const response = await onSubmit(payload, 'single');
+      console.log('Single reservation response:', response);
       setResponseMsg('Rezerwacja pojedyncza zakończona pomyślnie!');
     } else {
       const payload: RecurringPayload = {
@@ -161,7 +162,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ userId, initialData, 
         byDays:       formData.byDays,
         userId,
       };
-      await onSubmit(payload, 'recurring');
+      const response = await onSubmit(payload, 'recurring');
+      console.log("Reccuring reservation response:", response);
       setResponseMsg('Rezerwacja cykliczna została utworzona pomyślnie!');
     }
   } catch (err: any) {

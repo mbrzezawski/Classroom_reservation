@@ -3,7 +3,6 @@ import Layout from "../components/layout/layout";
 import ReservationForm from "../components/reservation/reservation-form";
 import { Toaster } from "sonner";
 import useCalendarEvents from "../hooks/use-calendar-events";
-import { useState } from "react";
 import type { EditableReservation } from "../types/reservations";
 import SearchBar from "../components/lists/search-bar.tsx";
 import {useUsers} from "../hooks/use-users.ts";
@@ -13,7 +12,7 @@ import {useLocation} from "react-router-dom";
 
 const MainPage = () => {
   const userId = "682b8bc9811311363ff183d0";
-  const userRole = "TEACHER";
+  const userRole = "DEANS_OFFICE";
         
   const location = useLocation();
   const { users } = useUsers();
@@ -22,9 +21,11 @@ const MainPage = () => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
         
   const effectiveUserId = selectedUserId ?? initialUserId ?? "";
-       
-  
-  const { events, dispatch } = useCalendarEvents({userRole === "DEANS_OFFICE" ? effectiveUserId : userId});
+
+
+    const { events, dispatch } = useCalendarEvents(
+        userRole === "DEANS_OFFICE" ? effectiveUserId : userId
+    );
 
   const [editEvent, setEditEvent] = useState<EditableReservation | null>(null);
 
