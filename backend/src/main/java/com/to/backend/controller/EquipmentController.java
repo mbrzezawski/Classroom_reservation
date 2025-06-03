@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/equipment")
-//@PreAuthorize("isAuthenticated()")
+@PreAuthorize("isAuthenticated()")
 public class EquipmentController {
     private final EquipmentService service;
 
@@ -22,12 +22,7 @@ public class EquipmentController {
     // POST /equipment – creates new equipment, returns 201 + Location
     // FOR: ADMIN and DEANS_OFFICE
     @PostMapping
-//    @PreAuthorize(
-//            "hasAnyRole(" +
-//                    "T(com.to.backend.model.utils.RoleType).ADMIN.name(), " +
-//                    "T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()" +
-//                    ")"
-//    )
+    @PreAuthorize("hasAnyRole('ADMIN','DEANS_OFFICE')")
     public ResponseEntity<Equipment> create(@RequestBody Equipment e) {
         Equipment saved = service.create(e);
         URI location = URI.create("/equipment/" + saved.getId());
@@ -51,12 +46,7 @@ public class EquipmentController {
     // DELETE /equipment/{id} – deletes equipment by id, returns 204 or 404
     // FOR: ADMIN and DEANS_OFFICE
     @DeleteMapping("/{id}")
-//    @PreAuthorize(
-//            "hasAnyRole(" +
-//                    "T(com.to.backend.model.utils.RoleType).ADMIN.name(), " +
-//                    "T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()" +
-//                    ")"
-//    )
+    @PreAuthorize("hasAnyRole('ADMIN','DEANS_OFFICE')")
     public ResponseEntity<Void> delete(@PathVariable String id) {
         if (service.findById(id).isPresent()) {
             service.delete(id);

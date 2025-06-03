@@ -15,7 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/rooms")
 @CrossOrigin(origins = "http://localhost:5137")
-//@PreAuthorize("isAuthenticated()")
+@PreAuthorize("isAuthenticated()")
 public class RoomController {
 
     private final RoomService service;
@@ -27,12 +27,7 @@ public class RoomController {
     // POST / – creates new room, returns 201 + Location
     // FOR: ADMIN AND DEANS_OFFICE
     @PostMapping
-//    @PreAuthorize(
-//            "hasAnyRole(" +
-//                    "T(com.to.backend.model.utils.RoleType).ADMIN.name(), " +
-//                    "T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()" +
-//                    ")"
-//    )
+    @PreAuthorize("hasAnyRole('ADMIN','DEANS_OFFICE')")
     public ResponseEntity<Room> createRoom(@RequestBody Room room) {
         Room saved = service.createRoom(room);
 
@@ -79,12 +74,7 @@ public class RoomController {
     // FOR: ADMIN AND DEANS_OFFICE
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-//    @PreAuthorize(
-//            "hasAnyRole(" +
-//                    "T(com.to.backend.model.utils.RoleType).ADMIN.name(), " +
-//                    "T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()" +
-//                    ")"
-//    )
+    @PreAuthorize("hasAnyRole('ADMIN','DEANS_OFFICE')")
     public void deleteRoom(@PathVariable String id) {
         service.deleteRoom(id);
     }
@@ -92,11 +82,7 @@ public class RoomController {
     // PUT /rooms/{id} - update a room,
     // FOR: admin and deans_office
     @PutMapping("/{id}")
-//    @PreAuthorize("hasAnyRole(" +
-//                    "T(com.to.backend.model.utils.RoleType).ADMIN.name(), " +
-//                    "T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()" +
-//                    ")"
-//    )
+    @PreAuthorize("hasAnyRole('ADMIN','DEANS_OFFICE')")
     public ResponseEntity<Room> updateRoom(
             @PathVariable String id,
             @RequestBody Room room

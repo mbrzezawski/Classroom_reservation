@@ -35,9 +35,9 @@ public class ReservationController {
     }
 
     // POST /reservations - creates new reservation, returns 201 + Location
-    // FOR: ADMIN
+    // FOR: TEACHER
     @PostMapping
-//    @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name())")
+    @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).TEACHER.name())")
     public ResponseEntity<Reservation> createReservation(@RequestBody Reservation reservation) {
         Reservation saved = service.createReservation(reservation);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -50,6 +50,7 @@ public class ReservationController {
     // GET /reservations - retrieves all reservations
     // FOR: EVERYONE LOGGED IN
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Reservation>> getAllReservations() {
         return ResponseEntity.ok(service.getAllReservations());
     }
@@ -57,6 +58,7 @@ public class ReservationController {
     // GET /reservations/{id} – retrieves reservation by id or returns 404
     // FOR: EVERYONE LOGGED IN
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Reservation> getReservationById(@PathVariable String id) {
         Reservation reservation = service.getReservationById(id);
         return ResponseEntity.ok(reservation);
@@ -66,11 +68,11 @@ public class ReservationController {
     // FOR: ADMIN, DEANS_OFFICE AND OWNER
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-//    @PreAuthorize(
-//            "hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name()) or " +
-//                    "hasRole(T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()) or " +
-//                    "@reservationService.isOwner(#id, principal.username)"
-//    )
+    @PreAuthorize(
+            "hasRole('ADMIN')                               || " +
+                    "hasRole('TEACHER')                        || " +
+                    "@reservationService.isOwner(#id, principal.username)"
+    )
     public void deleteReservation(
             @PathVariable String id,
             @AuthenticationPrincipal CustomUserDetails principal
@@ -82,6 +84,7 @@ public class ReservationController {
     // business logic: booking a room
     // FOR: EVERYONE LOGGED IN
     @PostMapping("/book")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReservationResponse> reserve(@RequestBody ReservationRequest req) {
         ReservationResponse resp = service.reserve(req);
 
@@ -99,6 +102,7 @@ public class ReservationController {
 
     // FOR: EVERYONE LOGGED IN
     @GetMapping("/calendar")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<CalendarReservationDto>> getCalendar(
             @RequestParam("userId") String userId,
             @RequestParam(name = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -113,10 +117,10 @@ public class ReservationController {
     // FOR: ADMIN AND OWNER
     @DeleteMapping("/{id}/cancel")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-//    @PreAuthorize(
-//            "hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name()) or " +
-//                    "@reservationService.isOwner(#reservationId, principal.username)"
-//    )
+    @PreAuthorize(
+            "hasRole('ADMIN') || " +
+                    "@reservationService.isOwner(#reservationId, principal.username)"
+    )
     public void cancelReservation(
             @PathVariable("id") String reservationId,
             @AuthenticationPrincipal CustomUserDetails principal) {
@@ -125,6 +129,11 @@ public class ReservationController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize(
+            "hasRole('ADMIN')                               || " +
+                    "hasRole('TEACHER')                        || " +
+                    "@reservationService.isOwner(#oldReservationId, principal.username)"
+    )
     public ResponseEntity<ReservationResponse> updateReservation(
             @PathVariable("id") String oldReservationId,
             @Valid @RequestBody ReservationRequest updatedRequest
@@ -132,8 +141,5 @@ public class ReservationController {
         ReservationResponse newResp = service.updateReservation(oldReservationId, updatedRequest);
         return ResponseEntity.ok(newResp);
     }
-
-
-
 
 }

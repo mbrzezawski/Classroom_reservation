@@ -7,17 +7,19 @@ import jakarta.validation.constraints.Size;
 
 public class RegistrationRequestDto {
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
-    @Pattern(
-            regexp = "^[A-Za-z0-9._%+-]+@((student\\.agh\\.edu\\.pl)|(agh\\.edu\\.pl))$",
-            message = "Email must end with @agh.edu.pl or @student.agh.edu.pl"
-    )
+//    @NotBlank(message = "Email is required")
+//    @Email(message = "Invalid email format")
+//    @Pattern(
+//            regexp = "^[A-Za-z0-9._%+-]+@((student\\.agh\\.edu\\.pl)|(agh\\.edu\\.pl))$",
+//            message = "Email must end with @agh.edu.pl or @student.agh.edu.pl"
+//    )
     private String email;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must be at least 8 characters long")
+//    @NotBlank(message = "Password is required")
+//    @Size(min = 8, message = "Password must be at least 8 characters long")
     private String password;
+
+    private String adminCode;
 
     public RegistrationRequestDto() { }
 
@@ -36,4 +38,6 @@ public class RegistrationRequestDto {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    public String getAdminCode(){return adminCode;}
 }

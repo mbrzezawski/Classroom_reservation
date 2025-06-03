@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/recurring-reservations")
-//@PreAuthorize("isAuthenticated()")
+@PreAuthorize("isAuthenticated()")
 public class RecurringReservationController {
 
     private final RecurringReservationService service;

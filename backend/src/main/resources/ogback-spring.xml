@@ -1,0 +1,11 @@
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+    <!-- Security – pokazuje decyzje autoryzacyjne -->
+    <logger name="org.springframework.security"          level="DEBUG"/>
+    <logger name="org.springframework.security.access"   level="DEBUG"/>
+    <logger name="org.springframework.security.authorization" level="DEBUG"/>
+
+    <!-- Pokazuje dopasowanie ścieżek do wzorców -->
+    <logger name="org.springframework.security.web.util.matcher" level="TRACE"/>
+</configuration>

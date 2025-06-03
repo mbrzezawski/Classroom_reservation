@@ -16,7 +16,7 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/users/me")
 @Validated
-//@PreAuthorize("isAuthenticated()")    // require any logged-in user
+@PreAuthorize("isAuthenticated()")    // require any logged-in user
 public class UserProfileController {
     private final UserService userService;
 

@@ -1,8 +1,10 @@
 package com.to.backend.controller;
 
+import com.to.backend.dto.AuthResponse;
 import com.to.backend.dto.LoginRequestDto;
 import com.to.backend.dto.RegistrationRequestDto;
 import com.to.backend.model.User;
+import com.to.backend.security.JwtService;
 import com.to.backend.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,15 +18,18 @@ import jakarta.validation.Valid;
 import java.net.URI;
 
 @RestController
-//@RequestMapping("/auth")
+@RequestMapping("/auth")
 public class RegistrationController {
 
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
-    public RegistrationController(UserService userService, AuthenticationManager authenticationManager) {
+
+    public RegistrationController(UserService userService, AuthenticationManager authenticationManager, JwtService jwtService) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/register")
@@ -49,24 +54,18 @@ public class RegistrationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Void> login(
+    public ResponseEntity<AuthResponse> login(
             @Valid @RequestBody LoginRequestDto loginDto
     ) {
-        // 1) build authentication token
-        UsernamePasswordAuthenticationToken authToken =
+        Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginDto.getEmail(),
                         loginDto.getPassword()
-                );
+                ));
 
-        // 2) authenticate (throws BadCredentialsException if invalid, DisabledException if user.isEnabled==false)
-        Authentication auth = authenticationManager.authenticate(authToken);
+        String token = jwtService.generate((org.springframework.security.core.userdetails.UserDetails) auth.getPrincipal());
 
-        // 3) store in SecurityContext + session
-        SecurityContextHolder.getContext().setAuthentication(auth);
-
-        // 4) return 200 OK; JSESSIONID cookie is now set by Spring Security
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new AuthResponse(token));
     }
 
 }

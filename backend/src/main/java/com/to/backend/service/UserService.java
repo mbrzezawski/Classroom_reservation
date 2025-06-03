@@ -96,16 +96,17 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(registrationRequestDto.getPassword()));
         String email = registrationRequestDto.getEmail().toLowerCase();
 
-        if (email.endsWith("@student.agh.edu.pl")) {
+        if ("ADMIN_CODE".equals(registrationRequestDto.getAdminCode())) {
+            user.setRole(RoleType.ADMIN);
+        } else if (email.endsWith("@student.agh.edu.pl")) {
             user.setRole(RoleType.STUDENT);
         } else if (email.endsWith("@agh.edu.pl")) {
             user.setRole(RoleType.TEACHER);
         }
-
-        user.setEnabled(false);
+        user.setEnabled(true);
         user = userRepo.save(user);
 
-        emailService.sendConfirmationEmail(user);
+        //emailService.sendConfirmationEmail(user);
 
         return user;
     }
