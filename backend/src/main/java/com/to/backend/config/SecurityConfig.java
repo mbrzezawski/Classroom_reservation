@@ -88,6 +88,7 @@ public class SecurityConfig {
                         .requestMatchers("/rooms/**").authenticated()
                         .requestMatchers("/recurring-reservations/**").authenticated()
                         .requestMatchers("/equipment/**").authenticated()
+                        .requestMatchers("/proposals/**").authenticated()
                         .anyRequest().authenticated()
                 )
 

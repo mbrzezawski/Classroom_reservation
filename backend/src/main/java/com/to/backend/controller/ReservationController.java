@@ -35,9 +35,9 @@ public class ReservationController {
     }
 
     // POST /reservations - creates new reservation, returns 201 + Location
-    // FOR: TEACHER
+    // FOR: ADMIN
     @PostMapping
-    @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).TEACHER.name())")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Reservation> createReservation(@RequestBody Reservation reservation) {
         Reservation saved = service.createReservation(reservation);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()

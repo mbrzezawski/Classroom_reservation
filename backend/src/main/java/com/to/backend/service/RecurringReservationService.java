@@ -149,8 +149,16 @@ public class RecurringReservationService {
 
                     reservations.add(new ReservationResponse(
                             r.getId(),
+                            r.getUserId(),
                             r.getRoomId(),
-                            "Sala przydzielona: " + room.getName() + " (data: " + date + ")"
+                            r.getRecurrenceId(),
+                            r.getStart(),
+                            r.getEnd(),
+                            r.getPurpose(),
+                            r.getMinCapacity(),
+                            r.getSoftwareIds(),
+                            r.getEquipmentIds(),
+                            r.getStatus()
                     ));
                 }
 

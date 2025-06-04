@@ -8,6 +8,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class User {
     @Id
     private String id;
+    private String name;
+    private String surname;
     private String email;
     private String password;
     private RoleType role;
@@ -27,4 +29,24 @@ public class User {
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(Boolean enabled) { this.enabled = enabled; }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getSurname() {
+        return surname;
+    }
+
+    public void setSurname(String surname) {
+        this.surname = surname;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
 }
