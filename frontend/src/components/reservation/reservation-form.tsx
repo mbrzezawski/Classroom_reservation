@@ -2,7 +2,7 @@ import InputTextBox from "../ui/input-textbox.tsx";
 import Letter from "../icons/letter";
 import { FormProvider, useForm } from "react-hook-form";
 import DateHourPicker from "./reserving/date-hour-picker";
-import RepeatsAtendeesPicker from "./reserving/repeats-atendees-picker";
+import RoomAtendeesPicker from "./reserving/room-atendees-picker.tsx";
 import FeaturesPicker from "./reserving/features-picker";
 import submitReservation from "./reserving/submit-reservation.ts";
 import { useEffect, useState, type Dispatch, type FC } from "react";
@@ -11,12 +11,18 @@ import type { Action } from "../../store/events-reducer.ts";
 import { useRoomsMap } from "../../hooks/use-rooms-map.tsx";
 import type { Room } from "../../types/room.ts";
 import buildStartEndDate from "../../utils/build-start-end-date.ts";
-import type { EditableReservation, ReservationFormValues } from "../../types/reservations.ts";
+import type {
+  EditableReservation,
+  RecurringReservationResponseDTO,
+  ReservationFormValues,
+  ReservationResponseDTO,
+} from "../../types/reservations.ts";
 import DeleteReservationButton from "./reserving/delete-reservation-button.tsx";
-
+import RecurringOptions from "./reserving/recurring-options.tsx";
 
 interface ReservationFormProps {
   userId: string;
+  role: string;
   dispatch: Dispatch<Action>;
   mode: "create" | "edit";
   onFinishedEditing: () => void;
@@ -25,22 +31,37 @@ interface ReservationFormProps {
 }
 
 const defaultValues: ReservationFormValues = {
+  type: "single",
   title: "",
   date: "",
   startHour: "",
-  repeats: "None",
   atendees: 0,
   equipment: [],
   software: [],
+  roomId: "",
+
+  startDate: "",
+  endDate: "",
+  frequency: undefined,
+  interval: undefined,
+  byDays: [],
+  byMonthDays: [],
 };
 
-const ReservationForm: FC<ReservationFormProps> = ({userId, dispatch, mode, onFinishedEditing, reservationId, editValues}) => {
-
+const ReservationForm: FC<ReservationFormProps> = ({
+  userId,
+  role,
+  dispatch,
+  mode,
+  onFinishedEditing,
+  reservationId,
+  editValues,
+}) => {
   const methods = useForm({
-    defaultValues: editValues || defaultValues
+    defaultValues: editValues || defaultValues,
   });
   const { register, handleSubmit, reset } = methods;
-  
+
   useEffect(() => {
     if (mode === "edit" && editValues) {
       reset(editValues);
@@ -51,27 +72,52 @@ const ReservationForm: FC<ReservationFormProps> = ({userId, dispatch, mode, onFi
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitLabel = isSubmitting
-    ? mode === "create" ? "Booking..." : "Saving..."
-    : mode === "create" ? "Book" : "Save changes";
+    ? mode === "create"
+      ? "Booking..."
+      : "Saving..."
+    : mode === "create"
+    ? "Book"
+    : "Save changes";
 
   const onSubmit = async (data: ReservationFormValues) => {
     setIsSubmitting(true);
     try {
-      const response = await submitReservation(data, userId, mode, reservationId);
+      let response: ReservationResponseDTO | RecurringReservationResponseDTO;
 
-      const [startTime, endTime] = buildStartEndDate(data.date, data.startHour)
-
-      const room: Room = roomsMap[response.roomId];
-      showToast(
-        mode === "create" ? "Booking succeeded" : "Reservation updated",
-        {
-          description: `Room ${room.name} (${room.location}) ${mode === "create" ? "booked" : "updated"} for  
-          ${startTime.toTimeString().slice(0, 5)}-${endTime.toTimeString().slice(0, 5)} ${data.date}`,
-          variant: "success",
-        }
+      response = await submitReservation(
+        data,
+        userId,
+        mode,
+        reservationId
       );
-      const newEvent = {
-          id: response.reservationId,
+
+      console.log("response: ", response)
+      
+      const room: Room = roomsMap[response.roomId];
+      
+      // Check if response is RecurringReservationResponseDTO (has reservations array)
+      const singleReservationList =
+      "reservations" in response
+      ? response.reservations
+      : [response];
+      
+      singleReservationList.forEach(singleReservation => {
+        const [startTime, endTime] = buildStartEndDate(data.startHour,  singleReservation.date );
+        
+        showToast(
+          mode === "create" ? "Booking succeeded" : "Reservation updated",
+          {
+            description: `Room ${room.name} (${room.location}) ${
+              mode === "create" ? "booked" : "updated"
+            } for  
+            ${startTime.toTimeString().slice(0, 5)}-${endTime
+              .toTimeString()
+              .slice(0, 5)} ${data.date}`,
+            variant: "success",
+          }
+        );
+        const newEvent = {
+          id: singleReservation.reservationId,
           title: data.title,
           start: startTime.toISOString(),
           end: endTime.toISOString(),
@@ -81,20 +127,24 @@ const ReservationForm: FC<ReservationFormProps> = ({userId, dispatch, mode, onFi
             atendees: data.atendees,
             equipment: data.equipment,
             software: data.software,
+            roomId: data.roomId
           },
-        }
-      
-      if (mode === "edit"){
-        dispatch({ type: "updateEvent", payload: { oldId: reservationId!, newEvent } });
-        onFinishedEditing();
-      }
-      else
-        dispatch({ type: "addEvent", payload: newEvent });
+        };
+  
+        if (mode === "edit") {
+          dispatch({
+            type: "updateEvent",
+            payload: { oldId: reservationId!, newEvent },
+          });
+          onFinishedEditing();
+        } else dispatch({ type: "addEvent", payload: newEvent });
+      });
 
       reset(defaultValues);
     } catch (error) {
       showToast("Booking failed", {
-        description: error instanceof Error ? error.message : "Unknown error appeared",
+        description:
+          error instanceof Error ? error.message : "Unknown error appeared",
         variant: "destructive",
       });
     } finally {
@@ -106,40 +156,51 @@ const ReservationForm: FC<ReservationFormProps> = ({userId, dispatch, mode, onFi
     <FormProvider {...methods}>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col border px-6 py-8 gap-[30px] rounded-[8px]"
+        className="flex flex-col border px-6 py-8 gap-[8px] rounded-[8px]"
       >
-        {mode === "edit" ? (
-  <div className="flex justify-between items-center">
-    <h2 className="text-xl font-bold">Edit reservation</h2>
-    <DeleteReservationButton
-      reservationId={reservationId!}
-      onFinishedEditing={onFinishedEditing}
-      dispatch={dispatch}
-      resetForm={() => reset(defaultValues)}
-    />
-  </div>
-) : (
-  <h2 className="text-xl font-bold">New reservation</h2>
-)}
+        <div className="flex justify-between items-center mb-2">
+          {mode == "create" && (
+            <div className="flex flex-col gap-2">
+              <label className="font-medium text-xs">Reservation type</label>
+              <select
+                className="select"
+                {...register("type", { required: true })}
+              >
+                <option value="single">Single</option>
+                <option value="recurring">Recurring</option>
+              </select>
+            </div>
+          )}
+          <div className={mode !== "edit" ? "flex-1 ml-4" : ""}>
+            <InputTextBox
+              label="Title"
+              placeholder="Enter meeting title"
+              icon={<Letter />}
+              {...register("title", {
+                required: "Title is required",
+                minLength: {
+                  value: 3,
+                  message: "Title must be at least 3 characters long",
+                },
+              })}
+              error={methods.formState.errors.title?.message}
+            />
+          </div>
 
-        <InputTextBox
-          label="Title"
-          placeholder="Enter meeting title"
-          icon={<Letter />}
-          {...register("title", {
-            required: "Title is required",
-            minLength: {
-              value: 3,
-              message: "Title must be at least 3 characters long",
-            },
-          })}
-          error={methods.formState.errors.title?.message}
-        />
+          {mode === "edit" && (
+            <DeleteReservationButton
+              reservationId={reservationId!}
+              onFinishedEditing={onFinishedEditing}
+              dispatch={dispatch}
+              resetForm={() => reset(defaultValues)}
+            />
+          )}
+        </div>
 
         <DateHourPicker />
-        <RepeatsAtendeesPicker />
+        <RoomAtendeesPicker roomsMap={roomsMap} role={role} />
         <FeaturesPicker />
-
+        {methods.watch("type") === "recurring" && <RecurringOptions />}
         <button
           type="submit"
           className="btn rounded-[6px]"
@@ -148,17 +209,17 @@ const ReservationForm: FC<ReservationFormProps> = ({userId, dispatch, mode, onFi
           {submitLabel}
         </button>
         {mode === "edit" && (
-        <button
-          type="button"
-          className="btn bg-red-500 text-white rounded-[6px]"
-          onClick={() => {
-            onFinishedEditing();
-            reset(defaultValues);
-          }}
-        >
-          Cancel editing
-        </button>
-      )}
+          <button
+            type="button"
+            className="btn bg-red-500 text-white rounded-[6px]"
+            onClick={() => {
+              onFinishedEditing();
+              reset(defaultValues);
+            }}
+          >
+            Cancel editing
+          </button>
+        )}
       </form>
     </FormProvider>
   );

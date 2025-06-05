@@ -11,8 +11,8 @@ import {useLocation} from "react-router-dom";
 
 
 const MainPage = () => {
-  const userId = "682b8bc9811311363ff183d0";
-  const userRole = "DEANS_OFFICE";
+  const userId = "682b8bc4811311363ff183cf";
+  const userRole = "STUDENT";
         
   const location = useLocation();
   const { users } = useUsers();
@@ -46,13 +46,14 @@ const MainPage = () => {
                         const startDate = new Date(event.start);
                         setEditEvent({
                           id: event.id,
+                          type: 'single',
                           title: event.title,
                           date: startDate.toISOString().split("T")[0],
                           startHour: startDate.toTimeString().slice(0, 5),
                           atendees: event.extendedProps.atendees,
                           equipment: event.extendedProps.equipment,
                           software: event.extendedProps.software,
-                          repeats: "None",
+                          roomId: event.extendedProps.roomId,
                         });
                       }}
                     />
@@ -60,6 +61,7 @@ const MainPage = () => {
             </div>
               <ReservationForm
                 userId={userRole === "DEANS_OFFICE" ? effectiveUserId : userId}
+                role={userRole}
                 dispatch={dispatch}
                 mode={editEvent ? "edit" : "create"}
                 reservationId={editEvent?.id}
