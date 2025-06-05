@@ -3,6 +3,7 @@ package com.to.backend.service;
 import com.to.backend.dto.RecurringReservationRequestDto;
 import com.to.backend.dto.RecurringReservationResponseDto;
 import com.to.backend.dto.ReservationResponse;
+import com.to.backend.exception.ConflictException;
 import com.to.backend.exception.NoRoomAvailableException;
 import com.to.backend.exception.NotFoundException;
 import com.to.backend.model.RecurringReservation;
@@ -11,6 +12,7 @@ import com.to.backend.model.Room;
 import com.to.backend.model.utils.ReservationStatus;
 import com.to.backend.repository.RecurringReservationRepository;
 import com.to.backend.repository.ReservationRepository;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class RecurringReservationService {
@@ -29,11 +30,12 @@ public class RecurringReservationService {
     private final ReservationService reservationService;
     private final UserService userService;
     private final RoomService roomService;
+    private final ZoneId zone = ZoneId.of("Europe/Warsaw");
 
 
     public RecurringReservationService(
             RecurringReservationRepository recurringRepo, ReservationRepository reservationRepo,
-            ReservationService reservationService,
+            @Lazy ReservationService reservationService,
             UserService userService, RoomService roomService
     ) {
         this.recurringRepo = recurringRepo;
@@ -218,7 +220,7 @@ public class RecurringReservationService {
         }
 
         // delete all reservations
-        reservationRepo.deleteReservationsByRecurringReservationId(patternId);
+        reservationRepo.deleteByRecurrenceId(patternId);
         // delete pattern
         recurringRepo.deleteById(patternId);
     }
@@ -234,8 +236,78 @@ public class RecurringReservationService {
                 .orElseThrow(() -> new NotFoundException("RecurringReservation", recurringReservationId));
     }
 
+    @Transactional
+    public void splitSeriesAndShift(
+            String recurrenceId,
+            DayOfWeek dayToShift,
+            LocalTime newStart,
+            LocalTime newEnd
+    ) {
+        RecurringReservation original = recurringRepo.findById(recurrenceId)
+                .orElseThrow(() -> new NotFoundException("Series", recurrenceId));
 
+        if (!original.getDays().contains(dayToShift)) {
+            throw new ConflictException("Series nie obejmuje dnia: " + dayToShift);
+        }
 
+        List<DayOfWeek> remainingDays = original.getDays().stream()
+                .filter(d -> d != dayToShift)
+                .toList();
+        original.setDays(remainingDays);
+        recurringRepo.save(original);
 
+        RecurringReservation singleDaySeries = RecurringReservation.builder()
+                .userId(original.getUserId())
+                .roomId(original.getRoomId())
+                .startDate(original.getStartDate())
+                .endDate(original.getEndDate())
+                .startTime(newStart)
+                .endTime(newEnd)
+                .purpose(original.getPurpose())
+                .minCapacity(original.getMinCapacity())
+                .softwareIds(original.getSoftwareIds())
+                .equipmentIds(original.getEquipmentIds())
+                .frequency(original.getFrequency())
+                .interval(original.getInterval())
+                .byDays(List.of(dayToShift))
+                .status(original.getStatus())
+                .build();
+        recurringRepo.save(singleDaySeries);
 
+        ZonedDateTime now = ZonedDateTime.now(zone);
+
+        List<Reservation> occurrences = reservationRepo
+                .findByRecurrenceId(original.getId())
+                .stream()
+                .filter(r ->
+                        r.getStart().getDayOfWeek().equals(dayToShift)
+                                && r.getStart().isAfter(now)
+                )
+                .toList();
+
+        for (Reservation r : occurrences) {
+
+            ZonedDateTime base = r.getStart().withZoneSameInstant(zone);
+
+            ZonedDateTime shiftedStart = ZonedDateTime.of(
+                    base.toLocalDate(),
+                    newStart,
+                    zone
+            );
+            ZonedDateTime shiftedEnd = ZonedDateTime.of(
+                    base.toLocalDate(),
+                    newEnd,
+                    zone
+            );
+
+            r.setStart(shiftedStart);
+            r.setEnd(shiftedEnd);
+            r.setRecurrenceId(singleDaySeries.getId());
+        }
+        reservationRepo.saveAll(occurrences);
+
+        if (original.getDays().isEmpty()) {
+            recurringRepo.delete(original);
+        }
+    }
 }

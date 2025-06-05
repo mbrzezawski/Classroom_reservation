@@ -16,6 +16,7 @@ public class ProposalRequestDto {
 
     private String studentEmail;
     private String originalReservationId;
+    private String originalRecurrenceId;
 
     // Teraz zamiast jednej wspólnej daty, każdy “slot” ma swoją datę i godziny.
     private List<SlotWithDateDto> proposedSlots;
@@ -55,5 +56,13 @@ public class ProposalRequestDto {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public String getOriginalRecurrenceId() {
+        return originalRecurrenceId;
+    }
+
+    public void setOriginalRecurrenceId(String originalRecurrenceId) {
+        this.originalRecurrenceId = originalRecurrenceId;
     }
 }

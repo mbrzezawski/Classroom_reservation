@@ -25,6 +25,7 @@ public class ReservationProposal {
 
     // Jeśli to edycja istniejącej rezerwacji, to tutaj ID tej rezerwacji. Jeśli null → nowa rezerwacja.
     private String originalReservationId;
+    private String originalRecurrenceId;
 
     /**
      * Każda para (proposalsStart[i], proposalsEnd[i]) to pełny ZonedDateTime:
@@ -51,6 +52,7 @@ public class ReservationProposal {
             String teacherId,
             String studentId,
             String originalReservationId,
+            String originalRecurrenceId,
             List<ZonedDateTime> proposalsStart,
             List<ZonedDateTime> proposalsEnd,
             String comment
@@ -58,6 +60,7 @@ public class ReservationProposal {
         this.teacherId = teacherId;
         this.studentId = studentId;
         this.originalReservationId = originalReservationId;
+        this.originalRecurrenceId = originalRecurrenceId;
         this.proposalsStart = proposalsStart;
         this.proposalsEnd = proposalsEnd;
         this.comment = comment;
@@ -133,5 +136,13 @@ public class ReservationProposal {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public String getOriginalRecurrenceId() {
+        return originalRecurrenceId;
+    }
+
+    public void setOriginalRecurrenceId(String originalRecurrenceId) {
+        this.originalRecurrenceId = originalRecurrenceId;
     }
 }

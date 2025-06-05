@@ -25,12 +25,14 @@ public class ReservationService {
     private final ReservationRepository reservationRepo;
     private final RoomService roomService;
     private final UserService userService;
+    private final RecurringReservationService recurringReservationService;
+
     private final ReservationProposalRepository proposalRepo;
     private final UserRepository userRepo;
     private final ZoneId zone = ZoneId.of("Europe/Warsaw");
 
     public ReservationService(ReservationRepository reservationRepo,
-                              RecurringReservationRepository recurringRepo,
+                              RecurringReservationService recurringReservationService,
                               RoomService roomService, UserService userService,
                               ReservationProposalRepository proposalRepo,
                               UserRepository userRepo) {
@@ -39,6 +41,7 @@ public class ReservationService {
         this.userService = userService;
         this.proposalRepo = proposalRepo;
         this.userRepo = userRepo;
+        this.recurringReservationService = recurringReservationService;
     }
 
     public Reservation createReservation(Reservation reservation) {
@@ -290,21 +293,30 @@ public class ReservationService {
             endTimes.add(zEnd);
         }
 
-        // 5) Jeśli podano originalReservationId (edycja istniejącej rezerwacji),
-        // to sprawdzamy, czy faktycznie istnieje taka rezerwacja:
-        String origId = dto.getOriginalReservationId();
-        System.out.println(origId);
-        if (origId != null) {
-            // Jeżeli nie znaleziono – rzucamy NotFoundException
-            reservationRepo.findById(origId)
-                    .orElseThrow(() -> new NotFoundException("Original Reservation", origId));
+        String singleId     = dto.getOriginalReservationId();
+        String recurrenceId = dto.getOriginalRecurrenceId();
+
+        if ( (singleId == null) == (recurrenceId == null) ) {
+            throw new ConflictException(
+                    "Exactly one of originalReservationId or originalRecurrenceId must be provided");
         }
 
-        // 6) Tworzymy nowy obiekt ReservationProposal i zapisujemy
+        if (singleId != null) {
+            reservationRepo.findById(singleId)
+                    .orElseThrow(() -> new NotFoundException("Original Reservation", singleId));
+        }
+        if (recurrenceId != null) {
+            boolean exists = reservationRepo.existsByRecurrenceId(recurrenceId);
+            if (!exists) {
+                throw new NotFoundException("Recurring reservation", recurrenceId);
+            }
+        }
+
         ReservationProposal proposal = new ReservationProposal(
                 teacher.getId(),
                 student.getId(),
-                origId,
+                singleId,
+                recurrenceId,
                 startTimes,
                 endTimes,
                 dto.getComment()
@@ -388,6 +400,7 @@ public class ReservationService {
         // 7) Jeśli mamy edycję istniejącej rezerwacji (originalReservationId != null),
         //    odczytaj encję Reservation, ustaw start/end i status = CONFIRMED, zapisz.
         String origId = proposal.getOriginalReservationId();
+        String recurrenceId = proposal.getOriginalRecurrenceId();
         Reservation savedReservation;
         if (origId != null) {
             Reservation existing = reservationRepo.findById(origId)
@@ -397,7 +410,29 @@ public class ReservationService {
             existing.setEnd(selectedEnd);
             existing.setStatus(ReservationStatus.CONFIRMED);
             savedReservation = reservationRepo.save(existing);
-        } else {
+        } else if (recurrenceId != null){
+            DayOfWeek dayToShift = selectedStart.getDayOfWeek();
+            LocalTime newStart   = selectedStart.toLocalTime();
+            LocalTime newEnd     = selectedEnd.toLocalTime();
+
+            recurringReservationService.splitSeriesAndShift(
+                    recurrenceId,
+                    dayToShift,
+                    newStart,
+                    newEnd
+            );
+
+            List<Reservation> updatedOccurrences =
+                    reservationRepo.findByRecurrenceId(recurrenceId);
+
+            if (updatedOccurrences.isEmpty()) {
+                throw new NotFoundException("Reservation after split", recurrenceId);
+            }
+            savedReservation = updatedOccurrences.getFirst();
+        }
+
+
+        else {
             // 8) Jeżeli to nowa rezerwacja → w tym miejscu tworzymy nowy obiekt Reservation korzystając
             //    z wcześniej przygotowanej logiki “reserve(...)” lub bezpośrednio zapisujemy, jeśli
             //    w ProposalRequestDto przekazaliśmy wszystkie niezbędne dane (roomId, purpose, minCapacity itd.).

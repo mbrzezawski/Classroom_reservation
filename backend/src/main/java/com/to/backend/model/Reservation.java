@@ -15,7 +15,7 @@ public class Reservation {
     @Id private String id;
     private String userId;
     private String roomId;
-    private String recurringReservationId;
+    private String recurrenceId;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private ZonedDateTime start;
@@ -53,8 +53,8 @@ public class Reservation {
     public String getRoomId() { return roomId; }
     public void setRoomId(String roomId) { this.roomId = roomId; }
 
-    public String getRecurrenceId() { return recurringReservationId; }
-    public void setRecurrenceId(String recurrenceId) { this.recurringReservationId = recurrenceId; }
+    public String getRecurrenceId() { return recurrenceId; }
+    public void setRecurrenceId(String recurrenceId) { this.recurrenceId = recurrenceId; }
 
     public ZonedDateTime getStart() { return this.start; }
     public void setStart(ZonedDateTime start) { this.start = start; }
