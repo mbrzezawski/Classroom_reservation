@@ -1,4 +1,9 @@
-function buildStartEndDate(date: string, startHour: string): [Date, Date] {
+function buildStartEndDate(startHour: string, date?: string ): [Date, Date] {
+  if(!date){
+    date = "2024-06-01";
+  }
+  else
+  date = date;
   const [year, month, day] = date.split("-").map(Number);
   const [hour, minute] = startHour.split(":").map(Number);
   const start = new Date(year, month - 1, day, hour, minute);
