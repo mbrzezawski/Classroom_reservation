@@ -197,7 +197,7 @@ const ReservationForm: FC<ReservationFormProps> = ({
           )}
         </div>
 
-        <DateHourPicker />
+        <DateHourPicker type={methods.watch("type")}/>
         <RoomAtendeesPicker roomsMap={roomsMap} role={role} />
         <FeaturesPicker />
         {methods.watch("type") === "recurring" && <RecurringOptions />}
