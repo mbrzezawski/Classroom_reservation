@@ -3,8 +3,11 @@ import { useLocation } from "react-router-dom";
 import Mail from "../icons/mail";
 import User from "../icons/user";
 import { useLogout } from "../../hooks/use-logout";
+import ListMenu from "./list-menu.tsx";
 
-export const NavBar: FC = () => {
+
+
+export const NavBar: FC<{ userRole?: string }> = ({ userRole }) => {
   const location = useLocation();
   const isAuthPage =
     location.pathname == "/login" || location.pathname == "/signup";
@@ -18,6 +21,7 @@ export const NavBar: FC = () => {
         <div className="text-2xl font-bold mx-auto">UniReserve</div>
         {!isAuthPage && (
           <div className="flex gap-2 justify-end absolute right-0">
+            {userRole === "DEANS_OFFICE" && <ListMenu />}
             <div className="dropdown">
               <div tabIndex={0} role="button" className="btn m-1">
                 <Mail />

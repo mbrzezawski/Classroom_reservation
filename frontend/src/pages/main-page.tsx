@@ -12,7 +12,7 @@ import {useLocation} from "react-router-dom";
 
 const MainPage = () => {
   const userId = "682b8bc4811311363ff183cf";
-  const userRole = "STUDENT";
+  const userRole = "DEANS_OFFICE";
         
   const location = useLocation();
   const { users } = useUsers();
@@ -30,7 +30,7 @@ const MainPage = () => {
   const [editEvent, setEditEvent] = useState<EditableReservation | null>(null);
 
   return (
-    <Layout>
+    <Layout userRole={userRole}>
         <div className="grid grid-cols-3 min-h-screen gap-4 p-4">
             <div className="col-span-2 flex flex-col gap-4">
                 { userRole === "DEANS_OFFICE" &&
