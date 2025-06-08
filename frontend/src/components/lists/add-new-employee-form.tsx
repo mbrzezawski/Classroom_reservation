@@ -44,20 +44,21 @@ const AddUserForm = () => {
                 <h2 className="text-[32px] text-center font-semibold">Add New User</h2>
 
                 <InputTextBox
+                    icon={undefined}
                     label="First Name"
                     placeholder="Enter first name"
                     error={errors.firstName?.message}
-                    {...register("firstName", { required: "First name is required" })}
-                />
+                    {...register("firstName", {required: "First name is required"})}                />
 
                 <InputTextBox
+                    icon={undefined}
                     label="Last Name"
                     placeholder="Enter last name"
                     error={errors.lastName?.message}
-                    {...register("lastName", { required: "Last name is required" })}
-                />
+                    {...register("lastName", {required: "Last name is required"})}                />
 
                 <InputTextBox
+                    icon={undefined}
                     label="Email"
                     type="email"
                     placeholder="Enter email"
@@ -68,8 +69,7 @@ const AddUserForm = () => {
                             value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                             message: "Invalid email format",
                         },
-                    })}
-                />
+                    })}                />
 
                 <div className="flex flex-col gap-2">
                     <label className="text-sm font-medium">Role</label>
