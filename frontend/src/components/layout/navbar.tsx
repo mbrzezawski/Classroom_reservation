@@ -1,16 +1,19 @@
 import type { FC } from "react";
-import { useLocation } from "react-router-dom";
+import {useLocation, useNavigate} from "react-router-dom";
 import Mail from "../icons/mail";
 import User from "../icons/user";
 import { useLogout } from "../../hooks/use-logout";
 import ListMenu from "./list-menu.tsx";
+import ArrowBack from "../icons/arrow-back.tsx";
 
 
 
 export const NavBar: FC<{ userRole?: string }> = ({ userRole }) => {
+  const navigate = useNavigate();
   const location = useLocation();
   const isAuthPage =
     location.pathname == "/login" || location.pathname == "/signup";
+  const isListPage = location.pathname == "/employees" || location.pathname == "/rooms";
   const logout = useLogout();
   return (
     <div className="navbar bg-base-200 shadow-sm">
@@ -21,9 +24,19 @@ export const NavBar: FC<{ userRole?: string }> = ({ userRole }) => {
         <div className="text-2xl font-bold mx-auto">UniReserve</div>
         {!isAuthPage && (
           <div className="flex gap-2 justify-end absolute right-0">
-            {userRole === "DEANS_OFFICE" && <ListMenu />}
+
+            {isListPage &&
+                <div tabIndex={0} role="button" className="btn m-1" onClick={() => {
+                  navigate("/main")
+                }}>
+                  <ArrowBack/>
+                </div>
+            }
+
+            {userRole === "DEANS_OFFICE" && <ListMenu/>}
+
             <div className="dropdown">
-              <div tabIndex={0} role="button" className="btn m-1">
+            <div tabIndex={0} role="button" className="btn m-1">
                 <Mail />
               </div>
               <ol
