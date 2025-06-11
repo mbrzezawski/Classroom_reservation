@@ -42,12 +42,12 @@ public class GlobalExceptionHandler {
 
     // 409 Conflict - reservation
     @ExceptionHandler(NoRoomAvailableException.class)
-    public ResponseEntity<ReservationResponse> handleNoRoom(NoRoomAvailableException ex) {
-        ReservationResponse resp = new ReservationResponse(null, null, ex.getMessage());
+    public ResponseEntity<Void> handleNoRoom(NoRoomAvailableException ex) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(resp);
+                .build();
     }
+
 
     // 500 Internal Server Error
     @ExceptionHandler(RuntimeException.class)

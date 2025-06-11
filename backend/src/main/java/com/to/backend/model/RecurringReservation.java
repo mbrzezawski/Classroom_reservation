@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Data                              // getter, setter, equals, hashCode, toString
@@ -38,6 +39,14 @@ public class RecurringReservation {
 
     private Frequency frequency;
     private int interval;
+
+    public List<DayOfWeek> getDays() {
+        return byDays;
+    }
+
+    public void setDays(List<DayOfWeek> byDays) {
+        this.byDays = byDays;
+    }
 
     private List<DayOfWeek> byDays;
 

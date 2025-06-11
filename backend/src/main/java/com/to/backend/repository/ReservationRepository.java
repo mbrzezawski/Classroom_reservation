@@ -3,9 +3,7 @@ package com.to.backend.repository;
 import com.to.backend.model.Reservation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.DayOfWeek;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -29,9 +27,14 @@ public interface ReservationRepository extends MongoRepository<Reservation, Stri
             ZonedDateTime to
     );
 
-    void deleteReservationsByRecurringReservationId(
-            String recurringReservationId
+    void deleteByRecurrenceId(
+            String recurrenceId
     );
 
     List<Reservation> findByUserIdOrderByStartAsc(String userId);
+
+    List<Reservation> findByRecurrenceId(String recurrenceId);
+
+    boolean existsByRecurrenceId(String recurrenceId);
+
 }
