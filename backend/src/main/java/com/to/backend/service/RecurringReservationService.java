@@ -1,8 +1,6 @@
 package com.to.backend.service;
 
-import com.to.backend.dto.RecurringReservationRequestDto;
-import com.to.backend.dto.RecurringReservationResponseDto;
-import com.to.backend.dto.ReservationResponse;
+import com.to.backend.dto.*;
 import com.to.backend.exception.ConflictException;
 import com.to.backend.exception.NoRoomAvailableException;
 import com.to.backend.exception.NotFoundException;
@@ -22,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class RecurringReservationService {
@@ -45,7 +44,7 @@ public class RecurringReservationService {
         this.roomService = roomService;
     }
 
-    private List<LocalDate> generateDates(RecurringReservation pattern) {
+    List<LocalDate> generateDates(RecurringReservationRequest pattern) {
         List<LocalDate> dates = new ArrayList<>();
         LocalDate start = pattern.getStartDate();
         LocalDate d = start;
@@ -84,7 +83,7 @@ public class RecurringReservationService {
 
 
     @Transactional
-    public RecurringReservationResponseDto createRecurringReservations(RecurringReservationRequestDto dto) {
+    public RecurringReservationResponse createRecurringReservations(RecurringReservationRequest dto) {
         ZoneId zone = ZoneId.of("Europe/Warsaw");
 
         // 1) Zapisz wzorzec bez roomId
@@ -107,7 +106,7 @@ public class RecurringReservationService {
         pattern = recurringRepo.save(pattern);
 
         // 2) Wygeneruj daty
-        List<LocalDate> dates = generateDates(pattern);
+        List<LocalDate> dates = generateDates(dto);
 
         // 3) Kandydaci sal
         List<Room> candidates = roomService.getAllRooms().stream()
@@ -135,17 +134,18 @@ public class RecurringReservationService {
                 for (LocalDate date : dates) {
                     ZonedDateTime start = ZonedDateTime.of(date, sTime, zone);
                     ZonedDateTime end   = ZonedDateTime.of(date, eTime, zone);
-                    Reservation r = new Reservation(
-                            dto.getUserId(),
-                            room.getId(),
-                            start,
-                            end,
-                            dto.getPurpose(),
-                            dto.getMinCapacity(),
-                            dto.getSoftwareIds(),
-                            dto.getEquipmentIds(),
-                            ReservationStatus.CONFIRMED
-                    );
+                    Reservation r = Reservation.builder()
+                            .userId(dto.getUserId())
+                            .roomId(room.getId())
+                            .start(start)
+                            .end(end)
+                            .purpose(dto.getPurpose())
+                            .minCapacity(dto.getMinCapacity())
+                            .softwareIds(dto.getSoftwareIds())
+                            .equipmentIds(dto.getEquipmentIds())
+                            .status(ReservationStatus.CONFIRMED)
+                            .build();
+
                     r.setRecurrenceId(pattern.getId());
                     reservationRepo.save(r);
 
@@ -171,7 +171,7 @@ public class RecurringReservationService {
                 recurringRepo.save(pattern);
 
                 // 7) Zwróć
-                return RecurringReservationResponseDto.builder()
+                return RecurringReservationResponse.builder()
                         .recurringReservationId(pattern.getId())
                         .roomId(room.getId())
                         .startDate(pattern.getStartDate())
@@ -200,9 +200,9 @@ public class RecurringReservationService {
      * Aktualizuje wzorzec (np. zmiana czasu, daty) i regeneruje rezerwacje.
      */
     @Transactional
-    public RecurringReservationResponseDto updatePattern(
+    public RecurringReservationResponse updatePattern(
             String patternId,
-            RecurringReservationRequestDto dto
+            RecurringReservationRequest dto
     ) {
         RecurringReservation existing = recurringRepo.findById(patternId)
                 .orElseThrow(() -> new NotFoundException("RecurringReservation", patternId));
@@ -310,4 +310,33 @@ public class RecurringReservationService {
             recurringRepo.delete(original);
         }
     }
+
+//    /**
+//     * Generuje listę SlotWithDateDto zgodnie z parametrami z DTO,
+//     * ale nie zapisuje niczego w bazie.
+//     */
+//    /**
+//     * Bazując na polach z ProposalRequestDto (które teraz zawiera
+//     * też startDate/endDate/frequency/interval/byDays/byMonthDays),
+//     * generuje dokładną listę SlotWithDateDto.
+//     */
+//    public List<SlotWithDateDto> expandPattern(ProposalRequestDto dto) {
+//        // Zmapuj ProposalRequestDto → RecurringReservationRequestDto
+//        RecurringReservationRequestDto rDto = new RecurringReservationRequestDto();
+//        rDto.setStartDate(dto.getStartDate());
+//        rDto.setEndDate(dto.getEndDate());
+//        rDto.setStartTime(dto.getStartTime());
+//        rDto.setEndTime(dto.getEndTime());
+//        rDto.setFrequency(dto.getFrequency());
+//        rDto.setInterval(dto.getInterval());
+//        rDto.setByDays(dto.getByDays());
+//        rDto.setByMonthDays(dto.getByMonthDays());
+//        // (reszta pól niepotrzebna do generowania dat)
+//
+//        // Wygeneruj daty
+//        List<LocalDate> dates = generateDates(rDto);
+//        return dates.stream()
+//                .map(d -> new SlotWithDateDto(d, rDto.getStartTime(), rDto.getEndTime()))
+//                .collect(Collectors.toList());
+//    }
 }

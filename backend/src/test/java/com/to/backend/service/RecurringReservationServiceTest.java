@@ -1,7 +1,7 @@
 package com.to.backend.service;
 
 import com.to.backend.dto.RecurringReservationRequestDto;
-import com.to.backend.dto.RecurringReservationResponseDto;
+import com.to.backend.dto.RecurringReservationResponse;
 import com.to.backend.exception.NoRoomAvailableException;
 import com.to.backend.model.RecurringReservation;
 import com.to.backend.model.Reservation;
@@ -100,7 +100,7 @@ class RecurringReservationServiceTest {
 
         RecurringReservationRequestDto dto = buildTestDto();  // pomocnicza metoda poniżej
 
-        RecurringReservationResponseDto response = service.createRecurringReservations(dto);
+        RecurringReservationResponse response = service.createRecurringReservations(dto);
 
         assertNotNull(response.getRecurringReservationId());
         assertEquals("R1", response.getRoomId());
@@ -131,7 +131,7 @@ class RecurringReservationServiceTest {
         when(reservationRepo.findByRoomIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
                 anyString(), any(), any(), any())).thenReturn(List.of());
 
-        RecurringReservationResponseDto result = service.createRecurringReservations(dto);
+        RecurringReservationResponse result = service.createRecurringReservations(dto);
 
         assertNotNull(result.getRecurringReservationId());
         assertEquals("R1", result.getRoomId(), "Should pick the smallest sufficient room");

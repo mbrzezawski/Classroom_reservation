@@ -16,14 +16,17 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/users/me")
 @Validated
-@PreAuthorize("isAuthenticated()")    // require any logged-in user
+@PreAuthorize("isAuthenticated()") // FOR: EVERYONE LOGGED IN
 public class UserProfileController {
+
     private final UserService userService;
 
     public UserProfileController(UserService userService){
         this.userService = userService;
     }
 
+    // GET /users/me – retrieves current user's profile
+    // FOR: EVERYONE LOGGED IN
     @GetMapping
     public User getMyProfile(@AuthenticationPrincipal CustomUserDetails principal) {
         User me = principal.getUser();
@@ -31,6 +34,8 @@ public class UserProfileController {
         return me;
     }
 
+    // PUT /users/me – updates current user's email address
+    // FOR: EVERYONE LOGGED IN
     @PutMapping
     public ResponseEntity<User> updateProfile(
             @AuthenticationPrincipal CustomUserDetails principal,
@@ -44,6 +49,8 @@ public class UserProfileController {
         return ResponseEntity.ok(updated);
     }
 
+    // POST /users/me/password – changes current user's password
+    // FOR: EVERYONE LOGGED IN
     @PostMapping("/password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void changePassword(
@@ -57,3 +64,4 @@ public class UserProfileController {
         );
     }
 }
+

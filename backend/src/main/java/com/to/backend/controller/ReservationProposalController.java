@@ -26,48 +26,38 @@ public class ReservationProposalController {
         this.reservationService = reservationService;
     }
 
-    /**
-     * 1. Tworzenie propozycji: /proposals
-     *    - tylko TEACHER
-     *    - w body: ProposalRequestDto (z List<SlotWithDateDto>)
-     *    Zwracamy utworzoną encję ReservationProposal (możemy też zwrócić DTO).
-     */
+    // POST /proposals – creates new proposal from teacher to students
+    // FOR: TEACHER, ADMIN
     @PostMapping
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<ReservationProposal> createProposal(
             @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody ProposalRequestDto dto) {
-
+            @Valid @RequestBody ProposalRequestDto dto
+    ) {
         ReservationProposal saved = reservationService.createProposal(dto, userDetails.getUsername());
         return ResponseEntity.ok(saved);
     }
 
-    /**
-     * 2. Pobranie wszystkich pending‐proposals dla zalogowanego studenta
-     *    - tylko STUDENT
-     *    - zwracamy listę ProposalResponseDto
-     */
+    // GET /proposals/student – retrieves pending proposals for current student
+    // FOR: STUDENT, ADMIN
     @GetMapping("/student")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
     public ResponseEntity<List<ProposalResponseDto>> listProposalsForStudent(
-            @AuthenticationPrincipal UserDetails userDetails) {
-
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
         List<ProposalResponseDto> list = reservationService.listProposalsForStudent(userDetails.getUsername());
         return ResponseEntity.ok(list);
     }
 
-    /**
-     * 3. Potwierdzenie wyboru slotu przez studenta: /proposals/{proposalId}/confirm
-     *    - tylko STUDENT
-     *    - w body: ConfirmProposalDto { chosenIndex: 0..size-1 }
-     *    - zwracamy ReservationResponse (pełną rezerwację po zatwierdzeniu/utworzeniu)
-     */
+    // POST /proposals/{proposalId}/confirm – confirms selected slot from proposal
+    // FOR: STUDENT, ADMIN
     @PostMapping("/{proposalId}/confirm")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
     public ResponseEntity<ReservationResponse> confirmProposal(
             @PathVariable String proposalId,
             @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody ConfirmProposalDto confirmDto) {
-
+            @Valid @RequestBody ConfirmProposalDto confirmDto
+    ) {
         ReservationResponse resp = reservationService.confirmProposal(
                 proposalId,
                 confirmDto,
@@ -76,17 +66,17 @@ public class ReservationProposalController {
         return ResponseEntity.ok(resp);
     }
 
-    /**
-     * 4. Student odrzuca całą propozycję: /proposals/{proposalId}/reject
-     *    - tylko STUDENT
-     */
+    // POST /proposals/{proposalId}/reject – rejects the entire proposal
+    // FOR: STUDENT, ADMIN
     @PostMapping("/{proposalId}/reject")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
     public ResponseEntity<Void> rejectProposal(
             @PathVariable String proposalId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
         reservationService.rejectProposal(proposalId, userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
 }
+
+

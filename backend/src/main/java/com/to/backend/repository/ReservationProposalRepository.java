@@ -4,6 +4,7 @@ import com.to.backend.model.ReservationProposal;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Repozytorium do encji ReservationProposal.
@@ -15,4 +16,8 @@ public interface ReservationProposalRepository extends MongoRepository<Reservati
 
     // (opcjonalnie) znajdź historię wszystkich propozycji dla danego oryginału
     List<ReservationProposal> findByOriginalReservationId(String originalReservationId);
+
+    Optional<Object> findByTeacherIdAndStudentIdAndOriginalReservationIdIsNull(String teacherId, String studentId);
+
+    List<ReservationProposal> findByOriginalRecurrenceId(String originalRecurrenceId);
 }

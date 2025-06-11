@@ -42,14 +42,6 @@ public class RoomController {
     // GET /rooms – retrieves all rooms
     // FOR: EVERYONE LOGGED IN
     @GetMapping
-//    @PreAuthorize(
-//            "hasAnyRole(" +
-//                    "T(com.to.backend.model.utils.RoleType).ADMIN.name(), " +
-//                    "T(com.to.backend.model.utils.RoleType).TEACHER.name(), " +
-//                    "T(com.to.backend.model.utils.RoleType).STUDENT.name(), " +
-//                    "T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()" +
-//                    ")"
-//    )
     public ResponseEntity<List<Room>> getAllRooms() {
         return ResponseEntity.ok(service.getAllRooms());
     }
@@ -57,14 +49,6 @@ public class RoomController {
     // GET /rooms/{id} – retrieves room by id or returns 404
     // FOR: EVERYONE LOGGED IN
     @GetMapping("/{id}")
-//    @PreAuthorize(
-//            "hasAnyRole(" +
-//                    "T(com.to.backend.model.utils.RoleType).ADMIN.name(), " +
-//                    "T(com.to.backend.model.utils.RoleType).TEACHER.name(), " +
-//                    "T(com.to.backend.model.utils.RoleType).STUDENT.name(), " +
-//                    "T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()" +
-//                    ")"
-//    )
     public ResponseEntity<Room> getRoomById(@PathVariable String id) {
         Room room = service.getRoomById(id);
         return ResponseEntity.ok(room);
