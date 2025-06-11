@@ -19,10 +19,12 @@ import type {
 } from "../../types/reservations.ts";
 import DeleteReservationButton from "./reserving/delete-reservation-button.tsx";
 import RecurringOptions from "./reserving/recurring-options.tsx";
+import type { RoleType } from "../../types/user-role.ts";
+import { useAuth } from "../../auth/auth-context";
 
 interface ReservationFormProps {
   userId: string;
-  role: string;
+  role: RoleType;
   dispatch: Dispatch<Action>;
   mode: "create" | "edit";
   onFinishedEditing: () => void;
@@ -57,6 +59,8 @@ const ReservationForm: FC<ReservationFormProps> = ({
   reservationId,
   editValues,
 }) => {
+  const { token } = useAuth();
+  if (!token) return;
   const methods = useForm({
     defaultValues: editValues || defaultValues,
   });
@@ -87,23 +91,25 @@ const ReservationForm: FC<ReservationFormProps> = ({
       response = await submitReservation(
         data,
         userId,
+        token,
         mode,
         reservationId
       );
 
-      console.log("response: ", response)
-      
+      console.log("response: ", response);
+
       const room: Room = roomsMap[response.roomId];
-      
+
       // Check if response is RecurringReservationResponseDTO (has reservations array)
       const singleReservationList =
-      "reservations" in response
-      ? response.reservations
-      : [response];
-      
-      singleReservationList.forEach(singleReservation => {
-        const [startTime, endTime] = buildStartEndDate(data.startHour,  singleReservation.date );
-        
+        "reservations" in response ? response.reservations : [response];
+
+      singleReservationList.forEach((singleReservation) => {
+        const [startTime, endTime] = buildStartEndDate(
+          data.startHour,
+          singleReservation.date
+        );
+
         showToast(
           mode === "create" ? "Booking succeeded" : "Reservation updated",
           {
@@ -127,10 +133,10 @@ const ReservationForm: FC<ReservationFormProps> = ({
             atendees: data.atendees,
             equipment: data.equipment,
             software: data.software,
-            roomId: data.roomId
+            roomId: data.roomId,
           },
         };
-  
+
         if (mode === "edit") {
           dispatch({
             type: "updateEvent",
@@ -197,7 +203,7 @@ const ReservationForm: FC<ReservationFormProps> = ({
           )}
         </div>
 
-        <DateHourPicker type={methods.watch("type")}/>
+        <DateHourPicker type={methods.watch("type")} />
         <RoomAtendeesPicker roomsMap={roomsMap} role={role} />
         <FeaturesPicker />
         {methods.watch("type") === "recurring" && <RecurringOptions />}

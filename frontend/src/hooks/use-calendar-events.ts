@@ -3,16 +3,22 @@ import { API_URL } from "../api";
 import type { CalendarReservationDto, FullCalendarEvent } from "../types/calendar-event";
 import showToast from "./show-toast";
 import eventsReducer from "../store/events-reducer";
+import { useAuth } from "../auth/auth-context";
 
   function useCalendarEvents(userId: string) {
     const [events, dispatch] = useReducer(eventsReducer, []);
-    useEffect(() => {
-    console.log("Aktualne eventy:", events);
-    }, [events]);
+    const {token} = useAuth();
+    // useEffect(() => {
+    // console.log("Aktualne eventy:", events);
+    // }, [events]);
     useEffect(() =>{
         if(!userId) return
 
-        fetch(`${API_URL}/reservations/calendar?userId=${userId}`)
+        fetch(`${API_URL}/reservations/calendar?userId=${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
         .then((res) => res.json())
         .then((data: CalendarReservationDto[]) =>{
             const mappedEvents: FullCalendarEvent[] = data.map((event: CalendarReservationDto) => ({

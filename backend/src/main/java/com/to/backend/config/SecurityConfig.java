@@ -80,6 +80,7 @@ public class SecurityConfig {
 
 
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/auth/**", "/error").permitAll()
                         .requestMatchers("/reservations/**").authenticated()
                         .requestMatchers("/users/**").authenticated()
