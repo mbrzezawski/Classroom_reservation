@@ -43,6 +43,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const data = await res.json();
       setUser(data);
+      console.log(token)
     } catch (err) {
       console.error("fetchUser error:", err);
       logout();
