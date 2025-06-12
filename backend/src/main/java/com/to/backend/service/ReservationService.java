@@ -174,7 +174,7 @@ public class ReservationService {
         List<ReservationRequest> singleReqs = List.of();
         List<RecurringReservationRequest> recurReqs = List.of();
 
-        // ✅ Tryb pojedynczy
+        // Tryb pojedynczy
         if (dto.getReservationRequests() != null && !dto.getReservationRequests().isEmpty()) {
             if (dto.getReservationRequests().size() > 3) {
                 throw new ConflictException("Max 3 pojedyncze requesty");
@@ -194,7 +194,7 @@ public class ReservationService {
                         }
                     })
                     .map(r -> ReservationRequest.builder()
-                            .userId(student.getId())
+                            .userId(teacher.getId())
                             .date(r.getDate())
                             .startTime(r.getStartTime())
                             .endTime(r.getEndTime())
@@ -206,7 +206,7 @@ public class ReservationService {
                     .toList();
         }
 
-        // ✅ Tryb cykliczny
+        // Tryb cykliczny
         else if (dto.getRecurringRequests() != null && !dto.getRecurringRequests().isEmpty()) {
             if (dto.getRecurringRequests().size() > 3) {
                 throw new ConflictException("Max 3 cykliczne requesty");
@@ -225,7 +225,7 @@ public class ReservationService {
                                 recurringReservationService.generateDates(r);
                         for (LocalDate date : dates) {
                             ReservationRequest virtualRequest = ReservationRequest.builder()
-                                    .userId(student.getId())
+                                    .userId(teacher.getId())
                                     .date(date)
                                     .startTime(r.getStartTime())
                                     .endTime(r.getEndTime())
@@ -244,7 +244,7 @@ public class ReservationService {
                         }
                     })
                     .map(r -> RecurringReservationRequest.builder()
-                            .userId(student.getId())
+                            .userId(teacher.getId())
                             .startDate(r.getStartDate())
                             .startTime(r.getStartTime())
                             .endTime(r.getEndTime())
@@ -330,7 +330,7 @@ public class ReservationService {
         ReservationResponse savedReservation;
 
         if (proposal.getOriginalReservationId() != null) {
-            // ✅ Pojedyncza rezerwacja
+            // Pojedyncza rezerwacja
             int chosen = confirmDto.getChosenIndex();
             if (proposal.getReservationRequests() == null || proposal.getReservationRequests().isEmpty()) {
                 throw new ConflictException("Proposal does not contain any reservation requests");
@@ -344,7 +344,7 @@ public class ReservationService {
             savedReservation = updateReservation(proposal.getOriginalReservationId(), chosenRequest);
 
         } else if (proposal.getOriginalRecurrenceId() != null) {
-            // ✅ Rezerwacja cykliczna
+            // Rezerwacja cykliczna
             int chosen = confirmDto.getChosenIndex();
             if (proposal.getRecurringRequests() == null || proposal.getRecurringRequests().isEmpty()) {
                 throw new ConflictException("Proposal does not contain any recurring requests");
