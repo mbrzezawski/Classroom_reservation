@@ -23,35 +23,14 @@ export const NavBar: FC = () => {
         <div className="text-2xl font-bold mx-auto">UniReserve</div>
         {!isAuthPage && (
           <div className="flex gap-2 justify-end absolute right-0">
-            <div className="dropdown">
-              <div tabIndex={0} role="button" className="btn m-1">
-                <Mail />
-              </div>
-              <ol
-                tabIndex={0}
-                className="dropdown-content dropdown-bottom dropdown-center menu bg-base-100 gap-1"
+              <button
+                type="button"
+                className="btn m-1 flex items-center justify-center cursor-pointer"
+                aria-label="Go to proposals"
+                onClick={() => navigate("/proposals")}
               >
-                {/* oczywiscie tutaj mapa powiadomien z jakims limitem i na koncu przycisk show all */}
-                <li>
-                  <button className="whitespace-nowrap">
-                    Confirm meeting A
-                  </button>
-                </li>
-                <li>
-                  <button className="whitespace-nowrap">
-                    Confirm meeting B
-                  </button>
-                </li>
-                <li>
-                  <button className="whitespace-nowrap">
-                    Confirm meeting B
-                  </button>
-                </li>
-                <li>
-                  <button className="btn-link">Show all </button>
-                </li>
-              </ol>
-            </div>
+                <Mail />
+              </button>
             <div className="dropdown dropdown-bottom dropdown-end">
               <div tabIndex={0} role="button" className="btn m-1">
                 <User />

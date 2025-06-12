@@ -1,13 +1,13 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes: light --default, dark --prefersdark;
+  themes: light --default;
 }
 
 :root {
   font-family: "Inter", sans-serif;
 
   
-  color-scheme: light dark ;
+  color-scheme: light;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;

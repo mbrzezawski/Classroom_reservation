@@ -14,6 +14,8 @@ public interface ReservationProposalRepository extends MongoRepository<Reservati
     // Znajdź wszystkie propozycje PENDING przeznaczone dla danego studenta
     List<ReservationProposal> findByStudentIdAndStatus(String studentId, com.to.backend.model.utils.ProposalStatus status);
 
+    List<ReservationProposal> findByStudentId(String studentId);
+
     // (opcjonalnie) znajdź historię wszystkich propozycji dla danego oryginału
     List<ReservationProposal> findByOriginalReservationId(String originalReservationId);
 
