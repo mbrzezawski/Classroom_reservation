@@ -1,6 +1,7 @@
 import { FormProvider, useForm } from "react-hook-form";
 import InputTextBox from "../ui/input-textbox";
 import { useState } from "react";
+import {createUser} from "../../hooks/userService.ts";
 
 type Role = "EMPLOYEE" | "MANAGER" | "ADMIN" | "DEANS_OFFICE";
 
@@ -29,10 +30,17 @@ const AddUserForm = () => {
 
     const [submittedData, setSubmittedData] = useState<NewUserFormValues | null>(null);
 
-    const onSubmit = (data: NewUserFormValues) => {
-        setSubmittedData(data);
-        console.log("New user added:", data);
-        methods.reset();       // TODO: implement communication with backend
+    const onSubmit = async (data: NewUserFormValues) => {
+        try {
+            await createUser(data);
+            setSubmittedData(data);
+            console.log("User created:", data);
+            methods.reset();
+            alert("User successfully added!");
+        } catch (error) {
+            console.error("Error creating user:", error);
+            alert("Failed to add user. Check console for details.");
+        }
     };
 
     return (

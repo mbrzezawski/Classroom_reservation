@@ -11,7 +11,7 @@ public class User {
     private String email;
     private String password;
     private RoleType role;
-    private Boolean enabled;
+    private Boolean enabled = false;
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
