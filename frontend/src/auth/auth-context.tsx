@@ -3,10 +3,10 @@ import { API_URL } from "../api";
 import type { RoleType } from "../types/user-role";
 
 type User = {
-  id: number;
+  id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  name: string;
+  surname: string;
   role: RoleType;
 };
 

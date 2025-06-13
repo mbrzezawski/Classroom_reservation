@@ -7,8 +7,6 @@ const daysOfWeek = [
   { label: "Wed", value: "WEDNESDAY" },
   { label: "Thu", value: "THURSDAY" },
   { label: "Fri", value: "FRIDAY" },
-  { label: "Sat", value: "SATURDAY" },
-  { label: "Sun", value: "SUNDAY" },
 ];
 
 const RecurringOptions: FC = () => {
@@ -17,30 +15,11 @@ const RecurringOptions: FC = () => {
 
   return (
     <div className="flex flex-col gap-2 p-4 ">
-      <div className="flex gap-2 w-full">
-        <label className="flex flex-col text-xs flex-1">
-          Start date
-          <input
-            type="date"
-            className="input"
-            {...register("startDate", { required: "Start date is required" })}
-          />
-        </label>
-        <label className="flex flex-col text-xs flex-1">
-          End date
-          <input
-            type="date"
-            className="input"
-            {...register("endDate", { required: "End date is required" })}
-          />
-        </label>
-      </div>
-
       <div className="flex gap-2">
         <label className="flex flex-col text-xs">
           Frequency
           <select className="select" {...register("frequency", { required: true })}>
-            <option value="DAILY" selected>Daily</option>
+            <option value="DAILY">Daily</option>
             <option value="WEEKLY">Weekly</option>
             <option value="MONTHLY">Monthly</option>
           </select>
@@ -60,14 +39,14 @@ const RecurringOptions: FC = () => {
 
       {frequency === "WEEKLY" && (
         <div className="flex flex-wrap gap-2">
-          <span className="font-medium text-sm">Repeat on days:</span>
+            <span className="text-sm">Repeat on days:</span>
           {daysOfWeek.map((day) => (
-            <label key={day.value} className="flex items-center gap-1">
+            <label key={day.value} className="flex items-center gap-1 text-xs">
               <input
-                type="checkbox"
-                className="checkbox"
-                value={day.value}
-                {...register("byDays")}
+              type="checkbox"
+              className="checkbox w-5 h-5"
+              value={day.value}
+              {...register("byDays")}
               />
               {day.label}
             </label>

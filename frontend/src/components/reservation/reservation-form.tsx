@@ -1,8 +1,6 @@
 import InputTextBox from "../ui/input-textbox.tsx";
 import Letter from "../icons/letter";
 import { FormProvider, useForm } from "react-hook-form";
-import DateHourPicker from "./reserving/date-hour-picker";
-import RoomAtendeesPicker from "./reserving/room-atendees-picker.tsx";
 import FeaturesPicker from "./reserving/features-picker";
 import submitReservation from "./reserving/submit-reservation.ts";
 import { useEffect, useState, type Dispatch, type FC } from "react";
@@ -10,7 +8,6 @@ import showToast from "../../hooks/show-toast.ts";
 import type { Action } from "../../store/events-reducer.ts";
 import { useRoomsMap } from "../../hooks/use-rooms-map.tsx";
 import type { Room } from "../../types/room.ts";
-import buildStartEndDate from "../../utils/build-start-end-date.ts";
 import type {
   EditableReservation,
   RecurringReservationResponseDTO,
@@ -19,8 +16,12 @@ import type {
 } from "../../types/reservations.ts";
 import DeleteReservationButton from "./reserving/delete-reservation-button.tsx";
 import RecurringOptions from "./reserving/recurring-options.tsx";
-import type { RoleType } from "../../types/user-role.ts";
+import { RoleType } from "../../types/user-role.ts";
 import { useAuth } from "../../auth/auth-context";
+import DatePicker from "./reserving/date-picker.tsx";
+import HourPicker from "./reserving/hour-picker.tsx";
+import AtendeesPicker from "./reserving/atendees-picker.tsx";
+import RoomPicker from "./reserving/room-picker.tsx";
 
 interface ReservationFormProps {
   userId: string;
@@ -37,6 +38,7 @@ const defaultValues: ReservationFormValues = {
   title: "",
   date: "",
   startHour: "",
+  endHour: "",
   atendees: 0,
   equipment: [],
   software: [],
@@ -64,10 +66,12 @@ const ReservationForm: FC<ReservationFormProps> = ({
   const methods = useForm({
     defaultValues: editValues || defaultValues,
   });
-  const { register, handleSubmit, reset } = methods;
+  const { register, handleSubmit, reset, watch } = methods;
+  const type = watch("type");
 
   useEffect(() => {
     if (mode === "edit" && editValues) {
+      console.log(editValues)
       reset(editValues);
     }
   }, [mode, editValues, reset]);
@@ -96,28 +100,22 @@ const ReservationForm: FC<ReservationFormProps> = ({
         reservationId
       );
 
-      console.log("response: ", response);
-
       const room: Room = roomsMap[response.roomId];
-
       // Check if response is RecurringReservationResponseDTO (has reservations array)
       const singleReservationList =
         "reservations" in response ? response.reservations : [response];
 
       singleReservationList.forEach((singleReservation) => {
-        const [startTime, endTime] = buildStartEndDate(
-          data.startHour,
-          singleReservation.date
-        );
-
+        
+        const startTime = singleReservation.start
+        const endTime = singleReservation.end
         showToast(
           mode === "create" ? "Booking succeeded" : "Reservation updated",
           {
             description: `Room ${room.name} (${room.location}) ${
               mode === "create" ? "booked" : "updated"
             } for  
-            ${startTime.toTimeString().slice(0, 5)}-${endTime
-              .toTimeString()
+            ${startTime.slice(0, 5)}-${endTime
               .slice(0, 5)} ${data.date}`,
             variant: "success",
           }
@@ -125,8 +123,8 @@ const ReservationForm: FC<ReservationFormProps> = ({
         const newEvent = {
           id: singleReservation.reservationId,
           title: data.title,
-          start: startTime.toISOString(),
-          end: endTime.toISOString(),
+          start: startTime,
+          end: endTime,
           extendedProps: {
             roomName: room.name,
             roomLocation: room.location,
@@ -157,13 +155,13 @@ const ReservationForm: FC<ReservationFormProps> = ({
       setIsSubmitting(false);
     }
   };
-
   return (
     <FormProvider {...methods}>
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex flex-col border px-6 py-8 gap-[8px] rounded-[8px]"
       >
+        {/* pierwszy rzad */}
         <div className="flex justify-between items-center mb-2">
           {mode == "create" && (
             <div className="flex flex-col gap-2">
@@ -202,11 +200,47 @@ const ReservationForm: FC<ReservationFormProps> = ({
             />
           )}
         </div>
-
-        <DateHourPicker type={methods.watch("type")} />
-        <RoomAtendeesPicker roomsMap={roomsMap} role={role} />
+        {/* drugi rzad */}
+        {type === "single" &&(
+          <div className="flex flex-row gap-2">
+              <DatePicker field="date" />
+              <HourPicker start={true}/>
+          </div>
+        )}
+        {type === "recurring" && (         
+          <div className="flex flex-row gap-2">
+            <DatePicker field="startDate" />
+            <DatePicker field="endDate" />
+          </div>
+        )}
+        {/* trzeci rzad */}
+        {type === "single" && (
+          <div className="flex flex-row gap-2">
+            <AtendeesPicker />
+            <HourPicker start={false}/>
+          </div>
+        )}
+        {type === "recurring" && (
+          <div className="flex flex-row gap-2">
+            <HourPicker start={true}/>
+            <HourPicker start={false}/>
+          </div>
+        )}
+        {/* czwarty rzad */}
+        {type === "recurring" && (
+          <div className="flex flex-row gap-2">
+            <AtendeesPicker/>
+            {role===RoleType.DEANS_OFFICE && (
+              <RoomPicker roomsMap={roomsMap}/>
+            )}
+          </div>
+        )}
+        {/* <DateHourPicker type={methods.watch("type")} />
+        <RoomAtendeesPicker roomsMap={roomsMap} role={role} /> */}
+        {/* equipment & software */}
         <FeaturesPicker />
-        {methods.watch("type") === "recurring" && <RecurringOptions />}
+        {/* rekurencyjne opcje */}
+        {type === "recurring" && <RecurringOptions />}
         <button
           type="submit"
           className="btn rounded-[6px]"
