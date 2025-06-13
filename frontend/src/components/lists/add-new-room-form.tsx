@@ -57,25 +57,30 @@ const AddNewRoomForm = () => {
         try {
             const softwareIds: string[] = formData.softwareIds;
 
-            if (formData.software && formData.software.length) {
-                const customSoftware = formData.software.filter((s: any) => s.isCustom);
-                for (const sw of customSoftware) {
-                    const created = await createSoftware.mutateAsync({ name: sw.name });
+            if (formData.customSoftware?.trim()) {
+                const names = formData.customSoftware
+                    .split(",")
+                    .map((name) => name.trim())
+                    .filter((name) => name.length > 0);
+
+                for (const name of names) {
+                    const created = await createSoftware.mutateAsync(name);
                     softwareIds.push(created.id);
                 }
-                // console.log("software id's: ", softwareIds)
-                softwareIds.push(...formData.software.filter((s: any) => !s.isCustom).map((s: any) => s.id));
             }
 
             const equipmentIds: string[] = formData.equipmentIds;
 
-            if (formData.equipment && formData.equipment.length) {
-                const customEquipment = formData.equipment.filter((e: any) => e.isCustom);
-                for (const eq of customEquipment) {
-                    const created = await createEquipment.mutateAsync({ name: eq.name });
+            if (formData.customEquipment?.trim()) {
+                const names = formData.customEquipment
+                    .split(",")
+                    .map((name) => name.trim())
+                    .filter((name) => name.length > 0);
+
+                for (const name of names) {
+                    const created = await createEquipment.mutateAsync(name);
                     equipmentIds.push(created.id);
                 }
-                equipmentIds.push(...formData.equipment.filter((e: any) => !e.isCustom).map((e: any) => e.id));
             }
 
             const newRoom = {
