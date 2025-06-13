@@ -1,4 +1,6 @@
 import {useEquipment, useSoftware} from "../../hooks/use-room-features.ts";
+import Delete from "../icons/delete.tsx";
+import {deleteRoom} from "../../hooks/del-room.ts"
 
 
 const ClassList = ({ rooms, loading, error }: { rooms: any[], loading: boolean, error: any }) => {
@@ -19,6 +21,14 @@ const ClassList = ({ rooms, loading, error }: { rooms: any[], loading: boolean, 
         roomSoftware.map((item) => [item.value, item.label])
     );
 
+    function handleDelete(id: number) {
+        if (confirm("Are you sure you want to delete this room?")) {
+            deleteRoom(id)
+                .then(() => alert("Room deleted"))
+                .catch(err => console.error("Delete failed", err));
+        }
+    }
+
     return (
         <div className="p-4 flex justify-center">
             <div className="border border-base-content/10 rounded-lg overflow-hidden">
@@ -30,6 +40,7 @@ const ClassList = ({ rooms, loading, error }: { rooms: any[], loading: boolean, 
                         <th>Software</th>
                         <th>Equipment</th>
                         <th>Location</th>
+                        <th>Action</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -52,6 +63,11 @@ const ClassList = ({ rooms, loading, error }: { rooms: any[], loading: boolean, 
                                 ))}
                             </td>
                             <td>{room.location}</td>
+                            <td>
+                                <button className="btn" onClick={() => handleDelete(room.id)}>
+                                    <Delete></Delete>
+                                </button>
+                            </td>
                         </tr>
                     ))}
                     </tbody>
