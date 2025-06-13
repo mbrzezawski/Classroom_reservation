@@ -11,10 +11,6 @@ const ClassList = ({ rooms, loading, error }: { rooms: any[], loading: boolean, 
 
     if (rooms.length === 0) return <div className="p-4">No users found.</div>;
 
-    console.log("dane:")
-    console.log(roomEquipment);
-    console.log(roomSoftware);
-
     const equipmentDict = Object.fromEntries(
         roomEquipment.map((item) => [item.value, item.label])
     );

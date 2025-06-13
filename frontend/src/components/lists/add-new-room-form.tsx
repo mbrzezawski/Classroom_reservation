@@ -1,18 +1,13 @@
 import { FormProvider, useForm, Controller } from "react-hook-form";
 import InputTextBox from "../ui/input-textbox";
 import { useState } from "react";
+import { useRoomService } from "../../hooks/useRoomService";
+import { useSoftwareService } from "../../hooks/useSoftwareService";
+import { useEquipmentService } from "../../hooks/useEquipmentService";
+import {useSoftware} from "../../hooks/use-room-features.ts";
+import {useEquipment} from "../../hooks/use-room-features.ts";
 
-const software = [
-    { label: "Zoom", value: "zoom" },
-    { label: "Teams", value: "teams" },
-    { label: "Photoshop", value: "photoshop" },
-];
 
-const equipment = [
-    { label: "Projector", value: "projector" },
-    { label: "Whiteboard", value: "whiteboard" },
-    { label: "Microphone", value: "microphone" },
-];
 
 type NewRoomFormValues = {
     name: string;
@@ -25,6 +20,10 @@ type NewRoomFormValues = {
 };
 
 const AddNewRoomForm = () => {
+
+    const software = useSoftware();
+    const equipment = useEquipment();
+
     const methods = useForm<NewRoomFormValues>({
         defaultValues: {
             name: "",
@@ -48,10 +47,58 @@ const AddNewRoomForm = () => {
     const [showCustomSoftware, setShowCustomSoftware] = useState(false);
     const [showCustomEquipment, setShowCustomEquipment] = useState(false);
 
-    const onSubmit = (data: NewRoomFormValues) => {
-        console.log("New room data:", data);
-        reset();
+    const { createRoom } = useRoomService();
+    const { createSoftware } = useSoftwareService();
+    const { createEquipment } = useEquipmentService();
+
+    const onSubmit = async (formData: any) => {
+        console.log("Form data on submit:", formData);
+
+        try {
+            const softwareIds: string[] = formData.softwareIds;
+
+            if (formData.software && formData.software.length) {
+                const customSoftware = formData.software.filter((s: any) => s.isCustom);
+                for (const sw of customSoftware) {
+                    const created = await createSoftware.mutateAsync({ name: sw.name });
+                    softwareIds.push(created.id);
+                }
+                // console.log("software id's: ", softwareIds)
+                softwareIds.push(...formData.software.filter((s: any) => !s.isCustom).map((s: any) => s.id));
+            }
+
+            const equipmentIds: string[] = formData.equipmentIds;
+
+            if (formData.equipment && formData.equipment.length) {
+                const customEquipment = formData.equipment.filter((e: any) => e.isCustom);
+                for (const eq of customEquipment) {
+                    const created = await createEquipment.mutateAsync({ name: eq.name });
+                    equipmentIds.push(created.id);
+                }
+                equipmentIds.push(...formData.equipment.filter((e: any) => !e.isCustom).map((e: any) => e.id));
+            }
+
+            const newRoom = {
+                name: formData.name,
+                capacity: formData.capacity,
+                location: formData.location,
+                softwareIds,
+                equipmentIds,
+            };
+
+            console.log("Creating room with data:", newRoom);
+
+            await createRoom.mutateAsync(newRoom);
+
+            alert("Room successfully created!");
+            methods.reset();
+
+        } catch (error) {
+            console.error("Error creating room:", error);
+            alert("Failed to create room. Check console for details.");
+        }
     };
+
 
     return (
         <FormProvider {...methods}>
@@ -115,6 +162,7 @@ const AddNewRoomForm = () => {
                             </div>
                         )}
                     />
+
                     <label className="text-sm flex items-center gap-2 mt-2">
                         <input
                             type="checkbox"
