@@ -78,6 +78,16 @@ const SingleReservationForm: FC<Props> = ({
     : mode === "create"
     ? "Book"
     : "Save changes";
+  const [allowChangeToReccuring, setAllowChangeToRecurring] = useState(true);
+  useEffect(() => {
+    if (editedEvent && !editedEvent.extendedProps.recurrenceProps) {
+      setType("single");
+      setAllowChangeToRecurring(false);
+    } else {
+      setAllowChangeToRecurring(true);
+    }
+    console.log(allowChangeToReccuring);
+  }, [editedEvent, type]);
 
   useEffect(() => {
     reset(
@@ -133,7 +143,9 @@ const SingleReservationForm: FC<Props> = ({
       >
         {/* pierwszy rzad */}
         <div className="flex justify-between items-center mb-2">
-          <TypePicker type={type} setType={setType} />
+          {allowChangeToReccuring && (
+            <TypePicker type={type} setType={setType} />
+          )}
           <div className={mode !== "edit" ? "flex-1 ml-4" : ""}>
             <InputTextBox
               label="Title"

@@ -92,6 +92,12 @@ const RecurringReservationForm: FC<Props> = ({
     : "Save changes";
 
   useEffect(() => {
+    if (editedEvent && !editedEvent.extendedProps.recurrenceProps) {
+      setType("single");
+    }
+  }, [editedEvent, type]);
+
+  useEffect(() => {
     reset(
       editedEvent
         ? mapCalendarEventToRecurringValues(editedEvent)
