@@ -6,14 +6,16 @@ import { useAuth } from "../../auth/auth-context";
 import { useNavigate } from "react-router-dom";
 
 export const NavBar: FC = () => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const { user } = useAuth();
-  if (!user) return <></>;
-  console.log(user);
+  // if (!user){
+  //   logout();
+  //   navigate("/login");
+  // } 
   const location = useLocation();
   const isAuthPage =
     location.pathname == "/login" || location.pathname == "/signup";
-  const { logout } = useAuth();
-  const navigate = useNavigate();
   return (
     <div className="navbar bg-base-200 shadow-sm">
       <div className="flex flex-1 items-center justify-center relative w-full">
@@ -55,7 +57,7 @@ export const NavBar: FC = () => {
             <div className="dropdown dropdown-bottom dropdown-end">
               <div tabIndex={0} role="button" className="btn m-1">
                 <User />
-                {`${user.firstName} ${user.lastName}`}
+                {`${user?.firstName} ${user?.lastName}`}
               </div>
               <ul
                 tabIndex={0}

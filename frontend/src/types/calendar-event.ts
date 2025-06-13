@@ -1,3 +1,5 @@
+import type { DayOfWeek, FrequencyOption } from "./reservations";
+
 export type FullCalendarEvent = {
   id: string;
   title: string;
@@ -6,9 +8,18 @@ export type FullCalendarEvent = {
   extendedProps: {
     roomName: string;
     roomLocation: string;
-    atendees: Number;
+    atendees: number;
     equipment: string[];
     software: string[];
+    recurrenceProps?: {
+      recurrenceId: string;
+      startDate: string;
+      endDate: string;
+      frequency: FrequencyOption;
+      interval: number;
+      byMonthDays: number[];
+      byDays: DayOfWeek[];
+    };
   };
 };
 
@@ -20,7 +31,7 @@ export type CalendarReservationDto = {
   roomLocation: string;
   title: string;
   start: string; // lub `Date` jeśli od razu parsujesz
-  end: string;   // lub `Date`
+  end: string; // lub `Date`
   minCapacity: number;
   softwareIds: string[];
   equipmentIds: string[];

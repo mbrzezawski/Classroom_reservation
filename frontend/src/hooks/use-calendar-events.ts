@@ -1,47 +1,76 @@
 import { useEffect, useReducer } from "react";
 import { API_URL } from "../api";
-import type { CalendarReservationDto, FullCalendarEvent } from "../types/calendar-event";
-import showToast from "./show-toast";
-import eventsReducer from "../store/events-reducer";
 import { useAuth } from "../auth/auth-context";
+import eventsReducer from "../store/events-reducer";
+import showToast from "./show-toast";
+import type { CalendarReservationDto, FullCalendarEvent } from "../types/calendar-event";
+import type { RecurringReservationResponseDTO } from "../types/reservations";
 
-  function useCalendarEvents(userId: string) {
-    const [events, dispatch] = useReducer(eventsReducer, []);
-    const {token} = useAuth();
-    // useEffect(() => {
-    // console.log("Aktualne eventy:", events);
-    // }, [events]);
-    useEffect(() =>{
-        if(!userId) return
+function useCalendarEvents(userId: string) {
+  const [events, dispatch] = useReducer(eventsReducer, []);
+  const { token } = useAuth();
 
-        fetch(`${API_URL}/reservations/calendar?userId=${userId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-        .then((res) => res.json())
-        .then((data: CalendarReservationDto[]) =>{
-            const mappedEvents: FullCalendarEvent[] = data.map((event: CalendarReservationDto) => ({
-                id: event.reservationId,
-                title: event.title,
-                start: event.start,
-                end: event.end,
-                extendedProps: {
-                    roomName: event.roomName,
-                    roomLocation: event.roomLocation,
-                    atendees: event.minCapacity,
-                    equipment: event.equipmentIds,
-                    software: event.softwareIds
-                }
-            }))
-            dispatch({type: "setEvents", payload: mappedEvents});
-        })
-        .catch((err) => {
-            showToast("Error while loading reservations",{variant: "destructive"})
-            console.log("Error while loading reservations", err)
-        })
+  useEffect(() => {
+    if (!userId || !token) return;
 
-    }, [userId]);
-    return {events, dispatch};
+    const fetchEvents = async () => {
+      try {
+        const [resEvents, resRecurring] = await Promise.all([
+          fetch(`${API_URL}/reservations/calendar?userId=${userId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_URL}/recurring-reservations`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        const eventData: CalendarReservationDto[] = await resEvents.json();
+        const recurringData: RecurringReservationResponseDTO[] = await resRecurring.json();
+        const recurrenceMap: Record<string, RecurringReservationResponseDTO> = Object.fromEntries(
+          recurringData.map((r) => [r.id, r])
+        );
+
+        const mappedEvents: FullCalendarEvent[] = eventData.map((event) => {
+          const recurrenceData = event.recurrenceId ? recurrenceMap[event.recurrenceId] : undefined;
+          
+          const recurrenceProps = recurrenceData ? {
+            recurrenceId: event.recurrenceId,
+            startDate: recurrenceData.startDate,
+            endDate: recurrenceData.endDate,
+            frequency: recurrenceData.frequency,
+            interval: recurrenceData.interval,
+            byMonthDays: recurrenceData.byMonthDays,
+            byDays: recurrenceData.byDays,
+          } : undefined;
+
+          return {
+            id: event.reservationId,
+            title: event.title,
+            start: event.start,
+            end: event.end,
+            extendedProps: {
+              roomName: event.roomName,
+              roomLocation: event.roomLocation,
+              atendees: event.minCapacity,
+              equipment: event.equipmentIds,
+              software: event.softwareIds,
+              recurrenceProps,
+            },
+          };
+        });
+        dispatch({ type: "setEvents", payload: mappedEvents });
+      } catch (err) {
+        showToast("Error while loading reservations", {
+          variant: "destructive",
+        });
+        console.error("Error while loading reservations", err);
+      }
+    };
+
+    fetchEvents();
+  }, [userId, token]);
+
+  return { events, dispatch };
 }
+
 export default useCalendarEvents

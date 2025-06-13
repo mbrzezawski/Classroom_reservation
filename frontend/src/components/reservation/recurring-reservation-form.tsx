@@ -1,0 +1,206 @@
+import type { Dispatch, FC } from "react";
+import { useForm, FormProvider } from "react-hook-form";
+import type {
+  RecurringReservationFormValues,
+  RecurringReservationResponseDTO,
+  ReservationType,
+} from "../../types/reservations";
+import { useEffect, useState } from "react";
+import InputTextBox from "../ui/input-textbox";
+import Letter from "../icons/letter";
+import DeleteReservationButton from "./reserving/delete-reservation-button";
+import DatePicker from "./reserving/date-picker";
+import HourPicker from "./reserving/hour-picker";
+import AtendeesPicker from "./reserving/atendees-picker";
+import FeaturesPicker from "./reserving/features-picker";
+import RecurringOptions from "./reserving/recurring-options";
+import TypePicker from "./reserving/type-picker";
+import type { Action } from "../../store/events-reducer.ts";
+import { useAuth } from "../../auth/auth-context.tsx";
+import { useRoomsMap } from "../../hooks/use-rooms-map.tsx";
+import submitRecurringReservation from "./reserving/submit-recurring-reservation.tsx";
+import showToast from "../../hooks/show-toast.ts";
+import {
+  mapCalendarEventToRecurringValues,
+  mapSingleReservationResponsetoCalendarEvent,
+} from "../../utils/reserving-mapping.ts";
+import type { Room } from "../../types/room.ts";
+import type { FullCalendarEvent } from "../../types/calendar-event.ts";
+
+interface Props {
+  userId: string;
+  role: string;
+  dispatch: Dispatch<Action>;
+  type: ReservationType;
+  setType: (type: ReservationType) => void;
+  editedEvent: FullCalendarEvent | null;
+  onFinishedEditing: () => void;
+}
+const defaultValues: RecurringReservationFormValues = {
+  type: "single",
+  title: "",
+  startDate: "",
+  endDate: "",
+  startHour: "",
+  endHour: "",
+  atendees: 0,
+  equipment: [],
+  software: [],
+  roomId: "",
+
+  frequency: "WEEKLY",
+  interval: 1,
+  byDays: [],
+  byMonthDays: [],
+};
+const RecurringReservationForm: FC<Props> = ({
+  userId,
+  role,
+  dispatch,
+  type,
+  setType,
+  editedEvent,
+  onFinishedEditing,
+}) => {
+  const methods = useForm<RecurringReservationFormValues>({
+    defaultValues,
+  });
+  const { token } = useAuth();
+  if (!token) {
+    window.location.href = "/login";
+    return;
+  }
+  const { register, handleSubmit, reset } = methods;
+  const roomsMap = useRoomsMap();
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const mode = editedEvent ? "edit" : "create";
+  const reservationId =
+    editedEvent && editedEvent.extendedProps.recurrenceProps
+      ? editedEvent.extendedProps.recurrenceProps?.recurrenceId
+      : "";  
+      
+  const submitLabel = isSubmitting
+    ? mode === "create"
+      ? "Booking..."
+      : "Saving..."
+    : mode === "create"
+    ? "Book"
+    : "Save changes";
+
+  useEffect(() => {
+    reset(
+      editedEvent
+        ? mapCalendarEventToRecurringValues(editedEvent)
+        : defaultValues
+    );
+  }, [editedEvent, reset]);
+
+  const onSubmit = async (data: RecurringReservationFormValues) => {
+    setIsSubmitting(true);
+    try {
+      let response: RecurringReservationResponseDTO;
+      response = await submitRecurringReservation(data, userId, token, mode);
+      console.log("response: ", response);
+      const room: Room = roomsMap[response.roomId];
+
+      response.reservations.forEach((singleReservation) => {
+        const newCalendarEvent = mapSingleReservationResponsetoCalendarEvent(
+          singleReservation,
+          room
+        );
+
+        if (mode === "create")
+          dispatch({ type: "addEvent", payload: newCalendarEvent });
+      });
+    } catch (error) {
+      showToast("Booking failed", {
+        description:
+          error instanceof Error ? error.message : "Unknown error appeared",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <FormProvider {...methods}>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col border px-6 py-6 gap-[6px] rounded-[8px]"
+      >
+        {/* pierwszy rzad */}
+        <div className="flex justify-between items-center mb-2">
+          <TypePicker type={type} setType={setType} />
+          <div className={mode !== "edit" ? "flex-1 ml-4" : ""}>
+            <InputTextBox
+              label="Title"
+              placeholder="Enter meeting title"
+              icon={<Letter />}
+              {...register("title", {
+                required: "Title is required",
+                minLength: {
+                  value: 3,
+                  message: "Title must be at least 3 characters long",
+                },
+              })}
+              error={methods.formState.errors.title?.message}
+            />
+          </div>
+
+          {mode === "edit" && (
+            <DeleteReservationButton
+              reservationId={reservationId}
+              onFinishedEditing={onFinishedEditing}
+              dispatch={dispatch}
+              resetForm={() => reset(defaultValues)}
+            />
+          )}
+        </div>
+        {/* drugi rzad */}
+
+        <div className="flex flex-row gap-2">
+          <DatePicker field="startDate" />
+          <DatePicker field="endDate" />
+        </div>
+        {/* trzeci rzad */}
+
+        <div className="flex flex-row gap-2">
+          <HourPicker start={true} />
+          <HourPicker start={false} />
+        </div>
+        {/* czwarty rzad */}
+        <div className="flex flex-row gap-2">
+          <AtendeesPicker />
+          {/* room picker */}
+        </div>
+        {/* equipment & software */}
+        <FeaturesPicker />
+        {/* rekurencyjne opcje */}
+        <RecurringOptions />
+        <button
+          type="submit"
+          className="btn rounded-[6px]"
+          disabled={isSubmitting}
+        >
+          {submitLabel}
+        </button>
+        {mode === "edit" && (
+          <button
+            type="button"
+            className="btn bg-red-500 text-white rounded-[6px]"
+            onClick={() => {
+              onFinishedEditing();
+              reset(defaultValues);
+            }}
+          >
+            Cancel editing
+          </button>
+        )}
+      </form>
+    </FormProvider>
+  );
+};
+
+export default RecurringReservationForm;
