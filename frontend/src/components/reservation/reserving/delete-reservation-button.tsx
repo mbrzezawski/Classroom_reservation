@@ -3,9 +3,11 @@ import deleteReservation from "./delete-reservation.ts";
 import showToast from "../../../hooks/show-toast.ts";
 import type { Dispatch } from "react";
 import type { Action } from "../../../store/events-reducer.ts";
+import { useAuth } from "../../../auth/auth-context.tsx";
 
 interface DeleteReservationButtonProps {
   reservationId: string;
+  reservationType: "single" | "recurring";
   onFinishedEditing: () => void;
   dispatch: Dispatch<Action>;
   resetForm: () => void;
@@ -13,21 +15,26 @@ interface DeleteReservationButtonProps {
 
 const DeleteReservationButton: FC<DeleteReservationButtonProps> = ({
   reservationId,
+  reservationType,
   onFinishedEditing,
   dispatch,
   resetForm,
 }) => {
+  const { token } = useAuth();
+  if (!token) return;
   const handleDelete = async () => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this reservation?");
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this reservation?"
+    );
     if (!confirmDelete) return;
 
     try {
-      await deleteReservation(reservationId);
+      await deleteReservation(reservationId, reservationType, token);
       showToast("Reservation deleted", { variant: "success" });
 
       dispatch({
         type: "removeEvent",
-        payload: reservationId ,
+        payload: reservationId,
       });
 
       onFinishedEditing();

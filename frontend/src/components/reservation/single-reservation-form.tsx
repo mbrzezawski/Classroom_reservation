@@ -19,9 +19,13 @@ import { useAuth } from "../../auth/auth-context";
 import type { Room } from "../../types/room";
 import { useRoomsMap } from "../../hooks/use-rooms-map";
 import showToast from "../../hooks/show-toast";
-import {mapSingleReservationResponsetoCalendarEvent, mapCalendarEventToSingleValues} from "../../utils/reserving-mapping.ts";
+import {
+  mapSingleReservationResponsetoCalendarEvent,
+  mapCalendarEventToSingleValues,
+} from "../../utils/reserving-mapping.ts";
 import type { Action } from "../../store/events-reducer.ts";
 import type { FullCalendarEvent } from "../../types/calendar-event.ts";
+import { showReservationToast } from "../../utils/show-reservation-toast.ts";
 
 interface Props {
   userId: string;
@@ -52,21 +56,21 @@ const SingleReservationForm: FC<Props> = ({
   setType,
   editedEvent,
   onFinishedEditing,
-}) => { 
+}) => {
   const methods = useForm<SingleReservationFormValues>({
     defaultValues,
   });
   const { token } = useAuth();
-if (!token) {
+  if (!token) {
     window.location.href = "/login";
     return;
-}
+  }
   const { register, handleSubmit, reset } = methods;
   const roomsMap = useRoomsMap();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const mode = editedEvent ? 'edit' : 'create';
-  const reservationId = editedEvent? editedEvent.id : "";
+  const mode = editedEvent ? "edit" : "create";
+  const reservationId = editedEvent ? editedEvent.id : "";
   const submitLabel = isSubmitting
     ? mode === "create"
       ? "Booking..."
@@ -76,23 +80,39 @@ if (!token) {
     : "Save changes";
 
   useEffect(() => {
-    reset(editedEvent ? mapCalendarEventToSingleValues(editedEvent) : defaultValues);
+    reset(
+      editedEvent ? mapCalendarEventToSingleValues(editedEvent) : defaultValues
+    );
   }, [editedEvent, reset]);
 
   const onSubmit = async (data: SingleReservationFormValues) => {
     setIsSubmitting(true);
     try {
       let response: ReservationResponseDTO;
-      response = await submitSingleReservation(data, userId, token, mode, reservationId);
+      response = await submitSingleReservation(
+        data,
+        userId,
+        token,
+        mode,
+        reservationId
+      );
       console.log(response);
       const room: Room = roomsMap[response.roomId];
 
-      const newCalendarEvent = mapSingleReservationResponsetoCalendarEvent(response, room);
+      const newCalendarEvent = mapSingleReservationResponsetoCalendarEvent(
+        response,
+        room
+      );
 
-      if(mode === 'create')
+      if (mode === "create")
         dispatch({ type: "addEvent", payload: newCalendarEvent });
       else
-        dispatch({type: "updateEvent", payload: {oldId: reservationId, newEvent: newCalendarEvent}})
+        dispatch({
+          type: "updateEvent",
+          payload: { oldId: reservationId, newEvent: newCalendarEvent },
+        });
+
+      showReservationToast(response, room, mode);
     } catch (error) {
       showToast("Booking failed", {
         description:
@@ -100,10 +120,11 @@ if (!token) {
         variant: "destructive",
       });
     } finally {
+      onFinishedEditing();
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <FormProvider {...methods}>
       <form
@@ -132,6 +153,7 @@ if (!token) {
           {mode === "edit" && (
             <DeleteReservationButton
               reservationId={reservationId}
+              reservationType={type}
               onFinishedEditing={onFinishedEditing}
               dispatch={dispatch}
               resetForm={() => reset(defaultValues)}

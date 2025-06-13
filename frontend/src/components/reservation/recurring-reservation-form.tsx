@@ -26,6 +26,8 @@ import {
 } from "../../utils/reserving-mapping.ts";
 import type { Room } from "../../types/room.ts";
 import type { FullCalendarEvent } from "../../types/calendar-event.ts";
+import { showReservationToast } from "../../utils/show-reservation-toast.ts";
+import { useRecurrenceMap } from "../../hooks/use-recurrence-map.ts";
 
 interface Props {
   userId: string;
@@ -72,14 +74,15 @@ const RecurringReservationForm: FC<Props> = ({
   }
   const { register, handleSubmit, reset } = methods;
   const roomsMap = useRoomsMap();
+  // const { recurrenceMap, isLoading } = useRecurrenceMap();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const mode = editedEvent ? "edit" : "create";
-  const reservationId =
+  const recurrenceId =
     editedEvent && editedEvent.extendedProps.recurrenceProps
       ? editedEvent.extendedProps.recurrenceProps?.recurrenceId
-      : "";  
-      
+      : "";
+
   const submitLabel = isSubmitting
     ? mode === "create"
       ? "Booking..."
@@ -100,19 +103,51 @@ const RecurringReservationForm: FC<Props> = ({
     setIsSubmitting(true);
     try {
       let response: RecurringReservationResponseDTO;
-      response = await submitRecurringReservation(data, userId, token, mode);
-      console.log("response: ", response);
+      response = await submitRecurringReservation(
+        data,
+        userId,
+        token,
+        mode,
+        recurrenceId
+      );
       const room: Room = roomsMap[response.roomId];
 
+      const recurrenceProps = {
+        recurrenceId: recurrenceId,
+        startDate: response.startDate,
+        endDate: response.endDate,
+        frequency: response.frequency,
+        interval: response.interval,
+        byMonthDays: response.byMonthDays,
+        byDays: response.byDays,
+      };
       response.reservations.forEach((singleReservation) => {
         const newCalendarEvent = mapSingleReservationResponsetoCalendarEvent(
           singleReservation,
-          room
+          room,
+          recurrenceProps
         );
 
         if (mode === "create")
           dispatch({ type: "addEvent", payload: newCalendarEvent });
+        else
+          dispatch({
+            type: "addEvent",
+            payload: newCalendarEvent,
+          });
+        showReservationToast(singleReservation, room, mode);
       });
+      // const previousSingleReservations = recurrenceMap[recurrenceId];
+      // console.log(recurrenceMap);
+      // console.log(recurrenceId);
+      // console.log(previousSingleReservations);
+      // if (mode === "create")
+      //   previousSingleReservations.forEach((singleReservation) =>
+      //     dispatch({
+      //       type: "removeEvent",
+      //       payload: singleReservation.reservationId,
+      //     })
+      //   );
     } catch (error) {
       showToast("Booking failed", {
         description:
@@ -120,6 +155,7 @@ const RecurringReservationForm: FC<Props> = ({
         variant: "destructive",
       });
     } finally {
+      onFinishedEditing();
       setIsSubmitting(false);
     }
   };
@@ -151,7 +187,8 @@ const RecurringReservationForm: FC<Props> = ({
 
           {mode === "edit" && (
             <DeleteReservationButton
-              reservationId={reservationId}
+              reservationId={recurrenceId}
+              reservationType={type}
               onFinishedEditing={onFinishedEditing}
               dispatch={dispatch}
               resetForm={() => reset(defaultValues)}

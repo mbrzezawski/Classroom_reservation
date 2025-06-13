@@ -12,7 +12,10 @@ async function submitRecurringReservation(
   reservationId?: string
 ) {
   const method = mode === "edit" ? "PUT" : "POST";
-  const endpoint = `${API_URL}/recurring-reservations`;
+  const endpoint =
+    mode === "edit"
+      ? `${API_URL}/recurring-reservations/${reservationId}`
+      : `${API_URL}/recurring-reservations`;
 
   let body: RecurringReservationRequestDTO;
   body = {

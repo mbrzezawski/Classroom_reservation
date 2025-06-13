@@ -4,45 +4,37 @@ import { useAuth } from "../auth/auth-context";
 import eventsReducer from "../store/events-reducer";
 import showToast from "./show-toast";
 import type { CalendarReservationDto, FullCalendarEvent } from "../types/calendar-event";
-import type { RecurringReservationResponseDTO } from "../types/reservations";
+import { useRecurrenceMap } from "./use-recurrence-map"; // import the custom hook
 
 function useCalendarEvents(userId: string) {
   const [events, dispatch] = useReducer(eventsReducer, []);
   const { token } = useAuth();
-
+  const { recurrenceMap } = useRecurrenceMap(); // use the custom hook
   useEffect(() => {
     if (!userId || !token) return;
 
     const fetchEvents = async () => {
       try {
-        const [resEvents, resRecurring] = await Promise.all([
-          fetch(`${API_URL}/reservations/calendar?userId=${userId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`${API_URL}/recurring-reservations`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
+        const resEvents = await fetch(`${API_URL}/reservations/calendar?userId=${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
         const eventData: CalendarReservationDto[] = await resEvents.json();
-        const recurringData: RecurringReservationResponseDTO[] = await resRecurring.json();
-        const recurrenceMap: Record<string, RecurringReservationResponseDTO> = Object.fromEntries(
-          recurringData.map((r) => [r.id, r])
-        );
 
         const mappedEvents: FullCalendarEvent[] = eventData.map((event) => {
           const recurrenceData = event.recurrenceId ? recurrenceMap[event.recurrenceId] : undefined;
-          
-          const recurrenceProps = recurrenceData ? {
-            recurrenceId: event.recurrenceId,
-            startDate: recurrenceData.startDate,
-            endDate: recurrenceData.endDate,
-            frequency: recurrenceData.frequency,
-            interval: recurrenceData.interval,
-            byMonthDays: recurrenceData.byMonthDays,
-            byDays: recurrenceData.byDays,
-          } : undefined;
 
+          const recurrenceProps = recurrenceData
+            ? {
+                recurrenceId: event.recurrenceId,
+                startDate: recurrenceData.startDate,
+                endDate: recurrenceData.endDate,
+                frequency: recurrenceData.frequency,
+                interval: recurrenceData.interval,
+                byMonthDays: recurrenceData.byMonthDays,
+                byDays: recurrenceData.byDays,
+              }
+            : undefined;
           return {
             id: event.reservationId,
             title: event.title,
@@ -68,7 +60,7 @@ function useCalendarEvents(userId: string) {
     };
 
     fetchEvents();
-  }, [userId, token]);
+  }, [userId, token, recurrenceMap]);
 
   return { events, dispatch };
 }

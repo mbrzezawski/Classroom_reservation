@@ -1,10 +1,19 @@
 import type { FullCalendarEvent } from "../types/calendar-event";
-import type { RecurringReservationFormValues, ReservationResponseDTO, SingleReservationFormValues } from "../types/reservations";
+import type { DayOfWeek, FrequencyOption, RecurringReservationFormValues, ReservationResponseDTO, SingleReservationFormValues } from "../types/reservations";
 import type { Room } from "../types/room";
 
 export function mapSingleReservationResponsetoCalendarEvent(
   dto: ReservationResponseDTO,
-  room: Room
+  room: Room,
+  recurrenceProps?: {
+        recurrenceId: string;
+        startDate: string;
+        endDate: string;
+        frequency: FrequencyOption;
+        interval: number;
+        byMonthDays: number[];
+        byDays: DayOfWeek[];
+      },
 ): FullCalendarEvent {
   return {
     id: dto.reservationId,
@@ -17,7 +26,7 @@ export function mapSingleReservationResponsetoCalendarEvent(
       atendees: dto.minCapacity,
       equipment: dto.equipmentIds,
       software: dto.softwareIds,
-      // roomId: dto.roomId
+      recurrenceProps: recurrenceProps ? { ...recurrenceProps } : undefined,
     },
   };
 }

@@ -5,8 +5,8 @@ import type { RoleType } from "../types/user-role";
 type User = {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  name: string;
+  surname: string;
   role: RoleType;
 };
 

@@ -86,7 +86,7 @@ export interface ReservationResponseDTO {
 }
 
 export interface RecurringReservationResponseDTO {
-  id: string;
+  recurringReservationId: string;
   roomId: string;
   startDate: string; // LocalDate serialized as YYYY-MM-DD
   endDate: string;   // LocalDate serialized as YYYY-MM-DD
