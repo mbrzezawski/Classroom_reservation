@@ -114,29 +114,26 @@ const AddNewRoomForm = () => {
                 <h2 className="text-[32px] text-center font-semibold">Add New Room</h2>
 
                 <InputTextBox
-                    label="Room Name"
+                    icon={undefined} label="Room Name"
                     placeholder="Enter room name"
                     error={errors.name?.message}
-                    {...register("name", { required: "Room name is required" })}
-                />
+                    {...register("name", {required: "Room name is required"})}                />
 
                 <InputTextBox
-                    label="Capacity"
+                    icon={undefined} label="Capacity"
                     type="number"
                     placeholder="Enter number of seats"
                     error={errors.capacity?.message}
                     {...register("capacity", {
                         required: "Capacity is required",
-                        min: { value: 1, message: "Capacity must be at least 1" },
-                    })}
-                />
+                        min: {value: 1, message: "Capacity must be at least 1"},
+                    })}                />
 
                 <InputTextBox
-                    label="Location"
+                    icon={undefined} label="Location"
                     placeholder="Enter location"
                     error={errors.location?.message}
-                    {...register("location", { required: "Location is required" })}
-                />
+                    {...register("location", {required: "Location is required"})}                />
 
                 {/* Software Checklist */}
                 <div className="flex flex-col gap-2">
@@ -178,10 +175,9 @@ const AddNewRoomForm = () => {
                     </label>
                     {showCustomSoftware && (
                         <InputTextBox
-                            label="Custom Software"
+                            icon={undefined} label="Custom Software"
                             placeholder="Separate entries with commas"
-                            {...register("customSoftware")}
-                        />
+                            {...register("customSoftware")}                        />
                     )}
                 </div>
 
