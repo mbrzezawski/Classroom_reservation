@@ -12,19 +12,16 @@ import ReservationFormWrapper from "../components/reservation/reservation-form-w
 import type { FullCalendarEvent } from "../types/calendar-event.ts";
 
 const MainPage = () => {
-<<<<<<< dev-idk
-  const userId = "682b8bc4811311363ff183cf";
-  const userRole = "DEANS_OFFICE";
-        
-  const location = useLocation();
-=======
+
   const { user } = useAuth();
   if (!user) {
     return;
   }
   const userId = user.id;
   const userRole = user.role;
->>>>>>> main
+
+
+
   const { users } = useUsers();
 
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -38,43 +35,13 @@ const MainPage = () => {
   const [editedEvent, setEditEvent] = useState<FullCalendarEvent | null>(null);
 
   return (
-<<<<<<< dev-idk
+
     <Layout userRole={userRole}>
-        <div className="grid grid-cols-3 min-h-screen gap-4 p-4">
-            <div className="col-span-2 flex flex-col gap-4">
-                { userRole === "DEANS_OFFICE" &&
-                    (<div className="relative z-10">
-                        <SearchBar users={users} onSelectUser={setSelectedUserId} />
-                    </div>)
-                }
-                <div className="relative z-0">
-                    <MyCalendar
-                      events={events}
-                      onEventClick={(event) => {
-                        if (!event.start) return;
-                        const startDate = new Date(event.start);
-                        setEditEvent({
-                          id: event.id,
-                          type: 'single',
-                          title: event.title,
-                          date: startDate.toISOString().split("T")[0],
-                          startHour: startDate.toTimeString().slice(0, 5),
-                          atendees: event.extendedProps.atendees,
-                          equipment: event.extendedProps.equipment,
-                          software: event.extendedProps.software,
-                          roomId: event.extendedProps.roomId,
-                        });
-                      }}
-                    />
-                </div>
-=======
-    <Layout>
       <div className="grid grid-cols-3 min-h-screen gap-4 p-4">
         <div className="col-span-2 flex flex-col gap-4">
           {userRole === "DEANS_OFFICE" && (
             <div className="relative z-10">
               <SearchBar users={users} onSelectUser={setSelectedUserId} />
->>>>>>> main
             </div>
           )}
           <div className="relative z-0">

@@ -16,12 +16,9 @@
     "@fullcalendar/react": "^6.1.17",
     "@fullcalendar/timegrid": "^6.1.17",
     "@tailwindcss/vite": "^4.1.5",
-<<<<<<< dev-idk
     "@tanstack/react-query": "^5.80.7",
     "axios": "^1.9.0",
-=======
     "lucide-react": "^0.514.0",
->>>>>>> main
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.56.3",
