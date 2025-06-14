@@ -26,6 +26,7 @@ import {
 import type { Action } from "../../store/events-reducer.ts";
 import type { FullCalendarEvent } from "../../types/calendar-event.ts";
 import { showReservationToast } from "../../utils/show-reservation-toast.ts";
+import ProposalForm from "./reserving/proposal-form.tsx";
 
 interface Props {
   userId: string;
@@ -79,6 +80,8 @@ const SingleReservationForm: FC<Props> = ({
     ? "Book"
     : "Save changes";
   const [allowChangeToReccuring, setAllowChangeToRecurring] = useState(true);
+  const [showProposalForm, setShowProposalForm] = useState(false);
+
   useEffect(() => {
     if (editedEvent && !editedEvent.extendedProps.recurrenceProps) {
       setType("single");
@@ -138,71 +141,90 @@ const SingleReservationForm: FC<Props> = ({
   return (
     <FormProvider {...methods}>
       <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col border px-6 py-8 gap-[8px] rounded-[8px]"
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col border px-6 py-8 gap-[8px] rounded-[8px]"
       >
         {/* pierwszy rzad */}
         <div className="flex justify-between items-center mb-2">
           {allowChangeToReccuring && (
-            <TypePicker type={type} setType={setType} />
+              <TypePicker type={type} setType={setType}/>
           )}
           <div className={mode !== "edit" ? "flex-1 ml-4" : ""}>
             <InputTextBox
-              label="Title"
-              placeholder="Enter meeting title"
-              icon={<Letter />}
-              {...register("title", {
-                required: "Title is required",
-                minLength: {
-                  value: 3,
-                  message: "Title must be at least 3 characters long",
-                },
-              })}
-              error={methods.formState.errors.title?.message}
+                label="Title"
+                placeholder="Enter meeting title"
+                icon={<Letter/>}
+                {...register("title", {
+                  required: "Title is required",
+                  minLength: {
+                    value: 3,
+                    message: "Title must be at least 3 characters long",
+                  },
+                })}
+                error={methods.formState.errors.title?.message}
             />
           </div>
 
           {mode === "edit" && (
-            <DeleteReservationButton
-              reservationId={reservationId}
-              reservationType={type}
-              onFinishedEditing={onFinishedEditing}
-              dispatch={dispatch}
-              resetForm={() => reset(defaultValues)}
-            />
+              <DeleteReservationButton
+                  reservationId={reservationId}
+                  reservationType={type}
+                  onFinishedEditing={onFinishedEditing}
+                  dispatch={dispatch}
+                  resetForm={() => reset(defaultValues)}
+              />
           )}
         </div>
         <div className="flex flex-row gap-2">
-          <DatePicker field="date" />
-          <HourPicker start={true} />
+          <DatePicker field="date"/>
+          <HourPicker start={true}/>
         </div>
 
         <div className="flex flex-row gap-2">
-          <AtendeesPicker />
-          <HourPicker start={false} />
+          <AtendeesPicker/>
+          <HourPicker start={false}/>
         </div>
 
-        <FeaturesPicker />
+        <label className="text-sm flex items-center gap-2 mt-2">
+          <input
+              type="checkbox"
+              onChange={(e) => setShowProposalForm(e.target.checked)}
+              checked={showProposalForm}
+          />
+          Send proposition of additional term
+        </label>
+        {showProposalForm && (
+            <ProposalForm/>
+        )}
+
+
+        <FeaturesPicker/>
         <button
-          type="submit"
-          className="btn rounded-[6px]"
-          disabled={isSubmitting}
+            type="submit"
+            className="btn rounded-[6px]"
+            disabled={isSubmitting}
         >
           {submitLabel}
         </button>
+
+
         {mode === "edit" && (
-          <button
-            type="button"
-            className="btn bg-red-500 text-white rounded-[6px]"
-            onClick={() => {
-              onFinishedEditing();
-              reset(defaultValues);
-            }}
-          >
-            Cancel editing
-          </button>
+            <button
+                type="button"
+                className="btn bg-red-500 text-white rounded-[6px]"
+                onClick={() => {
+                  onFinishedEditing();
+                  reset(defaultValues);
+                }}
+            >
+              Cancel editing
+            </button>
         )}
+
+
       </form>
+
+
     </FormProvider>
   );
 };
