@@ -3,6 +3,8 @@ import InputTextBox from "../ui/input-textbox";
 import PasswordTextBox from "./password-textbox";
 import AtIcon from "../icons/at";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth/auth-context";
+import { API_URL } from "../../api";
 type LoginFormValues = {
   email: string;
   password: string;
@@ -12,8 +14,27 @@ const LoginForm = () => {
   const methods = useForm({
     defaultValues: { email: "", password: "" },
   });
-  const onSubmit = (data: LoginFormValues) => {
-    console.log("Form submitted:", data);
+  const { login } = useAuth();
+
+  const onSubmit = async (data: LoginFormValues) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error("Nieprawidłowe dane logowania");
+      }
+
+      const { token } = await response.json();
+      await login(token);
+      navigate("/main");
+    } catch (err: any) {
+      console.error("Błąd logowania:", err.message);
+      alert(err.message);
+    }
   };
   const {
     register,

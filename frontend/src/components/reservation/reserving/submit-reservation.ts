@@ -9,9 +9,11 @@ import buildStartEndDate from "../../../utils/build-start-end-date";
 async function submitReservation(
   data: ReservationFormValues,
   userId: string,
+  token: string,
   mode: "create" | "edit",
   reservationId?: string
 ) {
+  
   const [startTime, endTime] = buildStartEndDate(data.startHour)
   const isRecurring = data.type === "recurring";
   const endpoint =
@@ -53,10 +55,12 @@ async function submitReservation(
       ...(data.roomId ? { roomId: data.roomId } : {}),
     };
   }
+
   console.log("request: ", body)
   const res = await fetch(`${endpoint}`, {
     method,
     headers: {
+      "Authorization": `Bearer ${token}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),

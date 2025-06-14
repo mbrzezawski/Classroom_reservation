@@ -1,7 +1,7 @@
 package com.to.backend.controller;
 
-import com.to.backend.dto.RecurringReservationRequestDto;
-import com.to.backend.dto.RecurringReservationResponseDto;
+import com.to.backend.dto.RecurringReservationRequest;
+import com.to.backend.dto.RecurringReservationResponse;
 import com.to.backend.model.RecurringReservation;
 import com.to.backend.service.RecurringReservationService;
 import com.to.backend.service.helper.CustomUserDetails;
@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/recurring-reservations")
-//@PreAuthorize("isAuthenticated()")
+@PreAuthorize("isAuthenticated()")
 public class RecurringReservationController {
 
     private final RecurringReservationService service;
@@ -25,38 +25,20 @@ public class RecurringReservationController {
         this.service = service;
     }
 
-//    /**
-//     * Create a new recurring reservation pattern and associated reservations.
-//     */
-//    @PostMapping
-//    public ResponseEntity<RecurringReservationResponseDto> create(
-//            @AuthenticationPrincipal CustomUserDetails principal,
-//            @Valid @RequestBody RecurringReservationRequestDto dto
-//    ) {
-//        // ensure userId comes from authenticated principal
-//        dto.setUserId(principal.getUser().getId());
-//        RecurringReservationResponseDto result = service.createRecurringReservations(dto);
-//        return ResponseEntity.status(HttpStatus.CREATED).body(result);
-//    }
-
-    // WERSJA BEZ PRINCIPAL DO TESTÓW
+    // POST /recurring-reservations – creates a recurring reservation pattern and instances
+    // FOR: EVERYONE LOGGED IN
     @PostMapping
-    public ResponseEntity<RecurringReservationResponseDto> create(
-            @Valid @RequestBody RecurringReservationRequestDto dto
+    public ResponseEntity<RecurringReservationResponse> create(
+            @AuthenticationPrincipal CustomUserDetails principal,
+            @Valid @RequestBody RecurringReservationRequest dto
     ) {
-        // teraz wymagamy, żeby DTO miało ustawione userId
-        if (dto.getUserId() == null || dto.getUserId().isBlank()) {
-            // możesz tu rzucić BadRequest albo domyślnie pobrać konta testowego
-            throw new IllegalArgumentException("Pole userId jest wymagane");
-        }
-        RecurringReservationResponseDto result = service.createRecurringReservations(dto);
+        dto.setUserId(principal.getUser().getId());
+        RecurringReservationResponse result = service.createRecurringReservations(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-
-    /**
-     * Get all recurring reservation patterns for the current user.
-     */
+    // GET /recurring-reservations – lists all recurring reservations of current user
+    // FOR: EVERYONE LOGGED IN
     @GetMapping
     public ResponseEntity<List<RecurringReservation>> list(
             @AuthenticationPrincipal CustomUserDetails principal
@@ -66,9 +48,8 @@ public class RecurringReservationController {
         return ResponseEntity.ok(list);
     }
 
-    /**
-     * Get a specific recurring reservation pattern by ID.
-     */
+    // GET /recurring-reservations/{id} – retrieves recurring reservation pattern by ID
+    // FOR: EVERYONE LOGGED IN
     @GetMapping("/{id}")
     public ResponseEntity<RecurringReservation> getById(
             @PathVariable String id,
@@ -78,23 +59,21 @@ public class RecurringReservationController {
         return ResponseEntity.ok(recurringReservation);
     }
 
-    /**
-     * Update an existing recurring reservation pattern.
-     */
+    // PUT /recurring-reservations/{id} – updates a recurring reservation pattern
+    // FOR: OWNER OF PATTERN
     @PutMapping("/{id}")
-    public ResponseEntity<RecurringReservationResponseDto> update(
+    public ResponseEntity<RecurringReservationResponse> update(
             @PathVariable String id,
             @AuthenticationPrincipal CustomUserDetails principal,
-            @Valid @RequestBody RecurringReservationRequestDto dto
+            @Valid @RequestBody RecurringReservationRequest dto
     ) {
         dto.setUserId(principal.getUser().getId());
-        RecurringReservationResponseDto updated = service.updatePattern(id, dto);
+        RecurringReservationResponse updated = service.updatePattern(id, dto);
         return ResponseEntity.ok(updated);
     }
 
-    /**
-     * Delete a recurring reservation pattern and all associated reservations.
-     */
+    // DELETE /recurring-reservations/{id} – deletes pattern and all related reservations
+    // FOR: OWNER OF PATTERN
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
@@ -104,3 +83,4 @@ public class RecurringReservationController {
         service.deletePattern(id);
     }
 }
+

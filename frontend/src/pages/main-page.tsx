@@ -1,35 +1,44 @@
 import MyCalendar from "../components/calendar/my-calendar";
 import Layout from "../components/layout/layout";
-import ReservationForm from "../components/reservation/reservation-form";
 import { Toaster } from "sonner";
 import useCalendarEvents from "../hooks/use-calendar-events";
-import type { EditableReservation } from "../types/reservations";
 import SearchBar from "../components/lists/search-bar.tsx";
-import {useUsers} from "../hooks/use-users.ts";
-import {useState} from "react";
-import {useLocation} from "react-router-dom";
+import { useUsers } from "../hooks/use-users.ts";
+import { useState } from "react";
 
+import { useAuth } from "../auth/auth-context.tsx";
+import { RoleType } from "../types/user-role.ts";
+import ReservationFormWrapper from "../components/reservation/reservation-form-wrapper.tsx";
+import type { FullCalendarEvent } from "../types/calendar-event.ts";
 
 const MainPage = () => {
+<<<<<<< dev-idk
   const userId = "682b8bc4811311363ff183cf";
   const userRole = "DEANS_OFFICE";
         
   const location = useLocation();
+=======
+  const { user } = useAuth();
+  if (!user) {
+    return;
+  }
+  const userId = user.id;
+  const userRole = user.role;
+>>>>>>> main
   const { users } = useUsers();
-        
-  const initialUserId = location.state?.userId ?? null;
+
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-        
-  const effectiveUserId = selectedUserId ?? initialUserId ?? "";
 
+  const effectiveUserId = selectedUserId ?? userId ?? "";
 
-    const { events, dispatch } = useCalendarEvents(
-        userRole === "DEANS_OFFICE" ? effectiveUserId : userId
-    );
+  const { events, dispatch } = useCalendarEvents(
+    userRole == RoleType.DEANS_OFFICE ? effectiveUserId : userId
+  );
 
-  const [editEvent, setEditEvent] = useState<EditableReservation | null>(null);
+  const [editedEvent, setEditEvent] = useState<FullCalendarEvent | null>(null);
 
   return (
+<<<<<<< dev-idk
     <Layout userRole={userRole}>
         <div className="grid grid-cols-3 min-h-screen gap-4 p-4">
             <div className="col-span-2 flex flex-col gap-4">
@@ -58,18 +67,53 @@ const MainPage = () => {
                       }}
                     />
                 </div>
+=======
+    <Layout>
+      <div className="grid grid-cols-3 min-h-screen gap-4 p-4">
+        <div className="col-span-2 flex flex-col gap-4">
+          {userRole === "DEANS_OFFICE" && (
+            <div className="relative z-10">
+              <SearchBar users={users} onSelectUser={setSelectedUserId} />
+>>>>>>> main
             </div>
-              <ReservationForm
-                userId={userRole === "DEANS_OFFICE" ? effectiveUserId : userId}
-                role={userRole}
-                dispatch={dispatch}
-                mode={editEvent ? "edit" : "create"}
-                reservationId={editEvent?.id}
-                editValues={editEvent}
-                onFinishedEditing={() => {setEditEvent(null)}}
-              />
+          )}
+          <div className="relative z-0">
+            <MyCalendar
+              events={events}
+              onEventClick={(event) => {
+                if (!event.start || !event.end) return;
+                const calendarEvent: FullCalendarEvent = {
+                  id: event.id,
+                  title: event.title,
+                  start: event.start?.toISOString(),
+                  end: event.end?.toISOString(),
+                  extendedProps: {
+                    roomName: event.extendedProps.roomName,
+                    roomLocation: event.extendedProps.roomLocation,
+                    atendees: event.extendedProps.atendees,
+                    equipment: event.extendedProps.equipment,
+                    software: event.extendedProps.software,
+                    recurrenceProps: event.extendedProps.recurrenceProps
+                      ? { ...event.extendedProps.recurrenceProps }
+                      : undefined,
+                  },
+                };
+                setEditEvent(calendarEvent);
+              }}
+            />
+          </div>
         </div>
-        <Toaster position="top-right" richColors closeButton />
+        <ReservationFormWrapper
+          userId={effectiveUserId}
+          role={userRole}
+          dispatch={dispatch}
+          editedEvent={editedEvent}
+          onFinishedEditing={() => {
+            setEditEvent(null);
+          }}
+        />
+      </div>
+      <Toaster position="top-right" richColors closeButton />
     </Layout>
   );
 };

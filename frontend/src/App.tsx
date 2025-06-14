@@ -5,6 +5,7 @@ import LoginPage from "./pages/login-page";
 import MainPage from "./pages/main-page";
 import EmployeesListPage from "./pages/employees-list-page.tsx";
 import ClassListPage from "./pages/class-list-page.tsx";
+import ProposalLIstPage from "./pages/proposal-list-page.tsx";
 
 const App = () => {
   return (
@@ -15,6 +16,7 @@ const App = () => {
       <Route path="/main" element={<MainPage />} />
       <Route path="/employees" element={<EmployeesListPage />} />
       <Route path="/rooms" element={<ClassListPage />} />
+      <Route path="/proposals" element={<ProposalLIstPage></ProposalLIstPage>} />
     </Routes>
   );
 };

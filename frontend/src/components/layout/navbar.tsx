@@ -2,6 +2,7 @@ import type { FC } from "react";
 import {useLocation, useNavigate} from "react-router-dom";
 import Mail from "../icons/mail";
 import User from "../icons/user";
+<<<<<<< dev-idk
 import { useLogout } from "../../hooks/use-logout";
 import ListMenu from "./list-menu.tsx";
 import ArrowBack from "../icons/arrow-back.tsx";
@@ -15,6 +16,18 @@ export const NavBar: FC<{ userRole?: string }> = ({ userRole }) => {
     location.pathname == "/login" || location.pathname == "/signup";
   const isListPage = location.pathname == "/employees" || location.pathname == "/rooms";
   const logout = useLogout();
+=======
+import { useAuth } from "../../auth/auth-context";
+import { useNavigate } from "react-router-dom";
+
+export const NavBar: FC = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const location = useLocation();
+  const isAuthPage =
+    location.pathname == "/login" || location.pathname == "/signup";
+>>>>>>> main
   return (
     <div className="navbar bg-base-200 shadow-sm">
       <div className="flex flex-1 items-center justify-center relative w-full">
@@ -24,6 +37,7 @@ export const NavBar: FC<{ userRole?: string }> = ({ userRole }) => {
         <div className="text-2xl font-bold mx-auto">UniReserve</div>
         {!isAuthPage && (
           <div className="flex gap-2 justify-end absolute right-0">
+<<<<<<< dev-idk
 
             {isListPage &&
                 <div tabIndex={0} role="button" className="btn m-1" onClick={() => {
@@ -42,39 +56,34 @@ export const NavBar: FC<{ userRole?: string }> = ({ userRole }) => {
               <ol
                 tabIndex={0}
                 className="dropdown-content dropdown-bottom dropdown-center menu bg-base-100 gap-1"
+=======
+              <button
+                type="button"
+                className="btn m-1 flex items-center justify-center cursor-pointer"
+                aria-label="Go to proposals"
+                onClick={() => navigate("/proposals")}
+>>>>>>> main
               >
-                {/* oczywiscie tutaj mapa powiadomien z jakims limitem i na koncu przycisk show all */}
-                <li>
-                  <button className="whitespace-nowrap">
-                    Confirm meeting A
-                  </button>
-                </li>
-                <li>
-                  <button className="whitespace-nowrap">
-                    Confirm meeting B
-                  </button>
-                </li>
-                <li>
-                  <button className="whitespace-nowrap">
-                    Confirm meeting B
-                  </button>
-                </li>
-                <li>
-                  <button className="btn-link">Show all </button>
-                </li>
-              </ol>
-            </div>
+                <Mail />
+              </button>
             <div className="dropdown dropdown-bottom dropdown-end">
               <div tabIndex={0} role="button" className="btn m-1">
                 <User />
-                Jan Kowalski
+                {`${user?.name} ${user?.surname}`}
               </div>
               <ul
                 tabIndex={0}
                 className="dropdown-content menu bg-base-100 whitespace-nowrap "
               >
                 <li>
-                  <button onClick={logout}>Log Out</button>
+                  <button
+                    onClick={() => {
+                      logout();
+                      navigate("/login");
+                    }}
+                  >
+                    Log Out
+                  </button>
                 </li>
                 <li>
                   <button>Change password</button>

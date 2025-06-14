@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/users")
-//@PreAuthorize("isAuthenticated()")
+@PreAuthorize("hasAnyRole('ADMIN', 'DEANS_OFFICE')")
 public class UserController {
 
     private final UserService service;
@@ -26,12 +26,6 @@ public class UserController {
     // POST /users – creates new user, returns 201 + Location
     // FOR: ADMIN and DEANS_OFFICE
     @PostMapping
-//    @PreAuthorize(
-//            "hasAnyRole(" +
-//                    "T(com.to.backend.model.utils.RoleType).ADMIN.name(), " +
-//                    "T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()" +
-//                    ")"
-//    )
     public ResponseEntity<User> createUser(@RequestBody User user) {
         User saved = service.createUser(user);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -44,7 +38,7 @@ public class UserController {
     // GET /users – retrieves all users
     // FOR: ADMIN only
     @GetMapping
-//    @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name())")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(service.getAllUsers());
     }
@@ -52,7 +46,7 @@ public class UserController {
     // GET /users/{id} – retrieves user by id or returns 404 via GlobalExceptionHandler
     // FOR: ADMIN only
     @GetMapping("/{id}")
-//    @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name())")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<User> getUser(@PathVariable String id) {
         User u = service.getUserById(id);
         return ResponseEntity.ok(u);
@@ -61,7 +55,7 @@ public class UserController {
     // GET /users/{email} – retrieves user by email
     // FOR: ADMIN only
     @GetMapping("/by-email/{email}")
-//    @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name())")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
         User user = service.getUserByEmail(email);
         return ResponseEntity.ok(user);
@@ -71,12 +65,6 @@ public class UserController {
     // FOR: ADMIN and DEANS_OFFICE
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-//    @PreAuthorize(
-//            "hasAnyRole(" +
-//                    "T(com.to.backend.model.utils.RoleType).ADMIN.name(), " +
-//                    "T(com.to.backend.model.utils.RoleType).DEANS_OFFICE.name()" +
-//                    ")"
-//    )
     public void deleteUser(@PathVariable String id) {
         service.deleteUser(id);
     }
@@ -84,7 +72,7 @@ public class UserController {
     // PUT /users/{id}/role – sets user role
     // FOR: ADMIN only
     @PutMapping("/{id}/role")
-//    @PreAuthorize("hasRole(T(com.to.backend.model.utils.RoleType).ADMIN.name())")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> setUserRole(
             @PathVariable String id,
             @RequestParam RoleType roleType

@@ -1,51 +1,125 @@
 package com.to.backend.service;
 
 import com.to.backend.dto.*;
+import com.to.backend.exception.ConflictException;
 import com.to.backend.exception.ForbiddenException;
 import com.to.backend.exception.NoRoomAvailableException;
 import com.to.backend.exception.NotFoundException;
-import com.to.backend.model.RecurringReservation;
 import com.to.backend.model.Reservation;
+import com.to.backend.model.ReservationProposal;
 import com.to.backend.model.Room;
 import com.to.backend.model.User;
+import com.to.backend.model.utils.ProposalStatus;
 import com.to.backend.model.utils.ReservationStatus;
-import com.to.backend.repository.RecurringReservationRepository;
+import com.to.backend.repository.ReservationProposalRepository;
 import com.to.backend.repository.ReservationRepository;
+import com.to.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 public class ReservationService {
     private final ReservationRepository reservationRepo;
-    private final RecurringReservationRepository recurringRepo;
-    private final RoomService roomService;
+    private final RoomAvailabilityService availabilityService;
     private final UserService userService;
+    private final RecurringReservationService recurringReservationService;
+    private final RoomAvailabilityService roomAvailabilityService;
+    private final ReservationProposalRepository proposalRepo;
+    private final UserRepository userRepo;
+    private final ZoneId zone = ZoneId.of("Europe/Warsaw");
+    private final RoomService roomService;
 
-    public ReservationService(ReservationRepository reservationRepo, RecurringReservationRepository recurringRepo, RoomService roomService, UserService userService) {
+    public ReservationService(
+            ReservationRepository reservationRepo,
+            RoomAvailabilityService availabilityService,
+            RecurringReservationService recurringReservationService,
+            UserService userService, RoomAvailabilityService roomAvailabilityService,
+            ReservationProposalRepository proposalRepo,
+            UserRepository userRepo, RoomService roomService
+    ) {
         this.reservationRepo = reservationRepo;
-        this.recurringRepo = recurringRepo;
-        this.roomService = roomService;
+        this.availabilityService = availabilityService;
+        this.recurringReservationService = recurringReservationService;
         this.userService = userService;
+        this.roomAvailabilityService = roomAvailabilityService;
+        this.proposalRepo = proposalRepo;
+        this.userRepo = userRepo;
+        this.roomService = roomService;
     }
 
     public Reservation createReservation(Reservation reservation) {
         return reservationRepo.save(reservation);
     }
 
+    /**
+     * Sprawdza dostępność sali i zwraca szczegóły rezerwacji.
+     */
+    @Transactional
+    public ReservationResponse reserve(ReservationRequest req) {
+        Room room = availabilityService.findAvailableRoom(
+                req,
+                Optional.empty(),
+                Optional.empty()
+        ).orElseThrow(() -> new NoRoomAvailableException(
+                "Brak dostępnych sal w zadanym terminie"
+        ));
+
+        return createReservationFromRequest(req, room);
+    }
+
+    private ReservationResponse createReservationFromRequest(ReservationRequest req,
+                                                       Room room) {
+        // utwórz encję i zapisz
+        Reservation reservation = Reservation.builder()
+                .userId(req.getUserId())
+                .roomId(room.getId())
+                .start(req.getDate().atTime(req.getStartTime()).atZone(zone))
+                .end(req.getDate().atTime(req.getEndTime()).atZone(zone))
+                .purpose(req.getPurpose())
+                .minCapacity(req.getMinCapacity())
+                .softwareIds(req.getSoftwareIds())
+                .equipmentIds(req.getEquipmentIds())
+                .status(ReservationStatus.CONFIRMED)
+                .build();
+        reservationRepo.save(reservation);
+
+        return new ReservationResponse(
+                reservation.getId(),
+                reservation.getUserId(),
+                reservation.getRoomId(),
+                reservation.getRecurrenceId(),
+                reservation.getStart(),
+                reservation.getEnd(),
+                reservation.getPurpose(),
+                reservation.getMinCapacity(),
+                reservation.getSoftwareIds(),
+                reservation.getEquipmentIds(),
+                reservation.getStatus()
+        );
+    }
+
+    // pozostałe metody (get, delete, cancel, updateReservation, zakładki proposal)
+
+    @Transactional(readOnly = true)
     public List<Reservation> getAllReservations() {
         return reservationRepo.findAll();
     }
 
+    @Transactional(readOnly = true)
     public Reservation getReservationById(String id) {
         return reservationRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Reservation", id));
     }
 
+    @Transactional
     public void deleteReservation(String id) {
         if (!reservationRepo.existsById(id)) {
             throw new NotFoundException("Reservation", id);
@@ -53,203 +127,292 @@ public class ReservationService {
         reservationRepo.deleteById(id);
     }
 
+    @Transactional
+    public void cancelReservation(String reservationId, String userId) {
+        Reservation reservation = reservationRepo.findById(reservationId)
+                .orElseThrow(() -> new NotFoundException("Reservation", reservationId));
 
-//     attempts to reserve a room - returns a response indicating the assigned roomId
-//     or an exception
-public ReservationResponse reserve(ReservationRequest req) {
-    List<String> requestedSoftware = Optional.ofNullable(req.getSoftwareIds())
-            .orElse(Collections.emptyList());
-    List<String> requestedEquipment = Optional.ofNullable(req.getEquipmentIds())
-            .orElse(Collections.emptyList());
-
-    // filtruj po pojemności
-    List<Room> byCapacity = roomService.getAllRooms().stream()
-            .filter(r -> r.getCapacity() >= req.getMinCapacity())
-            .toList();
-    if (byCapacity.isEmpty()) {
-        throw new NoRoomAvailableException(
-                "Brak sal o minimalnej pojemności " + req.getMinCapacity());
-    }
-
-    // filtruj dalej po oprogramowaniu
-    List<Room> bySoftware = byCapacity.stream()
-            .filter(r -> {
-                List<String> roomSoftware = Optional.ofNullable(r.getSoftwareIds())
-                        .orElse(Collections.emptyList());
-                return new HashSet<>(roomSoftware).containsAll(requestedSoftware);
-            })
-            .toList();
-    if (bySoftware.isEmpty()) {
-        throw new NoRoomAvailableException(
-                "Brak sal wyposażonych we wszystkie programy: " + requestedSoftware);
-    }
-
-    // filtruj dalej po sprzęcie
-    List<Room> byEquipment = bySoftware.stream()
-            .filter(r -> {
-                List<String> roomEquipment = Optional.ofNullable(r.getEquipmentIds())
-                        .orElse(Collections.emptyList());
-                return new HashSet<>(roomEquipment).containsAll(requestedEquipment);
-            })
-            .sorted(Comparator.comparing(Room::getCapacity))
-            .toList();
-    if (byEquipment.isEmpty()) {
-        throw new NoRoomAvailableException(
-                "Brak sal posiadających cały wymagany sprzęt: " + requestedEquipment);
-    }
-
-    // spośród pozostałych pokoi sprawdź nakładające się rezerwacje
-    for (Room r : byEquipment) {
-        // zbuduj LocalDateTime
-        ZoneId zone = ZoneId.of("Europe/Warsaw");
-        ZonedDateTime start = ZonedDateTime.of(req.getDate(), req.getStartTime(), zone);
-        ZonedDateTime end   = ZonedDateTime.of(req.getDate(), req.getEndTime(), zone);
-
-
-        // znajdź nakładające się rezerwacje
-        List<Reservation> overlaps = reservationRepo
-                .findByRoomIdAndStartLessThanAndEndGreaterThan(
-                        r.getId(),
-                        end,
-                        start
-                );
-
-        if (overlaps.isEmpty()) {
-            // zapis i zwrot sukcesu
-            Reservation entity = new Reservation(
-                    req.getUserId(),
-                    r.getId(),
-                    start,
-                    end,
-                    req.getPurpose(),
-                    req.getMinCapacity(),
-                    requestedSoftware,
-                    requestedEquipment,
-                    ReservationStatus.CONFIRMED
-            );
-            reservationRepo.save(entity);
-
-            return new ReservationResponse(
-                    entity.getId(),
-                    entity.getRoomId(),
-                    "Sala przydzielona: " + r.getName()
-            );
+        if (!reservation.getUserId().equals(userId)) {
+            throw new ForbiddenException("Nie masz uprawnień do anulowania tej rezerwacji");
+        }
+        if (reservation.getStatus() != ReservationStatus.CANCELLED) {
+            reservation.setStatus(ReservationStatus.CANCELLED);
+            reservationRepo.save(reservation);
         }
     }
 
-    // Jeśli wszystkie spełniają wymogi wyposażenia i pojemności, ale są zajęte
-    throw new NoRoomAvailableException(
-            "Brak wolnych terminów w wybranych salach w dniu " +
-                    req.getDate() + " od " + req.getStartTime() + " do " + req.getEndTime()
-    );
-}
+    @Transactional
+    public ReservationResponse updateReservation(String existingId, ReservationRequest req) {
+        Room room = availabilityService.findAvailableRoom(
+                req,
+                Optional.of(existingId),
+                Optional.empty()
+        ).orElseThrow(() -> new NoRoomAvailableException(
+                "Brak dostępnych sal po aktualizacji terminu"
+        ));
 
-//    @Transactional
-//    public RecurringReservationResponseDto createRecurringReservations(RecurringReservationRequestDto dto) {
-//        // 1) Zapisz wzorzec
-//        RecurringReservation pattern = RecurringReservation.builder()
-//                .userId(dto.getUserId())
-//                .roomId(dto.getRoomId())
-//                .startDate(dto.getStartDate())
-//                .endDate(dto.getEndDate())
-//                .startTime(dto.getStartTime())
-//                .endTime(dto.getEndTime())
-//                .purpose(dto.getPurpose())
-//                .minCapacity(dto.getMinCapacity())
-//                .softwareIds(dto.getSoftwareIds())
-//                .equipmentIds(dto.getEquipmentIds())
-//                .frequency(dto.getFrequency())
-//                .interval(dto.getInterval())
-//                .byDays(dto.getByDays())
-//                .status(ReservationStatus.CONFIRMED)
-//                .build();
-//        pattern = recurringRepo.save(pattern);
-//
-//        // 2) Wygeneruj listę dat
-//        List<LocalDate> dates = new ArrayList<>();
-//        LocalDate d = pattern.getStartDate();
-//        while (pattern.getEndDate() == null || !d.isAfter(pattern.getEndDate())) {
-//            boolean take = switch (pattern.getFrequency()) {
-//                case DAILY   -> true;
-//                case WEEKLY  -> pattern.getByDays().contains(d.getDayOfWeek());
-//                case MONTHLY -> d.getDayOfMonth() == pattern.getStartDate().getDayOfMonth();
-//            };
-//            if (take) dates.add(d);
-//            d = switch (pattern.getFrequency()) {
-//                case DAILY   -> d.plusDays(pattern.getInterval());
-//                case WEEKLY  -> d.plusWeeks(pattern.getInterval());
-//                case MONTHLY -> d.plusMonths(pattern.getInterval());
-//            };
-//        }
-//
-//        // 3) Wylicz kandydatów i posortuj po pojemności rosnąco
-//        List<Room> candidates = roomService.getAllRooms().stream()
-//                .filter(r -> r.getCapacity() >= dto.getMinCapacity())
-//                .filter(r -> new HashSet<>(r.getSoftwareIds()).containsAll(dto.getSoftwareIds()))
-//                .filter(r -> new HashSet<>(r.getEquipmentIds()).containsAll(dto.getEquipmentIds()))
-//                .sorted(Comparator.comparingInt(Room::getCapacity))
-//                .toList();
-//
-//        // 4) Dla każdej sali sprawdź, czy wszystkie daty są wolne
-//        for (Room room : candidates) {
-//            RecurringReservation finalPattern = pattern;
-//            boolean allFree = dates.stream().allMatch(date ->
-//                    reservationRepo
-//                            .findByRoomIdAndDateAndStartTimeLessThanAndEndTimeGreaterThan(
-//                                    room.getId(), date,
-//                                    finalPattern.getEndTime(), finalPattern.getStartTime()
-//                            ).isEmpty()
-//            );
-//            if (allFree) {
-//                // 5) Rezerwuj tę salę na wszystkie daty
-//                List<ReservationResponse> reservations = new ArrayList<>();
-//                for (LocalDate date : dates) {
-//                    Reservation r = new Reservation(
-//                            dto.getUserId(),
-//                            room.getId(),
-//                            date,
-//                            pattern.getStartTime(),
-//                            pattern.getEndTime(),
-//                            dto.getPurpose(),
-//                            dto.getMinCapacity(),
-//                            dto.getSoftwareIds(),
-//                            dto.getEquipmentIds(),
-//                            ReservationStatus.CONFIRMED
-//                    );
-//                    r.setRecurrenceId(pattern.getId());
-//                    reservationRepo.save(r);
-//
-//                    reservations.add(new ReservationResponse(
-//                            r.getId(),
-//                            r.getRoomId(),
-//                            "Sala przydzielona: " + room.getName() + " (data: " + date + ")"
-//                    ));
-//                }
-//
-//                return RecurringReservationResponseDto.builder()
-//                        .recurringReservationId(pattern.getId())
-//                        .roomId(room.getId())
-//                        .startDate(pattern.getStartDate())
-//                        .endDate(pattern.getEndDate())
-//                        .startTime(pattern.getStartTime())
-//                        .endTime(pattern.getEndTime())
-//                        .purpose(pattern.getPurpose())
-//                        .minCapacity(pattern.getMinCapacity())
-//                        .softwareIds(pattern.getSoftwareIds())
-//                        .equipmentIds(pattern.getEquipmentIds())
-//                        .frequency(pattern.getFrequency())
-//                        .interval(pattern.getInterval())
-//                        .byDays(pattern.getByDays())
-//                        .status(pattern.getStatus())
-//                        .reservations(reservations)
-//                        .build();
-//            }
-//        }
-//
-//        // 6) Jeżeli żadna sala nie przeszła w całości → błąd
-//        throw new NoRoomAvailableException("Brak jednej spójnej sali dla wszystkich terminów");
-//    }
+        // stwórz nową rezerwację
+        ReservationResponse resp = createReservationFromRequest(req, room);
+        // skasuj starą
+        deleteReservation(existingId);
+        return resp;
+    }
 
+    // metody dotyczące propozycji pozostają bez zmian i delegują do stworzonego serwisu
+
+
+    public ReservationProposal createProposal(ProposalRequestDto dto, String teacherEmail) {
+        User teacher = userRepo.findByEmail(teacherEmail)
+                .orElseThrow(() -> new NotFoundException("User by email", teacherEmail));
+        User student = userRepo.findByEmail(dto.getStudentEmail())
+                .orElseThrow(() -> new NotFoundException("Student by email", dto.getStudentEmail()));
+
+        if ((dto.getOriginalReservationId() == null) == (dto.getOriginalRecurrenceId() == null)) {
+            throw new ConflictException("Dokładnie jedno z originalReservationId lub originalRecurrenceId musi być ustawione");
+        }
+
+        List<ReservationRequest> singleReqs = List.of();
+        List<RecurringReservationRequest> recurReqs = List.of();
+
+        // Tryb pojedynczy
+        if (dto.getReservationRequests() != null && !dto.getReservationRequests().isEmpty()) {
+            if (dto.getReservationRequests().size() > 3) {
+                throw new ConflictException("Max 3 pojedyncze requesty");
+            }
+
+            singleReqs = dto.getReservationRequests().stream()
+                    .peek(r -> {
+                        if (!r.getEndTime().isAfter(r.getStartTime())) {
+                            throw new ConflictException("W każdym request: startTime < endTime");
+                        }
+
+                        // sprawdzenie dostępności
+                        boolean available = roomAvailabilityService.isSlotAvailable(
+                                r, Optional.empty(), Optional.empty());
+                        if (!available) {
+                            throw new ConflictException("Brak sali dla dnia: " + r.getDate());
+                        }
+                    })
+                    .map(r -> ReservationRequest.builder()
+                            .userId(teacher.getId())
+                            .date(r.getDate())
+                            .startTime(r.getStartTime())
+                            .endTime(r.getEndTime())
+                            .purpose(r.getPurpose())
+                            .minCapacity(r.getMinCapacity())
+                            .softwareIds(r.getSoftwareIds())
+                            .equipmentIds(r.getEquipmentIds())
+                            .build())
+                    .toList();
+        }
+
+        // Tryb cykliczny
+        else if (dto.getRecurringRequests() != null && !dto.getRecurringRequests().isEmpty()) {
+            if (dto.getRecurringRequests().size() > 3) {
+                throw new ConflictException("Max 3 cykliczne requesty");
+            }
+
+            recurReqs = dto.getRecurringRequests().stream()
+                    .peek(r -> {
+                        if (!r.getEndDate().isAfter(r.getStartDate())) {
+                            throw new ConflictException("endDate musi być po startDate");
+                        }
+                        if (!r.getEndTime().isAfter(r.getStartTime())) {
+                            throw new ConflictException("startTime < endTime");
+                        }
+
+                        List<LocalDate> dates =
+                                recurringReservationService.generateDates(r);
+                        for (LocalDate date : dates) {
+                            ReservationRequest virtualRequest = ReservationRequest.builder()
+                                    .userId(teacher.getId())
+                                    .date(date)
+                                    .startTime(r.getStartTime())
+                                    .endTime(r.getEndTime())
+                                    .purpose(r.getPurpose())
+                                    .minCapacity(r.getMinCapacity())
+                                    .softwareIds(r.getSoftwareIds())
+                                    .equipmentIds(r.getEquipmentIds())
+                                    .build();
+
+                            boolean available = roomAvailabilityService.isSlotAvailable(
+                                    virtualRequest, Optional.empty(), Optional.empty());
+
+                            if (!available) {
+                                throw new ConflictException("Brak dostępnej sali dla dnia: " + date);
+                            }
+                        }
+                    })
+                    .map(r -> RecurringReservationRequest.builder()
+                            .userId(teacher.getId())
+                            .startDate(r.getStartDate())
+                            .startTime(r.getStartTime())
+                            .endTime(r.getEndTime())
+                            .purpose(r.getPurpose())
+                            .minCapacity(r.getMinCapacity())
+                            .softwareIds(r.getSoftwareIds())
+                            .equipmentIds(r.getEquipmentIds())
+                            .frequency(r.getFrequency())
+                            .interval(r.getInterval())
+                            .byMonthDays(r.getByMonthDays())
+                            .byDays(r.getByDays())
+                            .endDate(r.getEndDate())
+                            .build())
+                    .toList();
+        }
+
+        ReservationProposal proposal = ReservationProposal.builder()
+                .teacherId(teacher.getId())
+                .studentId(student.getId())
+                .originalReservationId(dto.getOriginalReservationId())
+                .originalRecurrenceId(dto.getOriginalRecurrenceId())
+                .reservationRequests(singleReqs)
+                .recurringRequests(recurReqs)
+                .comment(dto.getComment())
+                .status(ProposalStatus.PENDING)
+                .build();
+
+        return proposalRepo.save(proposal);
+    }
+
+    /**
+     * 2. Student pobiera wszystkie swoje propozycje PENDING:
+     */
+    public List<ProposalResponseDto> listProposalsForStudent(String studentEmail) {
+        User student = userRepo.findByEmail(studentEmail)
+                .orElseThrow(() -> new NotFoundException("User by email", studentEmail));
+
+        List<ReservationProposal> pending = proposalRepo
+                .findByStudentIdAndStatus(student.getId(), ProposalStatus.PENDING);
+
+        return pending.stream()
+                .map(p -> {
+                    User teacher = userRepo.findById(p.getTeacherId())
+                            .orElseThrow(() -> new NotFoundException("User by id", p.getTeacherId()));
+
+                    return ProposalResponseDto.builder()
+                            .id(p.getId())
+                            .teacherId(teacher.getId())
+                            .teacherEmail(teacher.getEmail())
+                            .studentId(student.getId())
+                            .studentEmail(student.getEmail())
+                            .originalReservationId(p.getOriginalReservationId())
+                            .originalRecurrenceId(p.getOriginalRecurrenceId())
+                            .reservationRequests(p.getReservationRequests())
+                            .recurringRequests(p.getRecurringRequests())
+                            .status(p.getStatus())
+                            .comment(p.getComment())
+                            .build();
+                })
+                .toList();
+    }
+
+
+    @Transactional
+    public ReservationResponse confirmProposal(
+            String proposalId,
+            ConfirmProposalDto confirmDto,
+            String studentEmail
+    ) {
+        User student = userRepo.findByEmail(studentEmail)
+                .orElseThrow(() -> new NotFoundException("User by email", studentEmail));
+
+        ReservationProposal proposal = proposalRepo.findById(proposalId)
+                .orElseThrow(() -> new NotFoundException("ReservationProposal", proposalId));
+
+        if (!proposal.getStudentId().equals(student.getId())) {
+            throw new ConflictException("You’re not allowed to confirm this proposal");
+        }
+        if (proposal.getStatus() != ProposalStatus.PENDING) {
+            throw new ConflictException("Proposal is not PENDING");
+        }
+
+        ReservationResponse savedReservation;
+
+        if (proposal.getOriginalReservationId() != null) {
+            // Pojedyncza rezerwacja
+            int chosen = confirmDto.getChosenIndex();
+            if (proposal.getReservationRequests() == null || proposal.getReservationRequests().isEmpty()) {
+                throw new ConflictException("Proposal does not contain any reservation requests");
+            }
+            if (chosen < 0 || chosen >= proposal.getReservationRequests().size()) {
+                throw new ConflictException("Invalid chosenIndex");
+            }
+
+            ReservationRequest chosenRequest = proposal.getReservationRequests().get(chosen);
+
+            savedReservation = updateReservation(proposal.getOriginalReservationId(), chosenRequest);
+
+        } else if (proposal.getOriginalRecurrenceId() != null) {
+            // Rezerwacja cykliczna
+            int chosen = confirmDto.getChosenIndex();
+            if (proposal.getRecurringRequests() == null || proposal.getRecurringRequests().isEmpty()) {
+                throw new ConflictException("Proposal does not contain any recurring requests");
+            }
+            if (chosen < 0 || chosen >= proposal.getRecurringRequests().size()) {
+                throw new ConflictException("Invalid chosenIndex");
+            }
+
+            RecurringReservationRequest chosenRequest = proposal.getRecurringRequests().get(chosen);
+
+            RecurringReservationResponse recurringResp =
+                    recurringReservationService.updatePattern(proposal.getOriginalRecurrenceId(), chosenRequest);
+            String newRecurrenceId = recurringResp.getRecurringReservationId();
+
+            List<Reservation> updatedOccurrences =
+                    reservationRepo.findByRecurrenceId(newRecurrenceId);
+            if (updatedOccurrences.isEmpty()) {
+                throw new NotFoundException("Updated reservations not found", proposal.getOriginalRecurrenceId());
+            }
+            savedReservation = recurringResp.getReservations().getFirst();
+
+        } else {
+            throw new ConflictException("Proposal must reference either a single or recurring reservation");
+        }
+
+        proposal.setStatus(ProposalStatus.CONFIRMED);
+        proposalRepo.save(proposal);
+
+        List<ReservationProposal> related;
+        if (proposal.getOriginalReservationId() != null) {
+            related = proposalRepo.findByOriginalReservationId(proposal.getOriginalReservationId());
+        } else {
+            related = proposalRepo.findByOriginalRecurrenceId(proposal.getOriginalRecurrenceId());
+        }
+
+        for (ReservationProposal other : related) {
+            if (!other.getId().equals(proposal.getId())) {
+                other.setStatus(ProposalStatus.REJECTED);
+                proposalRepo.save(other);
+            }
+        }
+
+        return savedReservation;
+    }
+
+
+
+
+    /**
+     * 4. (Opcjonalnie) Student odrzuca całą propozycję --> status = REJECTED
+     */
+    public void rejectProposal(String proposalId, String studentEmail) {
+        User student = userRepo.findByEmail(studentEmail)
+                .orElseThrow(() -> new NotFoundException("User by email", studentEmail));
+
+        ReservationProposal proposal = proposalRepo.findById(proposalId)
+                .orElseThrow(() -> new NotFoundException("ReservationProposal", proposalId));
+
+        if (!proposal.getStudentId().equals(student.getId())) {
+            throw new ConflictException("You are not allowed to reject this proposal");
+        }
+        if (proposal.getStatus() != ProposalStatus.PENDING) {
+            throw new ConflictException("Proposal is not in PENDING state");
+        }
+
+        proposal.setStatus(ProposalStatus.REJECTED);
+        proposalRepo.save(proposal);
+    }
 
     @Transactional(readOnly = true)
     public List<CalendarReservationDto> getUserCalendar(
@@ -303,44 +466,6 @@ public ReservationResponse reserve(ReservationRequest req) {
                             .build();
                 })
                 .toList();
-    }
-
-
-
-
-    // cancel reservation if you are the owner
-    // TODO update the method so that admin can cancel every reservation
-    @Transactional
-    public void cancelReservation(String reservationId, String userId) {
-        Reservation reservation = reservationRepo.findById(reservationId)
-                .orElseThrow(() -> new NotFoundException("Reservation", reservationId));
-
-        if (!reservation.getUserId().equals(userId)) {
-            throw new ForbiddenException("Nie masz uprawnień do anulowania tej " +
-                    "rezerwacji");
-        }
-
-        if (reservation.getStatus() != ReservationStatus.CANCELLED) {
-            reservation.setStatus(ReservationStatus.CANCELLED);
-            reservationRepo.save(reservation);
-        }
-    }
-
-    public boolean isOwner(String reservationId, String email) {
-        Reservation reservation = reservationRepo.findById(reservationId)
-                .orElseThrow(() -> new NotFoundException("Reservation", reservationId));
-
-        User currentUser = userService.getUserByEmail(email);
-
-        return reservation.getUserId().equals(currentUser.getId());
-    }
-
-    @Transactional
-    public ReservationResponse updateReservation(String existingId, ReservationRequest req) {
-        ReservationResponse resp = reserve(req);
-        deleteReservation(existingId);
-
-        return resp;
     }
 
 }
