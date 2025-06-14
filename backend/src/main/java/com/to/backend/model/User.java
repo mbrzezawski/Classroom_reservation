@@ -19,7 +19,7 @@ public class User {
     private String email;
     private String password;
     private RoleType role;
-    private Boolean enabled;
+    private Boolean enabled = false;
 
     public boolean isEnabled() {
         return Boolean.TRUE.equals(enabled);

@@ -1,4 +1,8 @@
 import {useNavigate} from "react-router-dom";
+import Delete from "../icons/delete.tsx";
+import {deleteUser} from "../../hooks/del-user.ts"
+
+
 
 
 const EmployeesList = ({ users, loading, error }: { users: any[], loading: boolean, error: any }) => {
@@ -7,6 +11,14 @@ const EmployeesList = ({ users, loading, error }: { users: any[], loading: boole
 
     function handleClick(userId: number) {
         navigate(`/main`, {state: {userId}})
+    }
+
+    function handleDelete(id: number) {
+        if (confirm("Are you sure you want to delete this user?")) {
+            deleteUser(id)
+                .then(() => alert("User deleted"))
+                .catch(err => console.error("Delete failed", err));
+        }
     }
 
     if (loading) return <div className="p-4">Loading...</div>;
@@ -36,6 +48,9 @@ const EmployeesList = ({ users, loading, error }: { users: any[], loading: boole
                                         Go to calendar
                                     </button>
                                 )}
+                                <button className="btn" onClick={() => handleDelete(user.id)}>
+                                    <Delete ></Delete>
+                                </button>
                             </td>
                         </tr>
                     ))}
