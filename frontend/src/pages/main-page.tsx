@@ -1,6 +1,5 @@
 import MyCalendar from "../components/calendar/my-calendar";
 import Layout from "../components/layout/layout";
-import { Toaster } from "sonner";
 import useCalendarEvents from "../hooks/use-calendar-events";
 import SearchBar from "../components/lists/search-bar.tsx";
 import { useUsers } from "../hooks/use-users.ts";
@@ -12,14 +11,12 @@ import ReservationFormWrapper from "../components/reservation/reservation-form-w
 import type { FullCalendarEvent } from "../types/calendar-event.ts";
 
 const MainPage = () => {
-
   const { user } = useAuth();
   if (!user) {
     return;
   }
   const userId = user.id;
   const userRole = user.role;
-  // const userRole = RoleType.DEANS_OFFICE;
 
   const { users } = useUsers();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -30,7 +27,6 @@ const MainPage = () => {
   const [editedEvent, setEditEvent] = useState<FullCalendarEvent | null>(null);
 
   return (
-
     <Layout userRole={userRole}>
       <div className="grid grid-cols-3 min-h-screen gap-4 p-4">
         <div className="col-span-2 flex flex-col gap-4">
@@ -75,7 +71,6 @@ const MainPage = () => {
           }}
         />
       </div>
-      <Toaster position="top-right" richColors closeButton />
     </Layout>
   );
 };
