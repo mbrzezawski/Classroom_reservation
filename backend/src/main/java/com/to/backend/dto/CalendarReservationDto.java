@@ -1,5 +1,7 @@
 package com.to.backend.dto;
 
+import com.to.backend.model.ReservationProposal;
+import com.to.backend.model.utils.ReservationStatus;
 import lombok.Builder;
 import lombok.Value;
 
@@ -11,6 +13,7 @@ import java.util.List;
 public class CalendarReservationDto {
     String reservationId;
     String recurrenceId;
+    ReservationStatus reservationStatus;
     String roomId;
     String roomName;
     String roomLocation;
