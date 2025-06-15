@@ -26,8 +26,10 @@ import {
 import type { Action } from "../../store/events-reducer.ts";
 import type { FullCalendarEvent } from "../../types/calendar-event.ts";
 import { showReservationToast } from "../../utils/show-reservation-toast.ts";
-import ProposalForm, {type ProposalFormValues} from "./reserving/proposal-form";
-import {usePostProposal} from "../../hooks/usePostProposal.ts";
+import ProposalForm, {
+  type ProposalFormValues,
+} from "./reserving/proposal-form";
+import { usePostProposal } from "../../hooks/usePostProposal.ts";
 
 interface Props {
   userId: string;
@@ -52,14 +54,14 @@ const defaultValues: SingleReservationFormValues = {
 };
 
 const SingleReservationForm: FC<Props> = ({
-                                            userId,
-                                            role,
-                                            dispatch,
-                                            type,
-                                            setType,
-                                            editedEvent,
-                                            onFinishedEditing,
-                                          }) => {
+  userId,
+  role,
+  dispatch,
+  type,
+  setType,
+  editedEvent,
+  onFinishedEditing,
+}) => {
   const methods = useForm<SingleReservationFormValues>({
     defaultValues,
   });
@@ -79,14 +81,13 @@ const SingleReservationForm: FC<Props> = ({
           proposedDate: {
             date: "",
             startTime: "",
-            endTime: ""
-          }
-        }
+            endTime: "",
+          },
+        },
       ],
       comment: "",
     },
   });
-
 
   if (!token) {
     window.location.href = "/login";
@@ -99,13 +100,12 @@ const SingleReservationForm: FC<Props> = ({
   const mode = editedEvent ? "edit" : "create";
   const reservationId = editedEvent ? editedEvent.id : "";
   const submitLabel = isSubmitting
-      ? mode === "create"
-          ? "Booking..."
-          : "Saving..."
-      : mode === "create"
-          ? "Book"
-          : "Save changes";
-
+    ? mode === "create"
+      ? "Booking..."
+      : "Saving..."
+    : mode === "create"
+    ? "Book"
+    : "Save changes";
 
   useEffect(() => {
     if (editedEvent && !editedEvent.extendedProps.recurrenceProps) {
@@ -117,7 +117,9 @@ const SingleReservationForm: FC<Props> = ({
   }, [editedEvent, type]);
 
   useEffect(() => {
-    reset(editedEvent ? mapCalendarEventToSingleValues(editedEvent) : defaultValues);
+    reset(
+      editedEvent ? mapCalendarEventToSingleValues(editedEvent) : defaultValues
+    );
   }, [editedEvent, reset]);
 
   const onSubmit = async (data: SingleReservationFormValues) => {
@@ -126,9 +128,9 @@ const SingleReservationForm: FC<Props> = ({
     console.log("data on the start of onSubmit:", data);
 
     const isProposalMode =
-        mode === "edit" &&
-        showProposalForm &&
-        getProposalValues().additionalDates.length >= 1;
+      mode === "edit" &&
+      showProposalForm &&
+      getProposalValues().additionalDates.length >= 1;
 
     try {
       if (isProposalMode) {
@@ -159,13 +161,13 @@ const SingleReservationForm: FC<Props> = ({
           originalReservationId: reservationId,
           reservationRequests,
           comment: proposal.comment,
-        }
+        };
 
         // console.log("proposal comment:");
         // console.log(proposal.comment);
         // console.log("proposalRequests:");
         // console.log(proposalRequest);
-        console.log("Proposal request:" , proposalRequest);
+        console.log("Proposal request:", proposalRequest);
 
         const response = await postProposal(proposalRequest);
         console.log("Response from /proposals:", response);
@@ -174,18 +176,18 @@ const SingleReservationForm: FC<Props> = ({
       } else {
         console.log("data durring single reservation:", data);
         const response = await submitSingleReservation(
-            data,
-            userId,
-            token,
-            mode,
-            reservationId
+          data,
+          userId,
+          token,
+          mode,
+          reservationId
         );
 
         const room: Room = roomsMap[response.roomId];
 
         const newCalendarEvent = mapSingleReservationResponsetoCalendarEvent(
-            response,
-            room
+          response,
+          room
         );
 
         if (mode === "create")
@@ -200,8 +202,7 @@ const SingleReservationForm: FC<Props> = ({
       }
     } catch (error) {
       showToast("Submission failed", {
-        description:
-            error instanceof Error ? error.message : "Unknown error",
+        description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive",
       });
     } finally {
@@ -211,84 +212,94 @@ const SingleReservationForm: FC<Props> = ({
   };
 
   return (
-      <FormProvider {...methods}>
-        <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="flex flex-col border px-6 py-8 gap-[8px] rounded-[8px]"
+    <FormProvider {...methods}>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col border px-6 py-8 gap-[8px] rounded-[8px]"
+      >
+        <div className="flex justify-between items-center mb-2">
+          {allowChangeToReccuring && (
+            <TypePicker type={type} setType={setType} />
+          )}
+          <div className={mode !== "edit" ? "flex-1 ml-4" : ""}>
+            <InputTextBox
+              label="Title"
+              placeholder="Enter meeting title"
+              icon={<Letter />}
+              {...register("title", {
+                required: "Title is required",
+                minLength: {
+                  value: 3,
+                  message: "Title must be at least 3 characters long",
+                },
+              })}
+              error={methods.formState.errors.title?.message}
+            />
+          </div>
+
+          {mode === "edit" && (
+            <DeleteReservationButton
+              reservationId={reservationId}
+              reservationType={type}
+              onFinishedEditing={onFinishedEditing}
+              dispatch={dispatch}
+              resetForm={() => reset(defaultValues)}
+            />
+          )}
+        </div>
+
+        <div className="flex flex-row gap-2">
+          <DatePicker field="date" />
+          <HourPicker start={true} />
+        </div>
+
+        <div className="flex flex-row gap-2">
+          <AtendeesPicker />
+          <HourPicker start={false} />
+        </div>
+
+        {mode === "edit" && (
+          <label className="text-sm flex items-center gap-2 mt-2">
+            <input
+              type="checkbox"
+              className="checkbox"
+              onChange={(e) => setShowProposalForm(e.target.checked)}
+              checked={showProposalForm}
+            />
+            Send proposition of additional term
+          </label>
+        )}
+
+        {showProposalForm && mode === "edit" && (
+          <FormProvider {...proposalMethods}>
+            <ProposalForm />
+          </FormProvider>
+        )}
+
+        <FeaturesPicker />
+
+        <button
+          type="submit"
+          className="btn rounded-[6px]"
+          disabled={isSubmitting}
         >
-          <div className="flex justify-between items-center mb-2">
-            {allowChangeToReccuring && <TypePicker type={type} setType={setType} />}
-            <div className={mode !== "edit" ? "flex-1 ml-4" : ""}>
-              <InputTextBox
-                  label="Title"
-                  placeholder="Enter meeting title"
-                  icon={<Letter />}
-                  {...register("title", {
-                    required: "Title is required",
-                    minLength: { value: 3, message: "Title must be at least 3 characters long" },
-                  })}
-                  error={methods.formState.errors.title?.message}
-              />
-            </div>
+          {submitLabel}
+        </button>
 
-            {mode === "edit" && (
-                <DeleteReservationButton
-                    reservationId={reservationId}
-                    reservationType={type}
-                    onFinishedEditing={onFinishedEditing}
-                    dispatch={dispatch}
-                    resetForm={() => reset(defaultValues)}
-                />
-            )}
-          </div>
-
-          <div className="flex flex-row gap-2">
-            <DatePicker field="date" />
-            <HourPicker start={true} />
-          </div>
-
-          <div className="flex flex-row gap-2">
-            <AtendeesPicker />
-            <HourPicker start={false} />
-          </div>
-
-          {mode === "edit" && (
-              <label className="text-sm flex items-center gap-2 mt-2">
-                <input
-                    type="checkbox"
-                    onChange={(e) => setShowProposalForm(e.target.checked)}
-                    checked={showProposalForm}
-                />
-                Send proposition of additional term
-              </label>
-          )}
-
-          {showProposalForm && mode === "edit" && (
-              <FormProvider {...proposalMethods}>
-                <ProposalForm />
-              </FormProvider>
-          )}
-
-          <FeaturesPicker />
-
-          <button type="submit" className="btn rounded-[6px]" disabled={isSubmitting}>
-            {submitLabel}
+        {mode === "edit" && (
+          <button
+            type="button"
+            className="btn bg-red-500 text-white rounded-[6px]"
+            onClick={() => {
+              onFinishedEditing();
+              reset(defaultValues);
+            }}
+          >
+            Cancel editing
           </button>
-
-          {mode === "edit" && (
-              <button
-                  type="button"
-                  className="btn bg-red-500 text-white rounded-[6px]"
-                  onClick={() => {
-                    onFinishedEditing();
-                    reset(defaultValues);
-                  }}
-              >
-                Cancel editing
-              </button>
-          )}
-        </form>
-      </FormProvider>
+        )}
+      </form>
+    </FormProvider>
   );
 };
 
