@@ -18,8 +18,8 @@ const MainPage = () => {
     return;
   }
   const userId = user.id;
-  // const userRole = user.role;
-  const userRole = RoleType.DEANS_OFFICE;
+  const userRole = user.role;
+  // const userRole = RoleType.DEANS_OFFICE;
 
   const { users } = useUsers();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);

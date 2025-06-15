@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Dispatch, FC } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import type {
-  ReservationResponseDTO,
+  // ReservationResponseDTO,
   ReservationType,
   SingleReservationFormValues,
 } from "../../types/reservations";
@@ -27,6 +27,7 @@ import type { Action } from "../../store/events-reducer.ts";
 import type { FullCalendarEvent } from "../../types/calendar-event.ts";
 import { showReservationToast } from "../../utils/show-reservation-toast.ts";
 import ProposalForm, {type ProposalFormValues} from "./reserving/proposal-form";
+import {usePostProposal} from "../../hooks/usePostProposal.ts";
 
 interface Props {
   userId: string;
@@ -63,6 +64,13 @@ const SingleReservationForm: FC<Props> = ({
     defaultValues,
   });
 
+  const roomsMap = useRoomsMap();
+  const [allowChangeToReccuring, setAllowChangeToRecurring] = useState(true);
+  const [showProposalForm, setShowProposalForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { token } = useAuth();
+  const { postProposal } = usePostProposal();
+
   const proposalMethods = useForm<ProposalFormValues>({
     defaultValues: {
       email: "",
@@ -79,7 +87,7 @@ const SingleReservationForm: FC<Props> = ({
     },
   });
 
-  const { token } = useAuth();
+
   if (!token) {
     window.location.href = "/login";
     return null;
@@ -87,9 +95,7 @@ const SingleReservationForm: FC<Props> = ({
 
   const { register, handleSubmit, reset } = methods;
   const { getValues: getProposalValues } = proposalMethods;
-  const roomsMap = useRoomsMap();
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const mode = editedEvent ? "edit" : "create";
   const reservationId = editedEvent ? editedEvent.id : "";
   const submitLabel = isSubmitting
@@ -99,9 +105,7 @@ const SingleReservationForm: FC<Props> = ({
       : mode === "create"
           ? "Book"
           : "Save changes";
-  const [allowChangeToReccuring, setAllowChangeToRecurring] = useState(true);
 
-  const [showProposalForm, setShowProposalForm] = useState(false);
 
   useEffect(() => {
     if (editedEvent && !editedEvent.extendedProps.recurrenceProps) {
@@ -119,10 +123,12 @@ const SingleReservationForm: FC<Props> = ({
   const onSubmit = async (data: SingleReservationFormValues) => {
     setIsSubmitting(true);
 
+    console.log("data on the start of onSubmit:", data);
+
     const isProposalMode =
         mode === "edit" &&
         showProposalForm &&
-        getProposalValues().additionalDates.length > 1;
+        getProposalValues().additionalDates.length >= 1;
 
     try {
       if (isProposalMode) {
@@ -148,23 +154,25 @@ const SingleReservationForm: FC<Props> = ({
           })),
         ];
 
-        // await axios.post(
-        //     "/proposals",
-        //     {
-        //       studentEmail: proposal.email,
-        //       originalReservationId: reservationId,
-        //       comment: proposal.comment,
-        //       reservationRequests,
-        //     },
-        //     {
-        //       headers: { Authorization: `Bearer ${token}` },
-        //     }
-        // );
-        console.log(proposal.comment)
-        console.log(reservationRequests);
+        const proposalRequest = {
+          studentEmail: proposal.email,
+          originalReservationId: reservationId,
+          reservationRequests,
+          comment: proposal.comment,
+        }
+
+        // console.log("proposal comment:");
+        // console.log(proposal.comment);
+        // console.log("proposalRequests:");
+        // console.log(proposalRequest);
+        console.log("Proposal request:" , proposalRequest);
+
+        const response = await postProposal(proposalRequest);
+        console.log("Response from /proposals:", response);
 
         showToast("Proposal sent successfully!", { variant: "success" });
       } else {
+        console.log("data durring single reservation:", data);
         const response = await submitSingleReservation(
             data,
             userId,

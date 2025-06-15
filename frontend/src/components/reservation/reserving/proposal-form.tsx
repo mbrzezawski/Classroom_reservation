@@ -1,4 +1,4 @@
-import { useForm, useFieldArray } from "react-hook-form";
+import { useFormContext, useFieldArray } from "react-hook-form";
 import InputTextBox from "../../ui/input-textbox";
 import Delete from "../../icons/delete.tsx";
 import Plus from "../../icons/plus.tsx";
@@ -22,21 +22,7 @@ const ProposalForm = () => {
         register,
         control,
         formState: { errors },
-    } = useForm<ProposalFormValues>({
-        defaultValues: {
-            email: "",
-            additionalDates: [
-                {
-                    proposedDate: {
-                        date: "",
-                        startTime: "",
-                        endTime: "",
-                    },
-                },
-            ],
-            comment: "",
-        }
-    });
+    } = useFormContext<ProposalFormValues>()
 
     const { fields, append, remove } = useFieldArray({
         control,
