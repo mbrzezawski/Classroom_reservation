@@ -6,14 +6,20 @@ import { useAuth } from "../../auth/auth-context";
 // import { useLogout } from "../../hooks/use-logout";
 import ListMenu from "./list-menu.tsx";
 import ArrowBack from "../icons/arrow-back.tsx";
+import { RoleType } from "../../types/user-role.ts";
 
-export const NavBar: FC<{ userRole?: string }> = ({ userRole }) => {
+
+export const NavBar: FC<{ userRole?: RoleType }> = ({ userRole }) => {
+  
   const navigate = useNavigate();
   const location = useLocation();
   const isAuthPage =
     location.pathname == "/login" || location.pathname == "/signup";
   const isListPage =
-    location.pathname == "/employees" || location.pathname == "/rooms";
+    location.pathname == "/employees" ||
+    location.pathname == "/rooms" ||
+    location.pathname == "/proposals";
+
   const { user, logout } = useAuth();
 
   return (
@@ -22,7 +28,12 @@ export const NavBar: FC<{ userRole?: string }> = ({ userRole }) => {
         <div className="absolute left-0">
           {/* Możesz tu dodać logo lub zostawić puste */}
         </div>
-        <div className="text-2xl font-bold mx-auto">UniReserve</div>
+        <button
+          className="btn btn-ghost text-2xl font-bold mx-auto"
+          onClick={() => navigate("/main")}
+        >
+          UniReserve
+        </button>
         {!isAuthPage && (
           <div className="flex gap-2 justify-end absolute right-0">
             {isListPage && (
@@ -38,15 +49,18 @@ export const NavBar: FC<{ userRole?: string }> = ({ userRole }) => {
               </div>
             )}
 
-            {userRole === "DEANS_OFFICE" && <ListMenu />}
+
+            {userRole === RoleType.DEANS_OFFICE && <ListMenu />}
 
             <div className="dropdown dropdown-bottom dropdown-end">
               <div
-                tabIndex={0}
                 role="button"
                 className="btn m-1 flex items-center justify-center cursor-pointer"
                 aria-label="Go to proposals"
-                onClick={() => navigate("/proposals")}
+                onClick={() => {
+                  navigate("/proposals");
+                }}
+
               >
                 <Mail />
               </div>

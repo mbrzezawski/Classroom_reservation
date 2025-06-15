@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Dispatch, FC } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import type {
-  ReservationResponseDTO,
+  // ReservationResponseDTO,
   ReservationType,
   SingleReservationFormValues,
 } from "../../types/reservations";
@@ -26,6 +26,10 @@ import {
 import type { Action } from "../../store/events-reducer.ts";
 import type { FullCalendarEvent } from "../../types/calendar-event.ts";
 import { showReservationToast } from "../../utils/show-reservation-toast.ts";
+import ProposalForm, {
+  type ProposalFormValues,
+} from "./reserving/proposal-form";
+import { usePostProposal } from "../../hooks/usePostProposal.ts";
 
 interface Props {
   userId: string;
@@ -48,6 +52,7 @@ const defaultValues: SingleReservationFormValues = {
   software: [],
   roomId: "",
 };
+
 const SingleReservationForm: FC<Props> = ({
   userId,
   role,
@@ -60,15 +65,38 @@ const SingleReservationForm: FC<Props> = ({
   const methods = useForm<SingleReservationFormValues>({
     defaultValues,
   });
+
+  const roomsMap = useRoomsMap();
+  const [allowChangeToReccuring, setAllowChangeToRecurring] = useState(true);
+  const [showProposalForm, setShowProposalForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { token } = useAuth();
+  const { postProposal } = usePostProposal();
+
+  const proposalMethods = useForm<ProposalFormValues>({
+    defaultValues: {
+      email: "",
+      additionalDates: [
+        {
+          proposedDate: {
+            date: "",
+            startTime: "",
+            endTime: "",
+          },
+        },
+      ],
+      comment: "",
+    },
+  });
+
   if (!token) {
     window.location.href = "/login";
-    return;
+    return null;
   }
-  const { register, handleSubmit, reset } = methods;
-  const roomsMap = useRoomsMap();
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { register, handleSubmit, reset } = methods;
+  const { getValues: getProposalValues } = proposalMethods;
+
   const mode = editedEvent ? "edit" : "create";
   const reservationId = editedEvent ? editedEvent.id : "";
   const submitLabel = isSubmitting
@@ -78,7 +106,7 @@ const SingleReservationForm: FC<Props> = ({
     : mode === "create"
     ? "Book"
     : "Save changes";
-  const [allowChangeToReccuring, setAllowChangeToRecurring] = useState(true);
+
   useEffect(() => {
     if (editedEvent && !editedEvent.extendedProps.recurrenceProps) {
       setType("single");
@@ -86,7 +114,6 @@ const SingleReservationForm: FC<Props> = ({
     } else {
       setAllowChangeToRecurring(true);
     }
-    console.log(allowChangeToReccuring);
   }, [editedEvent, type]);
 
   useEffect(() => {
@@ -97,36 +124,85 @@ const SingleReservationForm: FC<Props> = ({
 
   const onSubmit = async (data: SingleReservationFormValues) => {
     setIsSubmitting(true);
+
+    console.log("data on the start of onSubmit:", data);
+
+    const isProposalMode =
+      mode === "edit" &&
+      showProposalForm &&
+      getProposalValues().additionalDates.length >= 1;
+
     try {
-      let response: ReservationResponseDTO;
-      response = await submitSingleReservation(
-        data,
-        userId,
-        token,
-        mode,
-        reservationId
-      );
-      console.log(response);
-      const room: Room = roomsMap[response.roomId];
+      if (isProposalMode) {
+        const proposal = getProposalValues();
+        const reservationRequests = [
+          {
+            date: data.date,
+            startTime: data.startHour,
+            endTime: data.endHour,
+            purpose: `${data.title} | ${proposal.comment}`,
+            minCapacity: data.atendees,
+            softwareIds: data.software,
+            equipmentIds: data.equipment,
+          },
+          ...proposal.additionalDates.map((item) => ({
+            date: item.proposedDate.date,
+            startTime: item.proposedDate.startTime,
+            endTime: item.proposedDate.endTime,
+            purpose: `${data.title} | ${proposal.comment}`,
+            minCapacity: data.atendees,
+            softwareIds: data.software,
+            equipmentIds: data.equipment,
+          })),
+        ];
 
-      const newCalendarEvent = mapSingleReservationResponsetoCalendarEvent(
-        response,
-        room
-      );
+        const proposalRequest = {
+          studentEmail: proposal.email,
+          originalReservationId: reservationId,
+          reservationRequests,
+          comment: proposal.comment,
+        };
 
-      if (mode === "create")
-        dispatch({ type: "addEvent", payload: newCalendarEvent });
-      else
-        dispatch({
-          type: "updateEvent",
-          payload: { oldId: reservationId, newEvent: newCalendarEvent },
-        });
+        // console.log("proposal comment:");
+        // console.log(proposal.comment);
+        // console.log("proposalRequests:");
+        // console.log(proposalRequest);
+        console.log("Proposal request:", proposalRequest);
 
-      showReservationToast(response, room, mode);
+        const response = await postProposal(proposalRequest);
+        console.log("Response from /proposals:", response);
+
+        showToast("Proposal sent successfully!", { variant: "success" });
+      } else {
+        console.log("data durring single reservation:", data);
+        const response = await submitSingleReservation(
+          data,
+          userId,
+          token,
+          mode,
+          reservationId
+        );
+
+        const room: Room = roomsMap[response.roomId];
+
+        const newCalendarEvent = mapSingleReservationResponsetoCalendarEvent(
+          response,
+          room
+        );
+
+        if (mode === "create")
+          dispatch({ type: "addEvent", payload: newCalendarEvent });
+        else
+          dispatch({
+            type: "updateEvent",
+            payload: { oldId: reservationId, newEvent: newCalendarEvent },
+          });
+
+        showReservationToast(response, room, mode);
+      }
     } catch (error) {
-      showToast("Booking failed", {
-        description:
-          error instanceof Error ? error.message : "Unknown error appeared",
+      showToast("Submission failed", {
+        description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive",
       });
     } finally {
@@ -141,7 +217,6 @@ const SingleReservationForm: FC<Props> = ({
         onSubmit={handleSubmit(onSubmit)}
         className="flex flex-col border px-6 py-8 gap-[8px] rounded-[8px]"
       >
-        {/* pierwszy rzad */}
         <div className="flex justify-between items-center mb-2">
           {allowChangeToReccuring && (
             <TypePicker type={type} setType={setType} />
@@ -172,6 +247,7 @@ const SingleReservationForm: FC<Props> = ({
             />
           )}
         </div>
+
         <div className="flex flex-row gap-2">
           <DatePicker field="date" />
           <HourPicker start={true} />
@@ -182,7 +258,26 @@ const SingleReservationForm: FC<Props> = ({
           <HourPicker start={false} />
         </div>
 
+        {mode === "edit" && (
+          <label className="text-sm flex items-center gap-2 mt-2">
+            <input
+              type="checkbox"
+              className="checkbox"
+              onChange={(e) => setShowProposalForm(e.target.checked)}
+              checked={showProposalForm}
+            />
+            Send proposition of additional term
+          </label>
+        )}
+
+        {showProposalForm && mode === "edit" && (
+          <FormProvider {...proposalMethods}>
+            <ProposalForm />
+          </FormProvider>
+        )}
+
         <FeaturesPicker />
+
         <button
           type="submit"
           className="btn rounded-[6px]"
@@ -190,6 +285,7 @@ const SingleReservationForm: FC<Props> = ({
         >
           {submitLabel}
         </button>
+
         {mode === "edit" && (
           <button
             type="button"

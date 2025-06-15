@@ -11,10 +11,11 @@ function formatTime(date?: Date | null) {
 
 function renderEventContent(eventArg: EventContentArg) {
   const { event } = eventArg;
-
+  console.log(event);
+  const color = event.extendedProps.isPending === true ? "btn-accent" : "";
   return (
     <div className="w-full h-full">
-      <button className="btn flex flex-col w-full h-full space-y-0">
+      <button className={`btn flex flex-col w-full h-full space-y-0 ${color}`}>
         <p className="text-sm font-bold truncate leading-tight">
           {event.title}
         </p>

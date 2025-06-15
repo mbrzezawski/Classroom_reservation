@@ -19,22 +19,18 @@ const MainPage = () => {
   const userRole = user.role;
 
   const { users } = useUsers();
-
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-
   const effectiveUserId = selectedUserId ?? userId ?? "";
-
   const { events, dispatch } = useCalendarEvents(
     userRole == RoleType.DEANS_OFFICE ? effectiveUserId : userId
   );
-
   const [editedEvent, setEditEvent] = useState<FullCalendarEvent | null>(null);
 
   return (
     <Layout userRole={userRole}>
       <div className="grid grid-cols-3 min-h-screen gap-4 p-4">
         <div className="col-span-2 flex flex-col gap-4">
-          {userRole === "DEANS_OFFICE" && (
+          {userRole === RoleType.DEANS_OFFICE && (
             <div className="relative z-10">
               <SearchBar users={users} onSelectUser={setSelectedUserId} />
             </div>

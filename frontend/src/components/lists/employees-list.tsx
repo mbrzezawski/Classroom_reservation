@@ -32,6 +32,8 @@ const EmployeesList = ({ users, loading, error }: { users: any[], loading: boole
                 <table className="table w-full">
                     <thead>
                     <tr>
+                        <th>Name</th>
+                        <th>Surname</th>
                         <th>Email</th>
                         <th>Role</th>
                         <th>Action</th>
@@ -40,6 +42,8 @@ const EmployeesList = ({ users, loading, error }: { users: any[], loading: boole
                     <tbody>
                     {users.map(user => (
                         <tr key={user.id}>
+                            <td>{user.name}</td>
+                            <td>{user.surname}</td>
                             <td>{user.email}</td>
                             <td>{user.role}</td>
                             <td>

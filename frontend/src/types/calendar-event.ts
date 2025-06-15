@@ -6,6 +6,7 @@ export type FullCalendarEvent = {
   start: string; // ISO string
   end: string;
   extendedProps: {
+    isPending?: boolean;
     roomName: string;
     roomLocation: string;
     atendees: number;
