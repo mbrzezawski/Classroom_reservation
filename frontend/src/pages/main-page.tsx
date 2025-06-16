@@ -46,6 +46,7 @@ const MainPage = () => {
                   start: event.start?.toISOString(),
                   end: event.end?.toISOString(),
                   extendedProps: {
+                    status: event.extendedProps.status,
                     roomName: event.extendedProps.roomName,
                     roomLocation: event.extendedProps.roomLocation,
                     atendees: event.extendedProps.atendees,

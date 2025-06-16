@@ -18,10 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -158,9 +155,6 @@ public class ReservationService {
         return resp;
     }
 
-    // metody dotyczące propozycji pozostają bez zmian i delegują do stworzonego serwisu
-
-
     public ReservationProposal createProposal(ProposalRequestDto dto, String teacherEmail) {
         User teacher = userRepo.findByEmail(teacherEmail)
                 .orElseThrow(() -> new NotFoundException("User by email", teacherEmail));
@@ -272,7 +266,57 @@ public class ReservationService {
                 .status(ProposalStatus.PENDING)
                 .build();
 
-        return proposalRepo.save(proposal);
+        ReservationProposal saved = proposalRepo.save(proposal);
+
+        List<String> genIds = new ArrayList<>();
+
+        if (saved.getReservationRequests() != null) {
+            for (ReservationRequest req : saved.getReservationRequests()) {
+                ZonedDateTime start = ZonedDateTime.of(req.getDate(), req.getStartTime(), zone);
+                ZonedDateTime end   = ZonedDateTime.of(req.getDate(), req.getEndTime(),   zone);
+                Reservation r = Reservation.builder()
+                        .userId(saved.getTeacherId())
+                        .roomId(null)
+                        .recurrenceId(null)
+                        .start(start)
+                        .end(end)
+                        .purpose(req.getPurpose())
+                        .minCapacity(req.getMinCapacity())
+                        .softwareIds(req.getSoftwareIds())
+                        .equipmentIds(req.getEquipmentIds())
+                        .status(ReservationStatus.PENDING)
+                        .build();
+                Reservation out = reservationRepo.save(r);
+                genIds.add(out.getId());
+            }
+        }
+
+        if (saved.getRecurringRequests() != null) {
+            for (RecurringReservationRequest rr : saved.getRecurringRequests()) {
+                List<LocalDate> dates = recurringReservationService.generateDates(rr);
+                for (LocalDate date : dates) {
+                    ZonedDateTime start = ZonedDateTime.of(date, rr.getStartTime(), zone);
+                    ZonedDateTime end   = ZonedDateTime.of(date, rr.getEndTime(),   zone);
+                    Reservation r = Reservation.builder()
+                            .userId(saved.getTeacherId())
+                            .roomId(null)
+                            .recurrenceId(null)
+                            .start(start)
+                            .end(end)
+                            .purpose(rr.getPurpose())
+                            .minCapacity(rr.getMinCapacity())
+                            .softwareIds(rr.getSoftwareIds())
+                            .equipmentIds(rr.getEquipmentIds())
+                            .status(ReservationStatus.PENDING)
+                            .build();
+                    Reservation out = reservationRepo.save(r);
+                    genIds.add(out.getId());
+                }
+            }
+        }
+
+        saved.setGeneratedReservationIds(genIds);
+        return proposalRepo.save(saved);
     }
 
     /**
@@ -327,67 +371,103 @@ public class ReservationService {
             throw new ConflictException("Proposal is not PENDING");
         }
 
-        ReservationResponse savedReservation;
-
+        int chosen = confirmDto.getChosenIndex();
+        ReservationResponse savedRes;
         if (proposal.getOriginalReservationId() != null) {
-            // Pojedyncza rezerwacja
-            int chosen = confirmDto.getChosenIndex();
-            if (proposal.getReservationRequests() == null || proposal.getReservationRequests().isEmpty()) {
-                throw new ConflictException("Proposal does not contain any reservation requests");
-            }
-            if (chosen < 0 || chosen >= proposal.getReservationRequests().size()) {
-                throw new ConflictException("Invalid chosenIndex");
-            }
-
-            ReservationRequest chosenRequest = proposal.getReservationRequests().get(chosen);
-
-            savedReservation = updateReservation(proposal.getOriginalReservationId(), chosenRequest);
-
-        } else if (proposal.getOriginalRecurrenceId() != null) {
-            // Rezerwacja cykliczna
-            int chosen = confirmDto.getChosenIndex();
-            if (proposal.getRecurringRequests() == null || proposal.getRecurringRequests().isEmpty()) {
-                throw new ConflictException("Proposal does not contain any recurring requests");
-            }
-            if (chosen < 0 || chosen >= proposal.getRecurringRequests().size()) {
-                throw new ConflictException("Invalid chosenIndex");
-            }
-
-            RecurringReservationRequest chosenRequest = proposal.getRecurringRequests().get(chosen);
-
-            RecurringReservationResponse recurringResp =
-                    recurringReservationService.updatePattern(proposal.getOriginalRecurrenceId(), chosenRequest);
-            String newRecurrenceId = recurringResp.getRecurringReservationId();
-
-            List<Reservation> updatedOccurrences =
-                    reservationRepo.findByRecurrenceId(newRecurrenceId);
-            if (updatedOccurrences.isEmpty()) {
-                throw new NotFoundException("Updated reservations not found", proposal.getOriginalRecurrenceId());
-            }
-            savedReservation = recurringResp.getReservations().getFirst();
-
+            ReservationRequest req = proposal.getReservationRequests().get(chosen);
+            savedRes = updateReservation(proposal.getOriginalReservationId(), req);
         } else {
-            throw new ConflictException("Proposal must reference either a single or recurring reservation");
+            RecurringReservationRequest rr = proposal.getRecurringRequests().get(chosen);
+            RecurringReservationResponse resp = recurringReservationService.updatePattern(
+                    proposal.getOriginalRecurrenceId(), rr);
+            savedRes = resp.getReservations().getFirst();
         }
 
         proposal.setStatus(ProposalStatus.CONFIRMED);
         proposalRepo.save(proposal);
 
-        List<ReservationProposal> related;
-        if (proposal.getOriginalReservationId() != null) {
-            related = proposalRepo.findByOriginalReservationId(proposal.getOriginalReservationId());
-        } else {
-            related = proposalRepo.findByOriginalRecurrenceId(proposal.getOriginalRecurrenceId());
+        if (proposal.getGeneratedReservationIds() != null) {
+            reservationRepo.deleteAllById(proposal.getGeneratedReservationIds());
         }
 
-        for (ReservationProposal other : related) {
-            if (!other.getId().equals(proposal.getId())) {
+        List<ReservationProposal> siblings = (proposal.getOriginalReservationId() != null)
+                ? proposalRepo.findByOriginalReservationId(proposal.getOriginalReservationId())
+                : proposalRepo.findByOriginalRecurrenceId(proposal.getOriginalRecurrenceId());
+        for (ReservationProposal other : siblings) {
+            if (!other.getId().equals(proposalId)) {
                 other.setStatus(ProposalStatus.REJECTED);
                 proposalRepo.save(other);
+                if (other.getGeneratedReservationIds() != null) {
+                    reservationRepo.deleteAllById(other.getGeneratedReservationIds());
+                }
             }
         }
 
-        return savedReservation;
+        return savedRes;
+
+
+
+//        ReservationResponse savedReservation;
+//
+//        if (proposal.getOriginalReservationId() != null) {
+//            // Pojedyncza rezerwacja
+//            int chosen = confirmDto.getChosenIndex();
+//            if (proposal.getReservationRequests() == null || proposal.getReservationRequests().isEmpty()) {
+//                throw new ConflictException("Proposal does not contain any reservation requests");
+//            }
+//            if (chosen < 0 || chosen >= proposal.getReservationRequests().size()) {
+//                throw new ConflictException("Invalid chosenIndex");
+//            }
+//
+//            ReservationRequest chosenRequest = proposal.getReservationRequests().get(chosen);
+//
+//            savedReservation = updateReservation(proposal.getOriginalReservationId(), chosenRequest);
+//
+//        } else if (proposal.getOriginalRecurrenceId() != null) {
+//            // Rezerwacja cykliczna
+//            int chosen = confirmDto.getChosenIndex();
+//            if (proposal.getRecurringRequests() == null || proposal.getRecurringRequests().isEmpty()) {
+//                throw new ConflictException("Proposal does not contain any recurring requests");
+//            }
+//            if (chosen < 0 || chosen >= proposal.getRecurringRequests().size()) {
+//                throw new ConflictException("Invalid chosenIndex");
+//            }
+//
+//            RecurringReservationRequest chosenRequest = proposal.getRecurringRequests().get(chosen);
+//
+//            RecurringReservationResponse recurringResp =
+//                    recurringReservationService.updatePattern(proposal.getOriginalRecurrenceId(), chosenRequest);
+//            String newRecurrenceId = recurringResp.getRecurringReservationId();
+//
+//            List<Reservation> updatedOccurrences =
+//                    reservationRepo.findByRecurrenceId(newRecurrenceId);
+//            if (updatedOccurrences.isEmpty()) {
+//                throw new NotFoundException("Updated reservations not found", proposal.getOriginalRecurrenceId());
+//            }
+//            savedReservation = recurringResp.getReservations().getFirst();
+//
+//        } else {
+//            throw new ConflictException("Proposal must reference either a single or recurring reservation");
+//        }
+//
+//        proposal.setStatus(ProposalStatus.CONFIRMED);
+//        proposalRepo.save(proposal);
+//
+//        List<ReservationProposal> related;
+//        if (proposal.getOriginalReservationId() != null) {
+//            related = proposalRepo.findByOriginalReservationId(proposal.getOriginalReservationId());
+//        } else {
+//            related = proposalRepo.findByOriginalRecurrenceId(proposal.getOriginalRecurrenceId());
+//        }
+//
+//        for (ReservationProposal other : related) {
+//            if (!other.getId().equals(proposal.getId())) {
+//                other.setStatus(ProposalStatus.REJECTED);
+//                proposalRepo.save(other);
+//            }
+//        }
+//
+//        return savedReservation;
     }
 
 
@@ -413,7 +493,6 @@ public class ReservationService {
         proposal.setStatus(ProposalStatus.REJECTED);
         proposalRepo.save(proposal);
     }
-
     @Transactional(readOnly = true)
     public List<CalendarReservationDto> getUserCalendar(
             String userId,
@@ -422,43 +501,47 @@ public class ReservationService {
     ) {
         ZoneId zone = ZoneId.of("Europe/Warsaw");
 
-        // zakres czasowy od początku dnia do końca dnia w odpowiedniej strefie
         ZonedDateTime realFrom = fromOpt
                 .map(d -> d.atStartOfDay(zone))
                 .orElse(ZonedDateTime.of(LocalDate.MIN, LocalTime.MIN, zone));
-
         ZonedDateTime realTo = toOpt
                 .map(d -> d.atTime(LocalTime.MAX).atZone(zone))
                 .orElse(ZonedDateTime.of(LocalDate.MAX, LocalTime.MAX, zone));
 
-        // pobierz rezerwacje użytkownika
         List<Reservation> reservationList = (fromOpt.isEmpty() && toOpt.isEmpty())
                 ? reservationRepo.findByUserIdOrderByStartAsc(userId)
                 : reservationRepo.findByUserIdAndStartBetweenOrderByStartAsc(
                 userId, realFrom, realTo
         );
 
-        // zbuduj mapę sal
         List<String> roomIds = reservationList.stream()
                 .map(Reservation::getRoomId)
+                .filter(Objects::nonNull)
                 .distinct()
                 .toList();
+
         Map<String, Room> roomMap = roomService.getRoomsByIds(roomIds).stream()
                 .collect(Collectors.toMap(Room::getId, Function.identity()));
 
-        // zmapuj na DTO
         return reservationList.stream()
                 .map(r -> {
-                    Room room = Optional.ofNullable(roomMap.get(r.getRoomId()))
-                            .orElseThrow(() -> new NotFoundException("Sala", r.getRoomId()));
+                    Room room = null;
+                    if (r.getRoomId() != null) {
+                        room = roomMap.get(r.getRoomId());
+                        if (room == null) {
+                            throw new NotFoundException("Sala", r.getRoomId());
+                        }
+                    }
+
                     return CalendarReservationDto.builder()
                             .reservationId(r.getId())
                             .recurrenceId(r.getRecurrenceId())
-                            .roomId(room.getId())
-                            .roomName(room.getName())
-                            .roomLocation(room.getLocation())
+                            .reservationStatus(r.getStatus())
+                            .roomId(room != null ? room.getId() : null)
+                            .roomName(room != null ? room.getName() : null)
+                            .roomLocation(room != null ? room.getLocation() : null)
                             .title(r.getPurpose())
-                            .start(r.getStart())  // r.getStart() musi być ZonedDateTime
+                            .start(r.getStart())
                             .end(r.getEnd())
                             .minCapacity(r.getMinCapacity())
                             .softwareIds(r.getSoftwareIds())
@@ -467,5 +550,7 @@ public class ReservationService {
                 })
                 .toList();
     }
+
+
 
 }

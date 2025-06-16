@@ -226,117 +226,54 @@ public class RecurringReservationService {
     }
 
     @Transactional(readOnly = true)
-    public List<RecurringReservation> getRecurringReservationsForUser(String userId) {
-        return recurringRepo.findByUserId(userId);
+    public List<RecurringReservationResponse> listRecurringReservationResponsesForUser(String userId) {
+        return recurringRepo.findByUserId(userId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public RecurringReservation getRecurringReservation(String recurringReservationId) {
-        return recurringRepo.findById(recurringReservationId)
-                .orElseThrow(() -> new NotFoundException("RecurringReservation", recurringReservationId));
+    public RecurringReservationResponse getRecurringReservationResponse(String patternId) {
+        RecurringReservation pattern = recurringRepo.findById(patternId)
+                .orElseThrow(() -> new NotFoundException("RecurringReservation", patternId));
+        return mapToResponse(pattern);
     }
 
-    @Transactional
-    public void splitSeriesAndShift(
-            String recurrenceId,
-            DayOfWeek dayToShift,
-            LocalTime newStart,
-            LocalTime newEnd
-    ) {
-        RecurringReservation original = recurringRepo.findById(recurrenceId)
-                .orElseThrow(() -> new NotFoundException("Series", recurrenceId));
+    @Transactional(readOnly = true)
+    public RecurringReservationResponse mapToResponse(RecurringReservation pattern) {
+        List<ReservationResponse> reservations = reservationRepo
+                .findByRecurrenceId(pattern.getId()).stream()
+                .map(r -> new ReservationResponse(
+                        r.getId(),
+                        r.getUserId(),
+                        r.getRoomId(),
+                        r.getRecurrenceId(),
+                        r.getStart(),
+                        r.getEnd(),
+                        r.getPurpose(),
+                        r.getMinCapacity(),
+                        r.getSoftwareIds(),
+                        r.getEquipmentIds(),
+                        r.getStatus()
+                ))
+                .collect(Collectors.toList());
 
-        if (!original.getDays().contains(dayToShift)) {
-            throw new ConflictException("Series nie obejmuje dnia: " + dayToShift);
-        }
-
-        List<DayOfWeek> remainingDays = original.getDays().stream()
-                .filter(d -> d != dayToShift)
-                .toList();
-        original.setDays(remainingDays);
-        recurringRepo.save(original);
-
-        RecurringReservation singleDaySeries = RecurringReservation.builder()
-                .userId(original.getUserId())
-                .roomId(original.getRoomId())
-                .startDate(original.getStartDate())
-                .endDate(original.getEndDate())
-                .startTime(newStart)
-                .endTime(newEnd)
-                .purpose(original.getPurpose())
-                .minCapacity(original.getMinCapacity())
-                .softwareIds(original.getSoftwareIds())
-                .equipmentIds(original.getEquipmentIds())
-                .frequency(original.getFrequency())
-                .interval(original.getInterval())
-                .byDays(List.of(dayToShift))
-                .status(original.getStatus())
+        return RecurringReservationResponse.builder()
+                .recurringReservationId(pattern.getId())
+                .roomId(pattern.getRoomId())
+                .startDate(pattern.getStartDate())
+                .endDate(pattern.getEndDate())
+                .startTime(pattern.getStartTime())
+                .endTime(pattern.getEndTime())
+                .purpose(pattern.getPurpose())
+                .minCapacity(pattern.getMinCapacity())
+                .softwareIds(pattern.getSoftwareIds())
+                .equipmentIds(pattern.getEquipmentIds())
+                .frequency(pattern.getFrequency())
+                .interval(pattern.getInterval())
+                .byDays(pattern.getByDays())
+                .status(pattern.getStatus())
+                .reservations(reservations)
                 .build();
-        recurringRepo.save(singleDaySeries);
-
-        ZonedDateTime now = ZonedDateTime.now(zone);
-
-        List<Reservation> occurrences = reservationRepo
-                .findByRecurrenceId(original.getId())
-                .stream()
-                .filter(r ->
-                        r.getStart().getDayOfWeek().equals(dayToShift)
-                                && r.getStart().isAfter(now)
-                )
-                .toList();
-
-        for (Reservation r : occurrences) {
-
-            ZonedDateTime base = r.getStart().withZoneSameInstant(zone);
-
-            ZonedDateTime shiftedStart = ZonedDateTime.of(
-                    base.toLocalDate(),
-                    newStart,
-                    zone
-            );
-            ZonedDateTime shiftedEnd = ZonedDateTime.of(
-                    base.toLocalDate(),
-                    newEnd,
-                    zone
-            );
-
-            r.setStart(shiftedStart);
-            r.setEnd(shiftedEnd);
-            r.setRecurrenceId(singleDaySeries.getId());
-        }
-        reservationRepo.saveAll(occurrences);
-
-        if (original.getDays().isEmpty()) {
-            recurringRepo.delete(original);
-        }
     }
-
-//    /**
-//     * Generuje listę SlotWithDateDto zgodnie z parametrami z DTO,
-//     * ale nie zapisuje niczego w bazie.
-//     */
-//    /**
-//     * Bazując na polach z ProposalRequestDto (które teraz zawiera
-//     * też startDate/endDate/frequency/interval/byDays/byMonthDays),
-//     * generuje dokładną listę SlotWithDateDto.
-//     */
-//    public List<SlotWithDateDto> expandPattern(ProposalRequestDto dto) {
-//        // Zmapuj ProposalRequestDto → RecurringReservationRequestDto
-//        RecurringReservationRequestDto rDto = new RecurringReservationRequestDto();
-//        rDto.setStartDate(dto.getStartDate());
-//        rDto.setEndDate(dto.getEndDate());
-//        rDto.setStartTime(dto.getStartTime());
-//        rDto.setEndTime(dto.getEndTime());
-//        rDto.setFrequency(dto.getFrequency());
-//        rDto.setInterval(dto.getInterval());
-//        rDto.setByDays(dto.getByDays());
-//        rDto.setByMonthDays(dto.getByMonthDays());
-//        // (reszta pól niepotrzebna do generowania dat)
-//
-//        // Wygeneruj daty
-//        List<LocalDate> dates = generateDates(rDto);
-//        return dates.stream()
-//                .map(d -> new SlotWithDateDto(d, rDto.getStartTime(), rDto.getEndTime()))
-//                .collect(Collectors.toList());
-//    }
 }
