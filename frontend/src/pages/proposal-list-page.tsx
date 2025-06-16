@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../auth/auth-context";
 import { API_URL } from "../api";
-import { Home } from "lucide-react";
-import { Link } from "react-router-dom";
 import Layout from "../components/layout/layout";
 
 interface ReservationRequest {

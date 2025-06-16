@@ -36,5 +36,4 @@ public interface ReservationRepository extends MongoRepository<Reservation, Stri
     List<Reservation> findByRecurrenceId(String recurrenceId);
 
     boolean existsByRecurrenceId(String recurrenceId);
-
 }

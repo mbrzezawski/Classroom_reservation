@@ -16,8 +16,8 @@ const MainPage = () => {
     return;
   }
   const userId = user.id;
-  // const userRole = user.role;
-  const userRole = RoleType.DEANS_OFFICE;
+  const userRole = user.role;
+  // const userRole = RoleType.DEANS_OFFICE;
   const { users } = useUsers();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const effectiveUserId = selectedUserId ?? userId ?? "";
@@ -46,6 +46,7 @@ const MainPage = () => {
                   start: event.start?.toISOString(),
                   end: event.end?.toISOString(),
                   extendedProps: {
+                    status: event.extendedProps.status,
                     roomName: event.extendedProps.roomName,
                     roomLocation: event.extendedProps.roomLocation,
                     atendees: event.extendedProps.atendees,

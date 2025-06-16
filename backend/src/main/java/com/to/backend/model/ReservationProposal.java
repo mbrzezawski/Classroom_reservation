@@ -33,4 +33,6 @@ public class ReservationProposal {
     private ProposalStatus status = ProposalStatus.PENDING;
 
     private String comment;
+
+    private List<String> generatedReservationIds;
 }

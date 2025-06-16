@@ -40,23 +40,22 @@ public class RecurringReservationController {
     // GET /recurring-reservations – lists all recurring reservations of current user
     // FOR: EVERYONE LOGGED IN
     @GetMapping
-    public ResponseEntity<List<RecurringReservation>> list(
+    public ResponseEntity<List<RecurringReservationResponse>> list(
             @AuthenticationPrincipal CustomUserDetails principal
     ) {
-        List<RecurringReservation> list =
-                service.getRecurringReservationsForUser(principal.getUser().getId());
-        return ResponseEntity.ok(list);
+        List<RecurringReservationResponse> dtos =
+                service.listRecurringReservationResponsesForUser(principal.getUser().getId());
+        return ResponseEntity.ok(dtos);
     }
 
     // GET /recurring-reservations/{id} – retrieves recurring reservation pattern by ID
     // FOR: EVERYONE LOGGED IN
     @GetMapping("/{id}")
-    public ResponseEntity<RecurringReservation> getById(
-            @PathVariable String id,
-            @AuthenticationPrincipal CustomUserDetails principal
+    public ResponseEntity<RecurringReservationResponse> getById(
+            @PathVariable("id") String id
     ) {
-        RecurringReservation recurringReservation = service.getRecurringReservation(id);
-        return ResponseEntity.ok(recurringReservation);
+        RecurringReservationResponse dto = service.getRecurringReservationResponse(id);
+        return ResponseEntity.ok(dto);
     }
 
     // PUT /recurring-reservations/{id} – updates a recurring reservation pattern

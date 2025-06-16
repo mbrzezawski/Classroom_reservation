@@ -6,7 +6,7 @@ export type FullCalendarEvent = {
   start: string; // ISO string
   end: string;
   extendedProps: {
-    isPending?: boolean;
+    status: "PENDING" | "CONFIRMED" | "CANCELLED";
     roomName: string;
     roomLocation: string;
     atendees: number;
@@ -27,6 +27,7 @@ export type FullCalendarEvent = {
 export type CalendarReservationDto = {
   reservationId: string;
   recurrenceId: string;
+  reservationStatus: "PENDING" | "CONFIRMED" | "CANCELLED";
   roomId: string;
   roomName: string;
   roomLocation: string;
