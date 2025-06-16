@@ -18,10 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -504,42 +501,45 @@ public class ReservationService {
     ) {
         ZoneId zone = ZoneId.of("Europe/Warsaw");
 
-        // zakres czasowy od początku dnia do końca dnia w odpowiedniej strefie
         ZonedDateTime realFrom = fromOpt
                 .map(d -> d.atStartOfDay(zone))
                 .orElse(ZonedDateTime.of(LocalDate.MIN, LocalTime.MIN, zone));
-
         ZonedDateTime realTo = toOpt
                 .map(d -> d.atTime(LocalTime.MAX).atZone(zone))
                 .orElse(ZonedDateTime.of(LocalDate.MAX, LocalTime.MAX, zone));
 
-        // pobierz rezerwacje użytkownika
         List<Reservation> reservationList = (fromOpt.isEmpty() && toOpt.isEmpty())
                 ? reservationRepo.findByUserIdOrderByStartAsc(userId)
                 : reservationRepo.findByUserIdAndStartBetweenOrderByStartAsc(
                 userId, realFrom, realTo
         );
 
-        // zbuduj mapę sal
         List<String> roomIds = reservationList.stream()
                 .map(Reservation::getRoomId)
+                .filter(Objects::nonNull)
                 .distinct()
                 .toList();
+
         Map<String, Room> roomMap = roomService.getRoomsByIds(roomIds).stream()
                 .collect(Collectors.toMap(Room::getId, Function.identity()));
 
-        // zmapuj na DTO
         return reservationList.stream()
                 .map(r -> {
-                    Room room = Optional.ofNullable(roomMap.get(r.getRoomId()))
-                            .orElseThrow(() -> new NotFoundException("Sala", r.getRoomId()));
+                    Room room = null;
+                    if (r.getRoomId() != null) {
+                        room = roomMap.get(r.getRoomId());
+                        if (room == null) {
+                            throw new NotFoundException("Sala", r.getRoomId());
+                        }
+                    }
+
                     return CalendarReservationDto.builder()
                             .reservationId(r.getId())
                             .recurrenceId(r.getRecurrenceId())
                             .reservationStatus(r.getStatus())
-                            .roomId(room.getId())
-                            .roomName(room.getName())
-                            .roomLocation(room.getLocation())
+                            .roomId(room != null ? room.getId() : null)
+                            .roomName(room != null ? room.getName() : null)
+                            .roomLocation(room != null ? room.getLocation() : null)
                             .title(r.getPurpose())
                             .start(r.getStart())
                             .end(r.getEnd())
@@ -547,10 +547,10 @@ public class ReservationService {
                             .softwareIds(r.getSoftwareIds())
                             .equipmentIds(r.getEquipmentIds())
                             .build();
-
                 })
                 .toList();
     }
+
 
 
 }
