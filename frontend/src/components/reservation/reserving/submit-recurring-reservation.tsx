@@ -34,7 +34,6 @@ async function submitRecurringReservation(
     byDays: data.byDays,
   };
 
-  console.log("Recurring res body: ", body);
   const res = await fetch(`${endpoint}`, {
     method,
     headers: {

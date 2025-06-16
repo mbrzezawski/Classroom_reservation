@@ -31,16 +31,15 @@ const ChangePasswordForm: FC = () => {
       .then(async (res) => {
         if (!res.ok) {
           const error = await res.json();
-          throw new Error(error.error || "Failed to change password");
+          throw new Error(error.error || "");
         }
         navigate("/main");
         showToast("Poprawnie zmieniono hasło", { variant: "success" });
       })
       .catch((error) => {
         console.log(error.message);
-        showToast("Changing password failed", {
-          description:
-            error instanceof Error ? error.message : "Unknown error appeared",
+        showToast("Nie udało się zmienić hasła", {
+          description: error instanceof Error ? error.message : "",
           variant: "destructive",
         });
       });
@@ -58,22 +57,22 @@ const ChangePasswordForm: FC = () => {
     <FormProvider {...methods}>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col border px-6 py-8 gap-[30px] rounded-[8px] "
+        className="flex flex-col bg-base-100 border border-base-300 shadow-lg w-[380px]  px-6 py-8 gap-[30px] rounded-[8px]"
       >
-        <h2 className="text-[42px] text-center"> Change password</h2>
+        <h2 className="text-3xl font-bold text-center">Zmień hasło</h2>
         <PasswordTextBox
           error={errors.oldPassword?.message}
           {...register("oldPassword", {
-            required: "Old password is required",
+            required: "Poprzednie hasło jest wymagane",
           })}
         />
         <PasswordTextBox
           error={errors.newPassword?.message}
           {...register("newPassword", {
-            required: "New password is required",
+            required: "Nowe hasło jest wymagane",
             minLength: {
               value: 8,
-              message: "Password must be at least 6 characters long",
+              message: "Hasło musi mieć przynajmniej 8 znaków",
             },
           })}
         />
@@ -81,16 +80,16 @@ const ChangePasswordForm: FC = () => {
           confirmPassword={true}
           error={errors.repeatedPassword?.message}
           {...register("repeatedPassword", {
-            required: "Please confirm your password",
-            validate: (value) => value === password || "Passwords do not match",
+            required: "Proszę powtórzyć hasło",
+            validate: (value) => value === password || "Hasła się różnią",
           })}
         />
         <div className="flex justify-center">
           <button
             type="submit"
-            className="btn w-[274px] py-2 border rounded-[12px]"
+            className="btn btn-primary w-[274px] py-2 rounded-xl shadow-md"
           >
-            Change Password
+            Zmień hasło
           </button>
         </div>
       </form>

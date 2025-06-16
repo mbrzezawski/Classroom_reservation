@@ -6,11 +6,10 @@ const FeaturesPicker: FC = () => {
   const { register } = useFormContext();
   const roomEquipment = useEquipment();
   const roomSoftware = useSoftware();
-  // console.log(roomEquipment)
   return (
     <div className="flex flex-row justify-center gap-4 w-full">
       <fieldset className="fieldset bg-base-100 border-base-300 rounded-box border p-4">
-        <legend className="fieldset-legend">Equipment</legend>
+        <legend className="fieldset-legend">Wyposażenie</legend>
         {roomEquipment.map((feature) => (
           <label className="label " key={feature.value}>
             <input
@@ -24,7 +23,7 @@ const FeaturesPicker: FC = () => {
         ))}
       </fieldset>
       <fieldset className="fieldset bg-base-100 border-base-300 rounded-box border p-4">
-        <legend className="fieldset-legend">Software</legend>
+        <legend className="fieldset-legend">Oprogramowanie</legend>
         {roomSoftware.map((feature) => (
           <label className="label" key={feature.value}>
             <input
