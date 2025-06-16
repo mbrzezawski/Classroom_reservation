@@ -9,17 +9,9 @@ function SearchBar({
 }) {
   const items = users.map((user) => ({
     id: user.id,
-    name: `${user.email} | ${user.role}`, // TODO: Można dodać też imię i nazwisko
+    name: `${user.name} | ${user.surname} | ${user.email} | ${user.role}`,
   }));
 
-  // const idToNameMap = new Map<string, string>(
-  //     users.map(user => [
-  //         user.id,
-  //         `${user.email} | ${user.role}`
-  //     ])
-  // );
-  //
-  // const initialDisplay =idToNameMap.get(initialUserId);
 
   const handleOnSelect = (item: any) => {
     console.log("Selected:", item);
