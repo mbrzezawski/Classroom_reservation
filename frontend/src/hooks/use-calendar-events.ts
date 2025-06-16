@@ -27,7 +27,6 @@ function useCalendarEvents(userId: string) {
         );
 
         const eventData: CalendarReservationDto[] = await resEvents.json();
-        console.log(eventData)
         const mappedEvents: FullCalendarEvent[] = eventData
           .filter((event) => event.reservationStatus !== "CANCELLED")
           .map((event) => {
@@ -61,7 +60,6 @@ function useCalendarEvents(userId: string) {
               },
             };
           });
-          console.log(mappedEvents)
         dispatch({ type: "setEvents", payload: mappedEvents });
       } catch (err) {
         showToast("Error while loading reservations", {
