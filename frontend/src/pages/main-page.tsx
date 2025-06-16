@@ -16,8 +16,8 @@ const MainPage = () => {
     return;
   }
   const userId = user.id;
-  const userRole = user.role;
-
+  // const userRole = user.role;
+  const userRole = RoleType.DEANS_OFFICE;
   const { users } = useUsers();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const effectiveUserId = selectedUserId ?? userId ?? "";
@@ -28,7 +28,7 @@ const MainPage = () => {
 
   return (
     <Layout userRole={userRole}>
-      <div className="grid grid-cols-3 min-h-screen gap-4 p-4">
+      <div className="grid grid-cols-3  gap-4 p-4">
         <div className="col-span-2 flex flex-col gap-4">
           {userRole === RoleType.DEANS_OFFICE && (
             <div className="relative z-10">
@@ -61,15 +61,17 @@ const MainPage = () => {
             />
           </div>
         </div>
-        <ReservationFormWrapper
-          userId={effectiveUserId}
-          role={userRole}
-          dispatch={dispatch}
-          editedEvent={editedEvent}
-          onFinishedEditing={() => {
-            setEditEvent(null);
-          }}
-        />
+        <div className="h-full">
+          <ReservationFormWrapper
+            userId={effectiveUserId}
+            role={userRole}
+            dispatch={dispatch}
+            editedEvent={editedEvent}
+            onFinishedEditing={() => {
+              setEditEvent(null);
+            }}
+          />
+        </div>
       </div>
     </Layout>
   );

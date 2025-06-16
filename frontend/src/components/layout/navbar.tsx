@@ -8,9 +8,7 @@ import ListMenu from "./list-menu.tsx";
 import ArrowBack from "../icons/arrow-back.tsx";
 import { RoleType } from "../../types/user-role.ts";
 
-
 export const NavBar: FC<{ userRole?: RoleType }> = ({ userRole }) => {
-  
   const navigate = useNavigate();
   const location = useLocation();
   const isAuthPage =
@@ -49,7 +47,6 @@ export const NavBar: FC<{ userRole?: RoleType }> = ({ userRole }) => {
               </div>
             )}
 
-
             {userRole === RoleType.DEANS_OFFICE && <ListMenu />}
 
             <div className="dropdown dropdown-bottom dropdown-end">
@@ -60,7 +57,6 @@ export const NavBar: FC<{ userRole?: RoleType }> = ({ userRole }) => {
                 onClick={() => {
                   navigate("/proposals");
                 }}
-
               >
                 <Mail />
               </div>
@@ -83,7 +79,7 @@ export const NavBar: FC<{ userRole?: RoleType }> = ({ userRole }) => {
                       navigate("/login");
                     }}
                   >
-                    Log Out
+                    Wyloguj się
                   </button>
                 </li>
                 <li>
@@ -92,7 +88,7 @@ export const NavBar: FC<{ userRole?: RoleType }> = ({ userRole }) => {
                       navigate("/change-password");
                     }}
                   >
-                    Change password
+                    Zmień hasło
                   </button>
                 </li>
               </ul>

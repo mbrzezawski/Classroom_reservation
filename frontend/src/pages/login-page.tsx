@@ -3,7 +3,7 @@ import Layout from "../components/layout/layout";
 
 const LoginPage = () => {
   return (
-    <div className="flex flex-col gap-8 ">
+    <div className="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-200 flex justify-center items-center">
       <Layout>
         <div className="flex justify-center items-center min-w-screen min-h-screen">
           <LoginForm />

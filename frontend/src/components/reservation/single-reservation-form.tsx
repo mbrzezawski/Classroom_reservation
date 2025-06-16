@@ -101,11 +101,11 @@ const SingleReservationForm: FC<Props> = ({
   const reservationId = editedEvent ? editedEvent.id : "";
   const submitLabel = isSubmitting
     ? mode === "create"
-      ? "Booking..."
-      : "Saving..."
+      ? "Rezerwuję..."
+      : "Zapisuję..."
     : mode === "create"
-    ? "Book"
-    : "Save changes";
+    ? "Zarezerwuj"
+    : "Zapisz zmiany";
 
   useEffect(() => {
     if (editedEvent && !editedEvent.extendedProps.recurrenceProps) {
@@ -215,7 +215,7 @@ const SingleReservationForm: FC<Props> = ({
     <FormProvider {...methods}>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col border px-6 py-8 gap-[8px] rounded-[8px]"
+        className="flex flex-col border min-h-[792px] px-6 py-8 gap-[8px] rounded-[8px]"
       >
         <div className="flex justify-between items-center mb-2">
           {allowChangeToReccuring && (
@@ -223,14 +223,14 @@ const SingleReservationForm: FC<Props> = ({
           )}
           <div className={mode !== "edit" ? "flex-1 ml-4" : ""}>
             <InputTextBox
-              label="Title"
-              placeholder="Enter meeting title"
+              label="Tytuł"
+              placeholder="Wprowadź tytuł"
               icon={<Letter />}
               {...register("title", {
-                required: "Title is required",
+                required: "Tytuł jest wymagany",
                 minLength: {
                   value: 3,
-                  message: "Title must be at least 3 characters long",
+                  message: "Tytuł musi mieć przynajmniej 3 znaki",
                 },
               })}
               error={methods.formState.errors.title?.message}
@@ -266,7 +266,7 @@ const SingleReservationForm: FC<Props> = ({
               onChange={(e) => setShowProposalForm(e.target.checked)}
               checked={showProposalForm}
             />
-            Send proposition of additional term
+            Wyślij jako propozycję innej osobie
           </label>
         )}
 
@@ -295,7 +295,7 @@ const SingleReservationForm: FC<Props> = ({
               reset(defaultValues);
             }}
           >
-            Cancel editing
+            Cofnij
           </button>
         )}
       </form>

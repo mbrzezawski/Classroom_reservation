@@ -74,7 +74,7 @@ const RecurringReservationForm: FC<Props> = ({
   }
   const { register, handleSubmit, reset } = methods;
   const roomsMap = useRoomsMap();
-  // const { recurrenceMap, isLoading } = useRecurrenceMap();
+  const { recurrenceMap } = useRecurrenceMap();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const mode = editedEvent ? "edit" : "create";
@@ -82,7 +82,7 @@ const RecurringReservationForm: FC<Props> = ({
     editedEvent && editedEvent.extendedProps.recurrenceProps
       ? editedEvent.extendedProps.recurrenceProps?.recurrenceId
       : "";
-
+  console.log(recurrenceId);
   const submitLabel = isSubmitting
     ? mode === "create"
       ? "Booking..."
@@ -143,19 +143,19 @@ const RecurringReservationForm: FC<Props> = ({
           });
         showReservationToast(singleReservation, room, mode);
       });
-      // const previousSingleReservations = recurrenceMap[recurrenceId];
-      // console.log(recurrenceMap);
-      // console.log(recurrenceId);
-      // console.log(previousSingleReservations);
-      // if (mode === "create")
-      //   previousSingleReservations.forEach((singleReservation) =>
-      //     dispatch({
-      //       type: "removeEvent",
-      //       payload: singleReservation.reservationId,
-      //     })
-      //   );
+      if (mode === "edit") {
+        const previousSingleReservations =
+          recurrenceMap[recurrenceId].reservations;
+
+        previousSingleReservations.forEach((singleReservation) =>
+          dispatch({
+            type: "removeEvent",
+            payload: singleReservation.reservationId,
+          })
+        );
+      }
     } catch (error) {
-      showToast("Booking failed", {
+      showToast("Rezerwacja nieudana", {
         description:
           error instanceof Error ? error.message : "Unknown error appeared",
         variant: "destructive",
@@ -170,21 +170,21 @@ const RecurringReservationForm: FC<Props> = ({
     <FormProvider {...methods}>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col border px-6 py-6 gap-[6px] rounded-[8px]"
+        className="flex flex-col border min-h-[792px] px-6 py-6 gap-[6px] rounded-[8px]"
       >
         {/* pierwszy rzad */}
         <div className="flex justify-between items-center mb-2">
           <TypePicker type={type} setType={setType} />
           <div className={mode !== "edit" ? "flex-1 ml-4" : ""}>
             <InputTextBox
-              label="Title"
-              placeholder="Enter meeting title"
+              label="Tytuł"
+              placeholder="Wprowadź tytuł"
               icon={<Letter />}
               {...register("title", {
-                required: "Title is required",
+                required: "Tytuł jest wymagany",
                 minLength: {
                   value: 3,
-                  message: "Title must be at least 3 characters long",
+                  message: "Tytuł musi mieć przynajmniej 3 znaki",
                 },
               })}
               error={methods.formState.errors.title?.message}
@@ -238,7 +238,7 @@ const RecurringReservationForm: FC<Props> = ({
               reset(defaultValues);
             }}
           >
-            Cancel editing
+            Cofnij
           </button>
         )}
       </form>

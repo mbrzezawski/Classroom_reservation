@@ -20,10 +20,12 @@ function useCalendarEvents(userId: string) {
         });
 
         const eventData: CalendarReservationDto[] = await resEvents.json();
-
+        // console.log("calendar gowno", eventData)
+        // console.log("rekurencyjne gowno", recurrenceMap)
         const mappedEvents: FullCalendarEvent[] = eventData.map((event) => {
           const recurrenceData = event.recurrenceId ? recurrenceMap[event.recurrenceId] : undefined;
-
+          // console.log(event.recurrenceId)
+          // console.log(recurrenceData)
           const recurrenceProps = recurrenceData
             ? {
                 recurrenceId: event.recurrenceId,

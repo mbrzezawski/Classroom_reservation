@@ -5,15 +5,15 @@ const AtendeesPicker: React.FC = () => {
   const { register } = useFormContext();
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[12px]">Number of Attendees</label>
+      <label className="text-[12px]">Liczba uczestników</label>
       <input
         type="number"
         className="input focus:outline-none"
-        placeholder="Enter number"
+        placeholder="Wprowadź liczbę"
         defaultValue=""
         min={1}
         {...register("atendees", {
-          required: "Number of atendees is required",
+          required: "Pole jest wymagane",
         })}
       />
     </div>

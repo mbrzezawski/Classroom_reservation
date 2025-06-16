@@ -17,7 +17,7 @@ export function useRecurrenceMap() {
     })
       .then((res) => res.json())
       .then((recurringData: RecurringReservationResponseDTO[]) => {
-        setRecurrenceMap(Object.fromEntries(recurringData.map((r) => [r.id, r])));
+        setRecurrenceMap(Object.fromEntries(recurringData.map((r) => [r.recurringReservationId, r])));
       })
       .catch((err) => {
         console.error("Error while loading recurring reservations", err);
