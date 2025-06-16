@@ -1,6 +1,7 @@
 package com.to.backend.service;
 
 import com.to.backend.dto.ReservationRequest;
+import com.to.backend.exception.ConflictException;
 import com.to.backend.model.Room;
 import com.to.backend.model.Reservation;
 import com.to.backend.repository.ReservationRepository;
@@ -32,28 +33,39 @@ public class RoomAvailabilityService {
      * z istniejącymi rezerwacjami, z opcjonalnym ignorowaniem
      * jednej rezerwacji lub całej serii.
      */
-    public Optional<Room> findAvailableRoom(
+    public Room findAvailableRoom(
             ReservationRequest reservationRequest,
             Optional<String> ignoreReservationId,
             Optional<String> ignoreRecurrenceId
     ) {
-        // 1) Filtrowanie po minimalnej pojemności
-        List<Room> byCapacity = roomService.getAllRooms().stream()
+        List<Room> allRooms = roomService.getAllRooms();
+
+        // 1) Pojemność
+        List<Room> byCapacity = allRooms.stream()
                 .filter(r -> r.getCapacity() >= reservationRequest.getMinCapacity())
                 .toList();
+        if (byCapacity.isEmpty()) {
+            throw new ConflictException("Brak sal z wystarczającą pojemnością.");
+        }
 
-        // 2) Filtrowanie po wymaganym oprogramowaniu
+        // 2) Oprogramowanie
         List<Room> bySoftware = byCapacity.stream()
                 .filter(r -> new HashSet<>(r.getSoftwareIds()).containsAll(reservationRequest.getSoftwareIds()))
                 .toList();
+        if (bySoftware.isEmpty()) {
+            throw new ConflictException("Brak sal z wymaganym oprogramowaniem.");
+        }
 
-        // 3) Filtrowanie po wymaganym sprzęcie, sortowanie po pojemności
+        // 3) Sprzęt
         List<Room> byEquipment = bySoftware.stream()
                 .filter(r -> new HashSet<>(r.getEquipmentIds()).containsAll(reservationRequest.getEquipmentIds()))
                 .sorted(Comparator.comparing(Room::getCapacity))
                 .toList();
+        if (byEquipment.isEmpty()) {
+            throw new ConflictException("Brak sal z wymaganym sprzętem.");
+        }
 
-        // 4) Sprawdzenie konfliktów czasowych
+        // 4) Konflikt czasowy
         ZonedDateTime start = ZonedDateTime.of(
                 reservationRequest.getDate(), reservationRequest.getStartTime(), zone
         );
@@ -66,25 +78,19 @@ public class RoomAvailabilityService {
                     .findByRoomIdAndStartLessThanAndEndGreaterThan(
                             room.getId(), end, start
                     );
-            // Usuń rezerwacje ignorowane
             List<Reservation> filtered = overlaps.stream()
-                    .filter(res -> ignoreReservationId
-                            .map(id -> !res.getId().equals(id))
-                            .orElse(true)
-                    )
-                    .filter(res -> ignoreRecurrenceId
-                            .map(rec -> !rec.equals(res.getRecurrenceId()))
-                            .orElse(true)
-                    )
+                    .filter(res -> ignoreReservationId.map(id -> !res.getId().equals(id)).orElse(true))
+                    .filter(res -> ignoreRecurrenceId.map(rec -> !rec.equals(res.getRecurrenceId())).orElse(true))
                     .toList();
 
             if (filtered.isEmpty()) {
-                return Optional.of(room);
+                return room;
             }
         }
 
-        return Optional.empty();
+        throw new ConflictException("Wszystkie pasujące sale są zajęte w podanym terminie.");
     }
+
 
     /**
      * Sprawdza, czy slot jest dostępny.
@@ -94,8 +100,14 @@ public class RoomAvailabilityService {
             Optional<String> ignoreReservationId,
             Optional<String> ignoreRecurrenceId
     ) {
-        return findAvailableRoom(reservationRequest, ignoreReservationId, ignoreRecurrenceId).isPresent();
+        try {
+            findAvailableRoom(reservationRequest, ignoreReservationId, ignoreRecurrenceId);
+            return true;
+        } catch (ConflictException e) {
+            return false;
+        }
     }
+
 }
 
 
