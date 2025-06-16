@@ -42,10 +42,10 @@ public class GlobalExceptionHandler {
 
     // 409 Conflict - reservation
     @ExceptionHandler(NoRoomAvailableException.class)
-    public ResponseEntity<Void> handleNoRoom(NoRoomAvailableException ex) {
+    public ResponseEntity<Map<String, String>> handleNoRoom(NoRoomAvailableException ex) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .build();
+                .body(Map.of("error", ex.getMessage()));
     }
 
 

@@ -65,9 +65,7 @@ public class ReservationService {
                 req,
                 Optional.empty(),
                 Optional.empty()
-        ).orElseThrow(() -> new NoRoomAvailableException(
-                "Brak dostępnych sal w zadanym terminie"
-        ));
+        );
 
         return createReservationFromRequest(req, room);
     }
@@ -144,16 +142,15 @@ public class ReservationService {
                 req,
                 Optional.of(existingId),
                 Optional.empty()
-        ).orElseThrow(() -> new NoRoomAvailableException(
-                "Brak dostępnych sal po aktualizacji terminu"
-        ));
+        );
 
-        // stwórz nową rezerwację
         ReservationResponse resp = createReservationFromRequest(req, room);
-        // skasuj starą
+
         deleteReservation(existingId);
+
         return resp;
     }
+
 
     public ReservationProposal createProposal(ProposalRequestDto dto, String teacherEmail) {
         User teacher = userRepo.findByEmail(teacherEmail)
