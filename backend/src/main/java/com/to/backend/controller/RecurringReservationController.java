@@ -39,7 +39,7 @@ public class RecurringReservationController {
 
     // GET /recurring-reservations – lists all recurring reservations of current user
     // FOR: EVERYONE LOGGED IN
-    @GetMapping("/recurring-reservations")
+    @GetMapping
     public ResponseEntity<List<RecurringReservationResponse>> list(
             @AuthenticationPrincipal CustomUserDetails principal
     ) {

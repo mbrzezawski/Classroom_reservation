@@ -3,53 +3,65 @@ import { API_URL } from "../api";
 import { useAuth } from "../auth/auth-context";
 import eventsReducer from "../store/events-reducer";
 import showToast from "./show-toast";
-import type { CalendarReservationDto, FullCalendarEvent } from "../types/calendar-event";
+import type {
+  CalendarReservationDto,
+  FullCalendarEvent,
+} from "../types/calendar-event";
 import { useRecurrenceMap } from "./use-recurrence-map"; // import the custom hook
 
 function useCalendarEvents(userId: string) {
   const [events, dispatch] = useReducer(eventsReducer, []);
   const { token } = useAuth();
   const { recurrenceMap } = useRecurrenceMap(); // use the custom hook
+  console.log(recurrenceMap)
   useEffect(() => {
     if (!userId || !token) return;
 
     const fetchEvents = async () => {
       try {
-        const resEvents = await fetch(`${API_URL}/reservations/calendar?userId=${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const resEvents = await fetch(
+          `${API_URL}/reservations/calendar?userId=${userId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
         const eventData: CalendarReservationDto[] = await resEvents.json();
-
-        const mappedEvents: FullCalendarEvent[] = eventData.map((event) => {
-          const recurrenceData = event.recurrenceId ? recurrenceMap[event.recurrenceId] : undefined;
-
-          const recurrenceProps = recurrenceData
-            ? {
-                recurrenceId: event.recurrenceId,
-                startDate: recurrenceData.startDate,
-                endDate: recurrenceData.endDate,
-                frequency: recurrenceData.frequency,
-                interval: recurrenceData.interval,
-                byMonthDays: recurrenceData.byMonthDays,
-                byDays: recurrenceData.byDays,
-              }
-            : undefined;
-          return {
-            id: event.reservationId,
-            title: event.title,
-            start: event.start,
-            end: event.end,
-            extendedProps: {
-              roomName: event.roomName,
-              roomLocation: event.roomLocation,
-              atendees: event.minCapacity,
-              equipment: event.equipmentIds,
-              software: event.softwareIds,
-              recurrenceProps,
-            },
-          };
-        });
+        console.log(eventData)
+        const mappedEvents: FullCalendarEvent[] = eventData
+          .filter((event) => event.reservationStatus !== "CANCELLED")
+          .map((event) => {
+            const recurrenceData = event.recurrenceId
+              ? recurrenceMap[event.recurrenceId]
+              : undefined;
+            const recurrenceProps = recurrenceData
+              ? {
+                  recurrenceId: event.recurrenceId,
+                  startDate: recurrenceData.startDate,
+                  endDate: recurrenceData.endDate,
+                  frequency: recurrenceData.frequency,
+                  interval: recurrenceData.interval,
+                  byMonthDays: recurrenceData.byMonthDays,
+                  byDays: recurrenceData.byDays,
+                }
+              : undefined;
+            return {
+              id: event.reservationId,
+              title: event.title,
+              start: event.start,
+              end: event.end,
+              extendedProps: {
+                status: event.reservationStatus,
+                roomName: event.roomName,
+                roomLocation: event.roomLocation,
+                atendees: event.minCapacity,
+                equipment: event.equipmentIds,
+                software: event.softwareIds,
+                recurrenceProps,
+              },
+            };
+          });
+          console.log(mappedEvents)
         dispatch({ type: "setEvents", payload: mappedEvents });
       } catch (err) {
         showToast("Error while loading reservations", {
@@ -65,4 +77,4 @@ function useCalendarEvents(userId: string) {
   return { events, dispatch };
 }
 
-export default useCalendarEvents
+export default useCalendarEvents;

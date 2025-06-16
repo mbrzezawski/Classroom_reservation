@@ -12,7 +12,8 @@ function formatTime(date?: Date | null) {
 function renderEventContent(eventArg: EventContentArg) {
   const { event } = eventArg;
   console.log(event);
-  const color = event.extendedProps.isPending === true ? "btn-accent" : "";
+  const isPending = event.extendedProps.status === "PENDING";
+  const color = isPending ? "btn-accent" : "";
   return (
     <div className="w-full h-full">
       <button className={`btn flex flex-col w-full h-full space-y-0 ${color}`}>
@@ -22,10 +23,12 @@ function renderEventContent(eventArg: EventContentArg) {
         <p className="text-xs leading-none">
           {formatTime(event.start)} - {formatTime(event.end)}
         </p>
-        <p className="text-xs leading-none">
-          s. {event.extendedProps.roomName} - bud.{" "}
-          {event.extendedProps.roomLocation}
-        </p>
+        {isPending && (
+          <p className="text-xs leading-none">
+            s. {event.extendedProps.roomName} - bud.{" "}
+            {event.extendedProps.roomLocation}
+          </p>
+        )}
       </button>
     </div>
   );
