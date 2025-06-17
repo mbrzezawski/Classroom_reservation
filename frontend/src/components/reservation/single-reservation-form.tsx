@@ -172,9 +172,8 @@ const SingleReservationForm: FC<Props> = ({
         const response = await postProposal(proposalRequest);
         console.log("Response from /proposals:", response);
 
-        showToast("Proposal sent successfully!", { variant: "success" });
+        showToast("Propozycja wysłana!", { variant: "success" });
       } else {
-        console.log("data durring single reservation:", data);
         const response = await submitSingleReservation(
           data,
           userId,

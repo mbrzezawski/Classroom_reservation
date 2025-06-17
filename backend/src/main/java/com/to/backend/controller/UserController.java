@@ -38,7 +38,7 @@ public class UserController {
     // GET /users – retrieves all users
     // FOR: ADMIN only
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEANS_OFFICE')")
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(service.getAllUsers());
     }
