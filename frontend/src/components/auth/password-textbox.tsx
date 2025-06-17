@@ -20,10 +20,10 @@ const PasswordTextBox: FC<PasswordTextBoxProps> = ({
   };
   return (
     <InputTextBox
-      label={confirmPassword ? "Confirm password" : "Password"}
+      label={confirmPassword ? "Powtórz hasło" : "Hasło"}
       type={visible ? "text" : "password"}
       placeholder={
-        confirmPassword ? "Confirm your password" : "Type your password"
+        confirmPassword ? "Wpisz hasło ponownie" : "Wpisz nowe hasło"
       }
       icon={<Lock />}
       secondaryIcon={

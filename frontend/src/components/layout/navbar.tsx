@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Mail from "../icons/mail";
 import User from "../icons/user";
 import { useAuth } from "../../auth/auth-context";
-// import { useLogout } from "../../hooks/use-logout";
 import ListMenu from "./list-menu.tsx";
 import ArrowBack from "../icons/arrow-back.tsx";
 import { RoleType } from "../../types/user-role.ts";
@@ -38,7 +37,7 @@ export const NavBar: FC<{ userRole?: RoleType }> = ({ userRole }) => {
               <div
                 tabIndex={0}
                 role="button"
-                className="btn m-1"
+                className="btn btn-neutral m-1"
                 onClick={() => {
                   navigate("/main");
                 }}
@@ -52,7 +51,7 @@ export const NavBar: FC<{ userRole?: RoleType }> = ({ userRole }) => {
             <div className="dropdown dropdown-bottom dropdown-end">
               <div
                 role="button"
-                className="btn m-1 flex items-center justify-center cursor-pointer"
+                className="btn btn-neutral m-1 flex items-center justify-center cursor-pointer"
                 aria-label="Go to proposals"
                 onClick={() => {
                   navigate("/proposals");
@@ -66,7 +65,7 @@ export const NavBar: FC<{ userRole?: RoleType }> = ({ userRole }) => {
               <div
                 tabIndex={0}
                 role="button"
-                className="btn m-1 flex items-center gap-1"
+                className="btn btn-neutral m-1 flex items-center gap-1"
               >
                 <User />
                 {`${user?.name} ${user?.surname}`}

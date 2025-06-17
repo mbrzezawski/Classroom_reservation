@@ -47,7 +47,7 @@ const LoginForm = () => {
     <FormProvider {...methods}>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col bg-base-100 border border-base-300 shadow-lg w-[380px]  px-6 py-8 gap-[30px] rounded-[8px]"
+        className="flex flex-col bg-base-200 border border-base-300 shadow-lg w-[380px] px-6 py-8 gap-[30px] rounded-[8px]"
       >
         <h2 className="text-3xl font-bold text-center">Zaloguj się</h2>
 

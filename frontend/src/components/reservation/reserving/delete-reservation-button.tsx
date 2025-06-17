@@ -63,7 +63,7 @@ const DeleteReservationButton: FC<DeleteReservationButtonProps> = ({
     <button
       type="button"
       onClick={handleDelete}
-      className="btn text-sm border-none bg-warning hover:text-red-800"
+      className="btn btn-warning text-sm border-none"
     >
       Usuń
     </button>
