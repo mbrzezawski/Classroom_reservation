@@ -47,9 +47,9 @@ const LoginForm = () => {
     <FormProvider {...methods}>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col border px-6 py-8 gap-[30px] rounded-[8px]"
+        className="flex flex-col bg-base-200 border border-base-300 shadow-lg w-[380px] px-6 py-8 gap-[30px] rounded-[8px]"
       >
-        <h2 className="text-[42px] text-center">Login</h2>
+        <h2 className="text-3xl font-bold text-center">Zaloguj się</h2>
 
         <InputTextBox
           label="Email"
@@ -58,46 +58,38 @@ const LoginForm = () => {
           icon={<AtIcon />}
           error={errors.email?.message}
           {...register("email", {
-            required: "Email is required",
+            required: "Email jest wymagany",
             pattern: {
               value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-              message: "Invalid email format",
+              message: "Nieprawidłowy format",
             },
           })}
         />
 
-        <div className="flex flex-col gap-1 items-end">
-          <div className="w-full">
-            <PasswordTextBox
-              error={errors.password?.message}
-              {...register("password", { required: "Password is required" })}
-            />
-          </div>
-          <button
-            type="button"
-            className="btn-link no-underline cursor-pointer text-[12px]"
-          >
-            Forgot password?
-          </button>
+        <div className="w-full">
+          <PasswordTextBox
+            error={errors.password?.message}
+            {...register("password", { required: "Hasło jest wymagane" })}
+          />
         </div>
 
         <div className="flex justify-center">
           <button
             type="submit"
-            className="btn w-[274px] py-2 border rounded-[12px]"
+            className="btn btn-primary w-[274px] py-2 border rounded-xl shadow-md"
           >
-            Login
+            Zaloguj się
           </button>
         </div>
 
         <div className="flex flex-col justify-center">
-          <p className="text-[12px] text-center">Don't have an account?</p>
+          <p className="text-[12px] text-center">Nie masz konta?</p>
           <button
             type="button"
             className="flex self-center btn-link no-underline cursor-pointer text-[12px] font-bold hover:underline"
             onClick={() => navigate(`/signup`)}
           >
-            Sign up
+            Stwórz konto
           </button>
         </div>
       </form>

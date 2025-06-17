@@ -2,11 +2,11 @@ import type { FC } from "react";
 import { useFormContext } from "react-hook-form";
 
 const daysOfWeek = [
-  { label: "Mon", value: "MONDAY" },
-  { label: "Tue", value: "TUESDAY" },
-  { label: "Wed", value: "WEDNESDAY" },
-  { label: "Thu", value: "THURSDAY" },
-  { label: "Fri", value: "FRIDAY" },
+  { label: "Pon", value: "MONDAY" },
+  { label: "Wt", value: "TUESDAY" },
+  { label: "Śr", value: "WEDNESDAY" },
+  { label: "Czw", value: "THURSDAY" },
+  { label: "Pt", value: "FRIDAY" },
 ];
 
 const RecurringOptions: FC = () => {
@@ -17,16 +17,19 @@ const RecurringOptions: FC = () => {
     <div className="flex flex-col gap-2 p-4 ">
       <div className="flex gap-2">
         <label className="flex flex-col text-xs">
-          Frequency
-          <select className="select" {...register("frequency", { required: true })}>
-            <option value="DAILY">Daily</option>
-            <option value="WEEKLY">Weekly</option>
-            <option value="MONTHLY">Monthly</option>
+          Częstotliwość
+          <select
+            className="select focus:outline-none"
+            {...register("frequency", { required: true })}
+          >
+            <option value="DAILY">Dziennie</option>
+            <option value="WEEKLY">Tygodniowo</option>
+            <option value="MONTHLY">Miesięcznie</option>
           </select>
         </label>
 
         <label className="flex flex-col text-xs">
-          Interval
+          Odstęp
           <input
             type="number"
             className="input"
@@ -39,14 +42,14 @@ const RecurringOptions: FC = () => {
 
       {frequency === "WEEKLY" && (
         <div className="flex flex-wrap gap-2">
-            <span className="text-sm">Repeat on days:</span>
+          <span className="text-sm">W dniach:</span>
           {daysOfWeek.map((day) => (
             <label key={day.value} className="flex items-center gap-1 text-xs">
               <input
-              type="checkbox"
-              className="checkbox w-5 h-5"
-              value={day.value}
-              {...register("byDays")}
+                type="checkbox"
+                className="checkbox w-5 h-5"
+                value={day.value}
+                {...register("byDays")}
               />
               {day.label}
             </label>
@@ -56,12 +59,13 @@ const RecurringOptions: FC = () => {
 
       {frequency === "MONTHLY" && (
         <div className="flex flex-col gap-2">
-          <label>
-            Month days (comma separated):<br />
+          <label className="text-xs">
+            Dni miesiąca (przedzielone przecinkiem):
+            <br />
             <input
               type="text"
               className="input"
-              placeholder="e.g. 1,15,28"
+              placeholder="np.: 1,15,28"
               {...register("byMonthDays")}
             />
           </label>
@@ -72,4 +76,3 @@ const RecurringOptions: FC = () => {
 };
 
 export default RecurringOptions;
-    

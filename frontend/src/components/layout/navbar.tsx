@@ -3,14 +3,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Mail from "../icons/mail";
 import User from "../icons/user";
 import { useAuth } from "../../auth/auth-context";
-// import { useLogout } from "../../hooks/use-logout";
 import ListMenu from "./list-menu.tsx";
 import ArrowBack from "../icons/arrow-back.tsx";
 import { RoleType } from "../../types/user-role.ts";
 
-
 export const NavBar: FC<{ userRole?: RoleType }> = ({ userRole }) => {
-  
   const navigate = useNavigate();
   const location = useLocation();
   const isAuthPage =
@@ -40,7 +37,7 @@ export const NavBar: FC<{ userRole?: RoleType }> = ({ userRole }) => {
               <div
                 tabIndex={0}
                 role="button"
-                className="btn m-1"
+                className="btn btn-neutral m-1"
                 onClick={() => {
                   navigate("/main");
                 }}
@@ -49,28 +46,28 @@ export const NavBar: FC<{ userRole?: RoleType }> = ({ userRole }) => {
               </div>
             )}
 
-
             {userRole === RoleType.DEANS_OFFICE && <ListMenu />}
-
-            <div className="dropdown dropdown-bottom dropdown-end">
-              <div
-                role="button"
-                className="btn m-1 flex items-center justify-center cursor-pointer"
-                aria-label="Go to proposals"
-                onClick={() => {
-                  navigate("/proposals");
-                }}
-
-              >
-                <Mail />
-              </div>
-            </div>
+            {userRole === RoleType.ADMIN ||
+              (userRole === RoleType.STUDENT && (
+                <div className="dropdown dropdown-bottom dropdown-end">
+                  <div
+                    role="button"
+                    className="btn btn-neutral m-1 flex items-center justify-center cursor-pointer"
+                    aria-label="Go to proposals"
+                    onClick={() => {
+                      navigate("/proposals");
+                    }}
+                  >
+                    <Mail />
+                  </div>
+                </div>
+              ))}
 
             <div className="dropdown dropdown-bottom dropdown-end">
               <div
                 tabIndex={0}
                 role="button"
-                className="btn m-1 flex items-center gap-1"
+                className="btn btn-neutral m-1 flex items-center gap-1"
               >
                 <User />
                 {`${user?.name} ${user?.surname}`}
@@ -83,7 +80,7 @@ export const NavBar: FC<{ userRole?: RoleType }> = ({ userRole }) => {
                       navigate("/login");
                     }}
                   >
-                    Log Out
+                    Wyloguj się
                   </button>
                 </li>
                 <li>
@@ -92,7 +89,7 @@ export const NavBar: FC<{ userRole?: RoleType }> = ({ userRole }) => {
                       navigate("/change-password");
                     }}
                   >
-                    Change password
+                    Zmień hasło
                   </button>
                 </li>
               </ul>

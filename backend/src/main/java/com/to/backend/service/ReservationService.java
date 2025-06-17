@@ -56,6 +56,15 @@ public class ReservationService {
         return reservationRepo.save(reservation);
     }
 
+    public boolean isOwner(String reservationId, String username) {
+        Optional<User> userOpt = userRepo.findByEmail(username);
+        if (userOpt.isEmpty()) return false;
+
+        Optional<Reservation> reservationOpt = reservationRepo.findById(reservationId);
+        return reservationOpt.map(reservation -> reservation.getUserId().equals(userOpt.get().getId())).orElse(false);
+
+    }
+    
     /**
      * Sprawdza dostępność sali i zwraca szczegóły rezerwacji.
      */

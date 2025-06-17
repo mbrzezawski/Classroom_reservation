@@ -28,8 +28,7 @@ public class UserService {
             UserRepository repo,
             PasswordEncoder passwordEncoder,
             EmailService emailService,
-            ConfirmationTokenRepository tokenRepo
-    ) {
+            ConfirmationTokenRepository tokenRepo) {
         this.userRepo = repo;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
@@ -48,7 +47,8 @@ public class UserService {
         return userRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("User", id));
     }
-    public User getUserByEmail(String email){
+
+    public User getUserByEmail(String email) {
         return userRepo.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("Email: ", email));
     }
@@ -59,10 +59,10 @@ public class UserService {
         }
         userRepo.deleteById(id);
     }
-    public void setUserRole(String id, RoleType roleType){
+
+    public void setUserRole(String id, RoleType roleType) {
         User user = getUserById(id);
-        String current =
-                SecurityContextHolder.getContext().getAuthentication().getName();
+        String current = SecurityContextHolder.getContext().getAuthentication().getName();
         if (user.getEmail().equals(current) && roleType != RoleType.ADMIN) {
             throw new SelfDemoteException("Cannot remove your own ADMIN role");
         }
@@ -102,10 +102,10 @@ public class UserService {
             user.setRole(RoleType.ADMIN);
         } else if (email.endsWith("@student.agh.edu.pl")) {
             user.setRole(RoleType.STUDENT);
+        } else if (email.endsWith("@agh.edu.pl") && "DEANS_CODE".equals(registrationRequestDto.getDeansCode())) {
+            user.setRole(RoleType.DEANS_OFFICE);
         } else if (email.endsWith("@agh.edu.pl")) {
             user.setRole(RoleType.TEACHER);
-        } else if ("DEANS_CODE".equals(registrationRequestDto.getDeansCode())) {
-            user.setRole(RoleType.DEANS_OFFICE);
         }
         user.setEnabled(false);
         user = userRepo.save(user);
@@ -114,7 +114,6 @@ public class UserService {
 
         return user;
     }
-
 
     public void confirmToken(String token) {
         ConfirmationToken ct = tokenRepo.findByToken(token)

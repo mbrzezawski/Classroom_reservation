@@ -185,172 +185,196 @@ const ProposalListPage: React.FC = () => {
             Nie masz żadnych nowych propozycji
           </div>
         ) : (
-          <>
-            <table className="table w-full">
-              <thead>
-                <tr>
-                  <th>Od</th>
-                  <th>Cel</th>
-                  <th>Status</th>
-                  <th>Szczegóły</th>
-                </tr>
-              </thead>
-              <tbody>
-                {proposals.map((p) => (
-                  <tr key={p.id} className="hover">
-                    <td>{p.teacherEmail}</td>
-                    <td>{getPurpose(p)}</td>
-                    <td>
-                      <span className="badge badge-warning">Oczekuje</span>
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-sm btn-primary"
-                        onClick={() => setSelectedProposal(p)}
-                      >
-                        Otwórz szczegóły
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {selectedProposal && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50">
-                <div className="bg-base-100 rounded-lg shadow-lg w-11/12 md:w-3/4 lg:w-1/2 p-6 relative max-h-[90vh] overflow-y-auto">
-                  <button
-                    className="btn btn-sm btn-circle btn-ghost absolute top-4 right-4"
-                    onClick={() => {
-                      setSelectedProposal(null);
-                      setChosenIndex(null);
-                    }}
-                  >
-                    ✕
-                  </button>
-                  <h2 className="text-xl font-bold mb-2">
-                    Szczegóły propozycji
-                  </h2>
-                  <div className="space-y-2 mb-4">
-                    <p>
-                      <strong>Od:</strong> {selectedProposal.teacherEmail}
-                    </p>
-                    <p>
-                      <strong>Dla:</strong> {selectedProposal.studentEmail}
-                    </p>
-                    {selectedProposal.comment && (
-                      <p>
-                        <strong>Komentarz:</strong> {selectedProposal.comment}
-                      </p>
-                    )}
-                    <p>
-                      <strong>Min. miejsc:</strong>{" "}
-                      {selectedProposal.reservationRequests[0]?.minCapacity ||
-                        selectedProposal.recurringRequests[0]?.minCapacity}
-                    </p>
-                    <p>
-                      <strong>Oprogramowanie:</strong>{" "}
-                      {(
-                        selectedProposal.reservationRequests[0]?.softwareIds ||
-                        selectedProposal.recurringRequests[0]?.softwareIds
-                      )
-                        .map((id) => softwareMap[id] || id)
-                        .join(", ")}
-                    </p>
-                    <p>
-                      <strong>Sprzęt:</strong>{" "}
-                      {(
-                        selectedProposal.reservationRequests[0]?.equipmentIds ||
-                        selectedProposal.recurringRequests[0]?.equipmentIds
-                      )
-                        .map((id) => equipmentMap[id] || id)
-                        .join(", ")}
-                    </p>
-                  </div>
-
-                  <form>
-                    <h3 className="font-semibold mt-4 mb-2">Wybierz termin:</h3>
-                    <div className="space-y-4">
-                      {[
-                        ...selectedProposal.reservationRequests.map((r, i) => ({
-                          type: "single",
-                          data: r,
-                          index: i,
-                        })),
-                        ...selectedProposal.recurringRequests.map((r, i) => ({
-                          type: "recurring",
-                          data: r,
-                          index:
-                            selectedProposal.reservationRequests.length + i,
-                        })),
-                      ].map((slot) => (
-                        <div
-                          key={slot.index}
-                          className="border rounded p-3 flex items-start space-x-3"
+          <table className="table bg-base-200 w-full">
+            <thead>
+              <tr>
+                <th>Od</th>
+                <th>Cel</th>
+                <th>Status</th>
+                <th>Szczegóły</th>
+              </tr>
+            </thead>
+            <tbody>
+              {proposals.map((p) => {
+                const isSelected = selectedProposal?.id === p.id;
+                return (
+                  <React.Fragment key={p.id}>
+                    <tr className="hover">
+                      <td>{p.teacherEmail}</td>
+                      <td>{getPurpose(p)}</td>
+                      <td>
+                        <span className="badge badge-warning">Oczekuje</span>
+                      </td>
+                      <td>
+                        <button
+                          className="btn btn-sm btn-primary"
+                          onClick={() =>
+                            setSelectedProposal(isSelected ? null : p)
+                          }
                         >
-                          <input
-                            type="radio"
-                            name="chosenSlot"
-                            checked={chosenIndex === slot.index}
-                            onChange={() => setChosenIndex(slot.index)}
-                            className="mt-1"
-                          />
-                          <div>
-                            {slot.type === "single" ? (
+                          {isSelected ? "Zwiń" : "Otwórz szczegóły"}
+                        </button>
+                      </td>
+                    </tr>
+                    {isSelected && (
+                      <tr>
+                        <td colSpan={4}>
+                          <div className="p-4 bg-base-100 rounded-lg space-y-2">
+                            <p>
+                              <strong>Od:</strong> {p.teacherEmail}
+                            </p>
+                            <p>
+                              <strong>Dla:</strong> {p.studentEmail}
+                            </p>
+                            {p.comment && (
                               <p>
-                                <strong>
-                                  {(slot.data as ReservationRequest).date}{" "}
-                                  {(slot.data as ReservationRequest).startTime}–
-                                  {(slot.data as ReservationRequest).endTime}
-                                </strong>
+                                <strong>Komentarz:</strong> {p.comment}
                               </p>
-                            ) : (
-                              <>
-                                <p>
-                                  <strong>
-                                    {(slot.data as RecurringRequest).startDate}{" "}
-                                    do {(slot.data as RecurringRequest).endDate}{" "}
-                                    {(slot.data as RecurringRequest).startTime}–
-                                    {(slot.data as RecurringRequest).endTime}
-                                  </strong>
-                                </p>
-                                <p>
-                                  Częstotliwość: co{" "}
-                                  {(slot.data as RecurringRequest).interval}{" "}
-                                  {freqMap[
-                                    (slot.data as RecurringRequest).frequency
-                                  ].toLowerCase()}
-                                </p>
-                                <p>
-                                  Dni:{" "}
-                                  {(slot.data as RecurringRequest).byDays
-                                    .map((d) => dayMap[d] || d)
-                                    .join(", ")}
-                                </p>
-                              </>
                             )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </form>
+                            <p>
+                              <strong>Min. miejsc:</strong>{" "}
+                              {p.reservationRequests[0]?.minCapacity ||
+                                p.recurringRequests[0]?.minCapacity}
+                            </p>
+                            <p>
+                              <strong>Oprogramowanie:</strong>{" "}
+                              {(
+                                p.reservationRequests[0]?.softwareIds ||
+                                p.recurringRequests[0]?.softwareIds
+                              )
+                                .map((id) => softwareMap[id] || id)
+                                .join(", ")}
+                            </p>
+                            <p>
+                              <strong>Sprzęt:</strong>{" "}
+                              {(
+                                p.reservationRequests[0]?.equipmentIds ||
+                                p.recurringRequests[0]?.equipmentIds
+                              )
+                                .map((id) => equipmentMap[id] || id)
+                                .join(", ")}
+                            </p>
 
-                  <div className="flex justify-end mt-6 space-x-3">
-                    <button
-                      className="btn btn-success"
-                      onClick={handleConfirm}
-                      disabled={chosenIndex === null}
-                    >
-                      Potwierdź
-                    </button>
-                    <button className="btn btn-error" onClick={handleReject}>
-                      Odrzuć
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
+                            <div className="space-y-2">
+                              {[
+                                ...p.reservationRequests.map((r, i) => ({
+                                  type: "single",
+                                  data: r,
+                                  index: i,
+                                })),
+                                ...p.recurringRequests.map((r, i) => ({
+                                  type: "recurring",
+                                  data: r,
+                                  index: p.reservationRequests.length + i,
+                                })),
+                              ].map((slot) => (
+                                <div
+                                  key={slot.index}
+                                  className="border rounded p-3 flex items-start space-x-3"
+                                >
+                                  <input
+                                    type="radio"
+                                    name={`chosenSlot-${p.id}`}
+                                    checked={chosenIndex === slot.index}
+                                    onChange={() => {
+                                      setSelectedProposal(p);
+                                      setChosenIndex(slot.index);
+                                    }}
+                                    className="mt-1"
+                                  />
+                                  <div>
+                                    {slot.type === "single" ? (
+                                      <p>
+                                        <strong>
+                                          {
+                                            (slot.data as ReservationRequest)
+                                              .date
+                                          }{" "}
+                                          {
+                                            (slot.data as ReservationRequest)
+                                              .startTime
+                                          }
+                                          –
+                                          {
+                                            (slot.data as ReservationRequest)
+                                              .endTime
+                                          }
+                                        </strong>
+                                      </p>
+                                    ) : (
+                                      <>
+                                        <p>
+                                          <strong>
+                                            {
+                                              (slot.data as RecurringRequest)
+                                                .startDate
+                                            }{" "}
+                                            do{" "}
+                                            {
+                                              (slot.data as RecurringRequest)
+                                                .endDate
+                                            }{" "}
+                                            {
+                                              (slot.data as RecurringRequest)
+                                                .startTime
+                                            }
+                                            –
+                                            {
+                                              (slot.data as RecurringRequest)
+                                                .endTime
+                                            }
+                                          </strong>
+                                        </p>
+                                        <p>
+                                          Częstotliwość: co{" "}
+                                          {
+                                            (slot.data as RecurringRequest)
+                                              .interval
+                                          }{" "}
+                                          {freqMap[
+                                            (slot.data as RecurringRequest)
+                                              .frequency
+                                          ].toLowerCase()}
+                                        </p>
+                                        <p>
+                                          Dni:{" "}
+                                          {(
+                                            slot.data as RecurringRequest
+                                          ).byDays
+                                            .map((d) => dayMap[d] || d)
+                                            .join(", ")}
+                                        </p>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-2">
+                              <button
+                                className="btn btn-success"
+                                onClick={handleConfirm}
+                                disabled={chosenIndex === null}
+                              >
+                                Potwierdź
+                              </button>
+                              <button
+                                className="btn btn-error"
+                                onClick={handleReject}
+                              >
+                                Odrzuć
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
         )}
       </div>
     </Layout>

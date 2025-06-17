@@ -8,9 +8,9 @@ const deleteReservation = async (reservationId: string, type: 'single' | 'recurr
       Authorization: `Bearer ${token}`,
     },
   });
-
+  
   if (!response.ok) {
-    throw new Error("Failed to delete reservation");
+    throw new Error("Nie udało się usunąć rezerwacji");
   }
 };
 

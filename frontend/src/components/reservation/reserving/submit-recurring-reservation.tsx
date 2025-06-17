@@ -34,7 +34,6 @@ async function submitRecurringReservation(
     byDays: data.byDays,
   };
 
-  console.log("Recurring res body: ", body);
   const res = await fetch(`${endpoint}`, {
     method,
     headers: {
@@ -45,7 +44,7 @@ async function submitRecurringReservation(
   });
   if (!res.ok) {
     const errorData = await res.json();
-    throw new Error(errorData.message || "Failed to make reservation");
+    throw new Error(errorData.error || "Failed to make reservation");
   }
 
   return await res.json();

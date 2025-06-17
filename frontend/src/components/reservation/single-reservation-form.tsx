@@ -101,11 +101,11 @@ const SingleReservationForm: FC<Props> = ({
   const reservationId = editedEvent ? editedEvent.id : "";
   const submitLabel = isSubmitting
     ? mode === "create"
-      ? "Booking..."
-      : "Saving..."
+      ? "Rezerwuję..."
+      : "Zapisuję..."
     : mode === "create"
-    ? "Book"
-    : "Save changes";
+    ? "Zarezerwuj"
+    : "Zapisz zmiany";
 
   useEffect(() => {
     if (editedEvent && !editedEvent.extendedProps.recurrenceProps) {
@@ -172,9 +172,8 @@ const SingleReservationForm: FC<Props> = ({
         const response = await postProposal(proposalRequest);
         console.log("Response from /proposals:", response);
 
-        showToast("Proposal sent successfully!", { variant: "success" });
+        showToast("Propozycja wysłana!", { variant: "success" });
       } else {
-        console.log("data durring single reservation:", data);
         const response = await submitSingleReservation(
           data,
           userId,
@@ -201,8 +200,8 @@ const SingleReservationForm: FC<Props> = ({
         showReservationToast(response, room, mode);
       }
     } catch (error) {
-      showToast("Submission failed", {
-        description: error instanceof Error ? error.message : "Unknown error",
+      showToast("Nieudana rezerwacja", {
+        description: error instanceof Error ? error.message : "Nieznany błąd",
         variant: "destructive",
       });
     } finally {
@@ -213,24 +212,21 @@ const SingleReservationForm: FC<Props> = ({
 
   return (
     <FormProvider {...methods}>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col border px-6 py-8 gap-[8px] rounded-[8px]"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
         <div className="flex justify-between items-center mb-2">
           {allowChangeToReccuring && (
             <TypePicker type={type} setType={setType} />
           )}
           <div className={mode !== "edit" ? "flex-1 ml-4" : ""}>
             <InputTextBox
-              label="Title"
-              placeholder="Enter meeting title"
+              label="Tytuł"
+              placeholder="Wprowadź tytuł"
               icon={<Letter />}
               {...register("title", {
-                required: "Title is required",
+                required: "Tytuł jest wymagany",
                 minLength: {
                   value: 3,
-                  message: "Title must be at least 3 characters long",
+                  message: "Tytuł musi mieć przynajmniej 3 znaki",
                 },
               })}
               error={methods.formState.errors.title?.message}
@@ -266,7 +262,7 @@ const SingleReservationForm: FC<Props> = ({
               onChange={(e) => setShowProposalForm(e.target.checked)}
               checked={showProposalForm}
             />
-            Send proposition of additional term
+            Wyślij jako propozycję innej osobie
           </label>
         )}
 
@@ -280,7 +276,7 @@ const SingleReservationForm: FC<Props> = ({
 
         <button
           type="submit"
-          className="btn rounded-[6px]"
+          className="btn btn-primary rounded-[6px]"
           disabled={isSubmitting}
         >
           {submitLabel}
@@ -289,13 +285,13 @@ const SingleReservationForm: FC<Props> = ({
         {mode === "edit" && (
           <button
             type="button"
-            className="btn bg-red-500 text-white rounded-[6px]"
+            className="btn btn-neutral rounded-[6px]"
             onClick={() => {
               onFinishedEditing();
               reset(defaultValues);
             }}
           >
-            Cancel editing
+            Cofnij
           </button>
         )}
       </form>
