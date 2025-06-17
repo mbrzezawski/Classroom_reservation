@@ -213,10 +213,7 @@ const SingleReservationForm: FC<Props> = ({
 
   return (
     <FormProvider {...methods}>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col border min-h-[792px] px-6 py-8 gap-[8px] rounded-[8px]"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
         <div className="flex justify-between items-center mb-2">
           {allowChangeToReccuring && (
             <TypePicker type={type} setType={setType} />
@@ -280,7 +277,7 @@ const SingleReservationForm: FC<Props> = ({
 
         <button
           type="submit"
-          className="btn rounded-[6px]"
+          className="btn btn-primary rounded-[6px]"
           disabled={isSubmitting}
         >
           {submitLabel}
@@ -289,7 +286,7 @@ const SingleReservationForm: FC<Props> = ({
         {mode === "edit" && (
           <button
             type="button"
-            className="btn bg-red-500 text-white rounded-[6px]"
+            className="btn btn-neutral rounded-[6px]"
             onClick={() => {
               onFinishedEditing();
               reset(defaultValues);

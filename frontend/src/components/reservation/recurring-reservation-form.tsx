@@ -168,10 +168,7 @@ const RecurringReservationForm: FC<Props> = ({
 
   return (
     <FormProvider {...methods}>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col border min-h-[792px] px-6 py-6 gap-[6px] rounded-[8px]"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col ">
         {/* pierwszy rzad */}
         <div className="flex justify-between items-center mb-2">
           <TypePicker type={type} setType={setType} />
@@ -232,7 +229,7 @@ const RecurringReservationForm: FC<Props> = ({
         {mode === "edit" && (
           <button
             type="button"
-            className="btn bg-red-500 text-white rounded-[6px]"
+            className="btn btn-neutral rounded-[6px]"
             onClick={() => {
               onFinishedEditing();
               reset(defaultValues);

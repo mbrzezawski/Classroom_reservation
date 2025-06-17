@@ -16,8 +16,8 @@ const MainPage = () => {
     return;
   }
   const userId = user.id;
-  const userRole = user.role;
-  // const userRole = RoleType.DEANS_OFFICE;
+  // const userRole = user.role;
+  const userRole = RoleType.DEANS_OFFICE;
   const { users } = useUsers();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const effectiveUserId = selectedUserId ?? userId ?? "";
@@ -29,7 +29,7 @@ const MainPage = () => {
   return (
     <Layout userRole={userRole}>
       <div className="grid grid-cols-3  gap-4 p-4">
-        <div className="col-span-2 flex flex-col gap-4">
+        <div className="col-span-2 bg-base-200 flex flex-col border-neutral p-4 gap-4">
           {userRole === RoleType.DEANS_OFFICE && (
             <div className="relative z-10">
               <SearchBar users={users} onSelectUser={setSelectedUserId} />
