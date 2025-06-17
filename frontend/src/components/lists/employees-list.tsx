@@ -1,13 +1,19 @@
 import {useNavigate} from "react-router-dom";
 import Delete from "../icons/delete.tsx";
 import {deleteUser} from "../../hooks/del-user.ts"
+import {useAuth} from "../../auth/auth-context.tsx";
+import showToast from "../../hooks/show-toast.ts";
 
 
 
 
 const EmployeesList = ({ users, loading, error }: { users: any[], loading: boolean, error: any }) => {
 
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+    const {token} = useAuth();
+    if (!token) {
+        return;
+    }
 
     function handleClick(userId: number) {
         navigate(`/main`, {state: {userId}})
@@ -15,9 +21,9 @@ const EmployeesList = ({ users, loading, error }: { users: any[], loading: boole
 
     function handleDelete(id: number) {
         if (confirm("Are you sure you want to delete this user?")) {
-            deleteUser(id)
-                .then(() => alert("User deleted"))
-                .catch(err => console.error("Delete failed", err));
+            deleteUser(id, token)
+                .then(() => showToast("User deleted", {variant: "success"}))
+                .catch(err => showToast("Delete failed", {variant: "destructive"}));
         }
     }
 

@@ -6,6 +6,7 @@ import { useSoftwareService } from "../../hooks/useSoftwareService";
 import { useEquipmentService } from "../../hooks/useEquipmentService";
 import {useSoftware} from "../../hooks/use-room-features.ts";
 import {useEquipment} from "../../hooks/use-room-features.ts";
+import showToast from "../../hooks/show-toast.ts";
 
 
 
@@ -95,12 +96,12 @@ const AddNewRoomForm = () => {
 
             await createRoom.mutateAsync(newRoom);
 
-            alert("Room successfully created!");
+            showToast("Room successfully created!", { variant: "success" });
             methods.reset();
 
         } catch (error) {
             console.error("Error creating room:", error);
-            alert("Failed to create room. Check console for details.");
+            showToast("Failed to create room. Check console for details.", { variant: "destructive" });
         }
     };
 
