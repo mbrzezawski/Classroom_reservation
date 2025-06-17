@@ -1,12 +1,19 @@
 import {useEquipment, useSoftware} from "../../hooks/use-room-features.ts";
 import Delete from "../icons/delete.tsx";
 import {deleteRoom} from "../../hooks/del-room.ts"
+import {useAuth} from "../../auth/auth-context.tsx";
+import showToast from "../../hooks/show-toast.ts";
 
 
 const ClassList = ({ rooms, loading, error }: { rooms: any[], loading: boolean, error: any }) => {
 
+
     const roomEquipment = useEquipment();
     const roomSoftware = useSoftware();
+    const {token} = useAuth();
+    if (!token) {
+        return;
+    }
 
     if (loading) return <div className="p-4">Loading...</div>;
     if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
@@ -23,9 +30,10 @@ const ClassList = ({ rooms, loading, error }: { rooms: any[], loading: boolean, 
 
     function handleDelete(id: number) {
         if (confirm("Are you sure you want to delete this room?")) {
-            deleteRoom(id)
-                .then(() => alert("Room deleted"))
-                .catch(err => console.error("Delete failed", err));
+
+            deleteRoom(id, token)
+                .then(() => showToast("Room deleted", {variant: "success"}))
+                .catch(err => showToast("Delete failed", {variant: "destructive"}));
         }
     }
 
