@@ -155,7 +155,7 @@ const SignUpForm: React.FC = () => {
           <p className="text-[12px] text-center">Masz już konto?</p>
           <button
             type="button"
-            className="btn-link self-center text-[12px] font-bold hover:underline"
+            className="btn-link self-center text-[12px] cursor-pointer font-bold hover:underline"
             onClick={() => navigate(`/login`)}
           >
             Zaloguj się
