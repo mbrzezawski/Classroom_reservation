@@ -47,19 +47,21 @@ export const NavBar: FC<{ userRole?: RoleType }> = ({ userRole }) => {
             )}
 
             {userRole === RoleType.DEANS_OFFICE && <ListMenu />}
-
-            <div className="dropdown dropdown-bottom dropdown-end">
-              <div
-                role="button"
-                className="btn btn-neutral m-1 flex items-center justify-center cursor-pointer"
-                aria-label="Go to proposals"
-                onClick={() => {
-                  navigate("/proposals");
-                }}
-              >
-                <Mail />
-              </div>
-            </div>
+            {userRole === RoleType.ADMIN ||
+              (userRole === RoleType.STUDENT && (
+                <div className="dropdown dropdown-bottom dropdown-end">
+                  <div
+                    role="button"
+                    className="btn btn-neutral m-1 flex items-center justify-center cursor-pointer"
+                    aria-label="Go to proposals"
+                    onClick={() => {
+                      navigate("/proposals");
+                    }}
+                  >
+                    <Mail />
+                  </div>
+                </div>
+              ))}
 
             <div className="dropdown dropdown-bottom dropdown-end">
               <div
