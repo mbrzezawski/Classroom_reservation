@@ -85,11 +85,11 @@ const RecurringReservationForm: FC<Props> = ({
   console.log(recurrenceId);
   const submitLabel = isSubmitting
     ? mode === "create"
-      ? "Booking..."
-      : "Saving..."
+      ? "Rezerwuję..."
+      : "Zapisuję..."
     : mode === "create"
-    ? "Book"
-    : "Save changes";
+    ? "Zarezerwuj"
+    : "Zapisz zmiany";
 
   useEffect(() => {
     if (editedEvent && !editedEvent.extendedProps.recurrenceProps) {
@@ -221,7 +221,7 @@ const RecurringReservationForm: FC<Props> = ({
         <RecurringOptions />
         <button
           type="submit"
-          className="btn rounded-[6px]"
+          className="btn btn-primary rounded-[6px]"
           disabled={isSubmitting}
         >
           {submitLabel}

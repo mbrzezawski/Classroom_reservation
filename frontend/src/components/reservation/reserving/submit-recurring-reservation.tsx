@@ -44,7 +44,7 @@ async function submitRecurringReservation(
   });
   if (!res.ok) {
     const errorData = await res.json();
-    throw new Error(errorData.message || "Failed to make reservation");
+    throw new Error(errorData.error || "Failed to make reservation");
   }
 
   return await res.json();

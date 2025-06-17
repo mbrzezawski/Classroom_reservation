@@ -201,8 +201,8 @@ const SingleReservationForm: FC<Props> = ({
         showReservationToast(response, room, mode);
       }
     } catch (error) {
-      showToast("Submission failed", {
-        description: error instanceof Error ? error.message : "Unknown error",
+      showToast("Nieudana rezerwacja", {
+        description: error instanceof Error ? error.message : "Nieznany błąd",
         variant: "destructive",
       });
     } finally {

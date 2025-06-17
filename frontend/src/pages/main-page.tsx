@@ -8,7 +8,7 @@ import { useAuth } from "../auth/auth-context.tsx";
 import { RoleType } from "../types/user-role.ts";
 import ReservationFormWrapper from "../components/reservation/reservation-form-wrapper.tsx";
 import type { FullCalendarEvent } from "../types/calendar-event.ts";
-import {useLocation} from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const MainPage = () => {
   const { user } = useAuth();
@@ -17,11 +17,12 @@ const MainPage = () => {
   }
   const userId = user.id;
   const userRole = user.role;
-
   const { users } = useUsers();
   const location = useLocation();
   const initialUserId = location.state?.userId as string | null;
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(initialUserId);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(
+    initialUserId
+  );
   const effectiveUserId = selectedUserId ?? userId ?? "";
   const { events, dispatch } = useCalendarEvents(
     userRole == RoleType.DEANS_OFFICE ? effectiveUserId : userId

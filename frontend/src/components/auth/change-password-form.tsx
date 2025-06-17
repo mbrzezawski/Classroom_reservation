@@ -37,7 +37,6 @@ const ChangePasswordForm: FC = () => {
         showToast("Poprawnie zmieniono hasło", { variant: "success" });
       })
       .catch((error) => {
-        console.log(error.message);
         showToast("Nie udało się zmienić hasła", {
           description: error instanceof Error ? error.message : "",
           variant: "destructive",
