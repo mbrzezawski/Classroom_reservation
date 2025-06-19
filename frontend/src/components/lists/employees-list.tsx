@@ -36,7 +36,8 @@ const EmployeesList = ({
   if (loading) return <div className="p-4">Loading...</div>;
   if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
-  if (users.length === 0) return <div className="p-4">No users found.</div>;
+  if (users.length === 0)
+    return <div className="p-4">Nie znaleziono użytkownika.</div>;
 
   return (
     <div className="p-4 flex justify-center ">
@@ -59,17 +60,22 @@ const EmployeesList = ({
                 <td>{user.email}</td>
                 <td>{user.role}</td>
                 <td>
-                  {user.role === "TEACHER" && (
+                  <div className="flex gap-2">
+                    {user.role === "TEACHER" && (
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => handleClick(user.id)}
+                      >
+                        Przejdź do kalendarza
+                      </button>
+                    )}
                     <button
-                      className="btn"
-                      onClick={() => handleClick(user.id)}
+                      className="btn btn-primary"
+                      onClick={() => handleDelete(user.id)}
                     >
-                      Go to calendar
+                      <Delete />
                     </button>
-                  )}
-                  <button className="btn" onClick={() => handleDelete(user.id)}>
-                    <Delete></Delete>
-                  </button>
+                  </div>
                 </td>
               </tr>
             ))}

@@ -32,7 +32,7 @@ const MainPage = () => {
   return (
     <Layout userRole={userRole}>
       <div className="grid grid-cols-3  gap-4 p-4">
-        <div className="col-span-2 bg-base-200 flex flex-col border-neutral p-4 gap-4">
+        <div className="col-span-2 bg-base-200 flex flex-col border-neutral p-4 gap-4 shadow-xl">
           {userRole === RoleType.DEANS_OFFICE && (
             <div className="relative z-10">
               <SearchBar users={users} onSelectUser={setSelectedUserId} />

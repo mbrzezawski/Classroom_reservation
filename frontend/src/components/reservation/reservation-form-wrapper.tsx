@@ -24,7 +24,7 @@ const ReservationFormWrapper: FC<ReservationFormWrapperProps> = ({
   const [type, setType] = useState<ReservationType>("single");
 
   return (
-    <div className="bg-base-200 min-h-[838px] px-6 py-8 gap-[8px] rounded-[8px] shadow-accent">
+    <div className="bg-base-200 min-h-[838px] px-6 py-8 gap-[8px] rounded-[8px] shadow-xl">
       {type === "single" ? (
         <SingleReservationForm
           userId={userId}
