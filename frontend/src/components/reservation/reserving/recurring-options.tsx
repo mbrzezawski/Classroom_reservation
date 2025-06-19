@@ -59,7 +59,7 @@ const RecurringOptions: FC = () => {
 
       {frequency === "MONTHLY" && (
         <div className="flex flex-col gap-2">
-          <label>
+          <label className="text-xs">
             Dni miesiąca (przedzielone przecinkiem):
             <br />
             <input

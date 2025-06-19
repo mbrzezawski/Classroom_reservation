@@ -6,7 +6,6 @@ import { FormProvider, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { data } from "autoprefixer";
 import { API_URL } from "../../api.ts";
-import showToast from "../../hooks/show-toast.ts";
 type SignUpFormValues = {
   email: string;
   password: string;
@@ -27,6 +26,10 @@ const SignUpForm: FC = () => {
       specialCode: "",
     },
   });
+  const navigate = useNavigate();
+  const [showCodeInput, setShowCodeInput] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const password = methods.watch("password");
 
   const onSubmit = async (data: SignUpFormValues) => {
     console.log("Form submitted:", data);
@@ -40,6 +43,7 @@ const SignUpForm: FC = () => {
       adminCode: data.specialCode === adminCode ? adminCode : "",
       deansCode: data.specialCode === deansCode ? deansCode : "",
     };
+
     try {
       const response = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
@@ -51,10 +55,8 @@ const SignUpForm: FC = () => {
         throw new Error("Błąd podczas rejestracji");
       }
 
-      navigate("/login");
-      showToast("Link z potwierdzeniem został wysłany na maila!", {
-        variant: "success",
-      });
+      // Show confirmation popup instead of direct navigation
+      setShowModal(true);
     } catch (err: any) {
       console.error("Błąd przy rejestracji:", err.message);
       alert(err.message);
@@ -64,13 +66,9 @@ const SignUpForm: FC = () => {
   const {
     register,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors },
   } = methods;
-  const password = watch("password");
-  const navigate = useNavigate();
-  const [showCodeInput, setShowCodeInput] = useState(false);
 
   useEffect(() => {
     if (showCodeInput == false) {
@@ -82,86 +80,92 @@ const SignUpForm: FC = () => {
     <FormProvider {...methods}>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col bg-base-200 px-6 py-8 gap-8 rounded-[8px] shadow-xs w-[400px] max-w-4xl mx-auto"
+        className="flex flex-col bg-base-200border px-6 py-8 gap-8 rounded-[8px] w-full max-w-4xl mx-auto shadow-xs w-[400px]"
       >
         <h2 className="text-3xl font-bold text-center">Załóż konto</h2>
 
-        <div className="flex flex-col gap-4 flex-1">
-          <InputTextBox
-            label="Imię"
-            type="text"
-            placeholder="Napisz swoje imię"
-            icon={undefined}
-            error={errors.name?.message}
-            {...register("name", {
-              required: "Imię jest wymagane",
-            })}
-          />
-          <InputTextBox
-            label="Nazwisko"
-            type="text"
-            placeholder="Napisz swoje nazwisko"
-            icon={undefined}
-            error={errors.surname?.message}
-            {...register("surname", {
-              required: "Nazwisko jest wymagane",
-            })}
-          />
-          <InputTextBox
-            label="Email"
-            type="email"
-            placeholder="Wpisz email"
-            icon={<AtIcon />}
-            error={errors.email?.message}
-            {...register("email", {
-              required: "Email jest wymagany",
-              pattern: {
-                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: "Niepoprawny format emaila",
-              },
-            })}
-          />
-          <PasswordTextBox
-            error={errors.password?.message}
-            {...register("password", {
-              required: "Hasło jest wymagane",
-              minLength: {
-                value: 6,
-                message: "Hasło musi mieć co najmniej 6 znaków",
-              },
-            })}
-          />
-          <PasswordTextBox
-            confirmPassword={true}
-            error={errors.repeatedPassword?.message}
-            {...register("repeatedPassword", {
-              required: "Powtórz hasło",
-              validate: (value) =>
-                value === password || "Hasła nie są takie same",
-            })}
-          />
+        <div className="flex flex-row gap-6">
+          <div className="flex flex-col gap-4 flex-1">
+            <InputTextBox
+              label="Imię"
+              type="text"
+              placeholder="Wpisz imię"
+              icon={undefined}
+              error={errors.name?.message}
+              {...register("name", {
+                required: "Imię jest wymagane",
+              })}
+            />
+            <InputTextBox
+              label="Nazwisko"
+              type="text"
+              placeholder="Wpisz nazwisko"
+              icon={undefined}
+              error={errors.surname?.message}
+              {...register("surname", {
+                required: "Nazwisko jest wymagane",
+              })}
+            />
+            <InputTextBox
+              label="Email"
+              type="email"
+              placeholder="Wpisz email"
+              icon={<AtIcon />}
+              error={errors.email?.message}
+              {...register("email", {
+                required: "Email jest wymagany",
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Nieprawidłowy format",
+                },
+              })}
+            />
+          </div>
 
-          <div className="flex flex-row gap-4 flex-1">
-            <label className="text-sm flex items-center gap-2 mt-2">
-              <input
-                type="checkbox"
-                className="checkbox"
-                onChange={(e) => setShowCodeInput(e.target.checked)}
-                checked={showCodeInput}
-              />
-              Mam kod specjalny
-            </label>
+          {/* Prawa kolumna */}
+          <div className="flex flex-col gap-4 flex-1">
+            <PasswordTextBox
+              error={errors.password?.message}
+              {...register("password", {
+                required: "Hasło jest wymagane",
+                minLength: {
+                  value: 8,
+                  message: "Min. 8 znaków",
+                },
+              })}
+            />
+            <PasswordTextBox
+              confirmPassword={true}
+              error={errors.repeatedPassword?.message}
+              {...register("repeatedPassword", {
+                required: "Powtórz hasło",
+                validate: (value) =>
+                  value === password || "Hasła nie są takie same",
+              })}
+            />
 
-            {showCodeInput && (
-              <InputTextBox
-                label={""}
-                icon={undefined}
-                type="code"
-                placeholder="Wpisz kod specjalny"
-                error={errors.specialCode?.message}
-                {...register("specialCode")}
-              />
-            )}
+            <div className="flex flex-row gap-4 flex-1">
+              <label className="text-sm flex items-center gap-2 mt-2">
+                <input
+                  type="checkbox"
+                  className="checkbox"
+                  onChange={(e) => setShowCodeInput(e.target.checked)}
+                  checked={showCodeInput}
+                />
+                Mam kod specjalny
+              </label>
+
+              {showCodeInput && (
+                <InputTextBox
+                  label={""}
+                  icon={undefined}
+                  type="code"
+                  placeholder="Wpisz kod specjalny"
+                  error={errors.specialCode?.message}
+                  {...register("specialCode")}
+                />
+              )}
+            </div>
           </div>
         </div>
 
@@ -190,4 +194,5 @@ const SignUpForm: FC = () => {
     </FormProvider>
   );
 };
+
 export default SignUpForm;
