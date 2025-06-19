@@ -40,6 +40,8 @@ const AddNewRoomForm = () => {
     control,
     formState: { errors },
     reset,
+    setValue,
+    watch,
   } = methods;
 
   const [showCustomSoftware, setShowCustomSoftware] = useState(false);
@@ -48,6 +50,9 @@ const AddNewRoomForm = () => {
   const { createRoom } = useRoomService();
   const { createSoftware } = useSoftwareService();
   const { createEquipment } = useEquipmentService();
+
+  const watchEquipment = watch("customEquipment");
+  const watchSoftware = watch("customSoftware");
 
   const onSubmit = async (formData: any) => {
     try {
@@ -104,7 +109,7 @@ const AddNewRoomForm = () => {
         onSubmit={handleSubmit(onSubmit)}
         className="flex flex-col bg-base-200 border px-6 py-12 gap-[40px] rounded-[8px] w-full max-w-lg mx-auto min-h-[700px]"
       >
-        <h2 className="text-[32px] text-center font-semibold">Add New Room</h2>
+        <h2 className="text-[32px] text-center font-semibold"> Nowa sala</h2>
 
         <InputTextBox
           icon={undefined}
@@ -139,7 +144,7 @@ const AddNewRoomForm = () => {
 
         {/* Software Checklist */}
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium">Software</label>
+          <label className="text-sm font-medium">Oprogramowanie</label>
           <Controller
             control={control}
             name="softwareIds"
@@ -172,7 +177,10 @@ const AddNewRoomForm = () => {
           <label className="text-sm flex items-center gap-2 mt-2">
             <input
               type="checkbox"
-              onChange={(e) => setShowCustomSoftware(e.target.checked)}
+              onChange={(e) => {
+                setShowCustomSoftware(e.target.checked);
+                if (!e.target.checked) setValue("customSoftware", "");
+              }}
               checked={showCustomSoftware}
             />
             Nowe oprogramowanie
@@ -189,7 +197,7 @@ const AddNewRoomForm = () => {
 
         {/* Equipment Checklist */}
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium">Equipment</label>
+          <label className="text-sm font-medium">Wyposażenie</label>
           <Controller
             control={control}
             name="equipmentIds"
@@ -221,7 +229,11 @@ const AddNewRoomForm = () => {
           <label className="text-sm flex items-center gap-2 mt-2">
             <input
               type="checkbox"
-              onChange={(e) => setShowCustomEquipment(e.target.checked)}
+              onChange={(e) => {
+                setShowCustomEquipment(e.target.checked);
+
+                if (!e.target.checked) setValue("customEquipment", "");
+              }}
               checked={showCustomEquipment}
             />
             Nowe wyposażenie
@@ -238,7 +250,7 @@ const AddNewRoomForm = () => {
         <div className="flex justify-center">
           <button
             type="submit"
-            className="btn w-[274px] py-2 border rounded-[12px]"
+            className="btn btn-primary w-[274px] py-2 border rounded-[12px]"
           >
             Dodaj pokój
           </button>

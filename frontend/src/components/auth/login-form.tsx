@@ -54,7 +54,7 @@ const LoginForm = () => {
         <InputTextBox
           label="Email"
           type="email"
-          placeholder="Type your email"
+          placeholder="Wpisz swój email"
           icon={<AtIcon />}
           error={errors.email?.message}
           {...register("email", {

@@ -24,7 +24,7 @@ const MainPage = () => {
     initialUserId
   );
   const effectiveUserId = selectedUserId ?? userId ?? "";
-  const { events, dispatch } = useCalendarEvents(
+  const { events, dispatch, refetch } = useCalendarEvents(
     userRole == RoleType.DEANS_OFFICE ? effectiveUserId : userId
   );
   const [editedEvent, setEditEvent] = useState<FullCalendarEvent | null>(null);
@@ -32,7 +32,7 @@ const MainPage = () => {
   return (
     <Layout userRole={userRole}>
       <div className="grid grid-cols-3  gap-4 p-4">
-        <div className="col-span-2 bg-base-200 flex flex-col border-neutral p-4 gap-4">
+        <div className="col-span-2 bg-base-200 flex flex-col border-neutral p-4 gap-4 shadow-xl">
           {userRole === RoleType.DEANS_OFFICE && (
             <div className="relative z-10">
               <SearchBar users={users} onSelectUser={setSelectedUserId} />
@@ -43,6 +43,10 @@ const MainPage = () => {
               events={events}
               onEventClick={(event) => {
                 if (!event.start || !event.end) return;
+                if (event.extendedProps.status === "PENDING") {
+                  setEditEvent(null);
+                  return;
+                }
                 const calendarEvent: FullCalendarEvent = {
                   id: event.id,
                   title: event.title,
@@ -73,6 +77,10 @@ const MainPage = () => {
             editedEvent={editedEvent}
             onFinishedEditing={() => {
               setEditEvent(null);
+            }}
+            onFinishedRequest={async () => {
+              setEditEvent(null);
+              await refetch();
             }}
           />
         </div>

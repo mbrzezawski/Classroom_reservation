@@ -20,17 +20,14 @@ import { useAuth } from "../../auth/auth-context.tsx";
 import { useRoomsMap } from "../../hooks/use-rooms-map.tsx";
 import submitRecurringReservation from "./reserving/submit-recurring-reservation.tsx";
 import showToast from "../../hooks/show-toast.ts";
-import {
-  mapCalendarEventToRecurringValues,
-  mapSingleReservationResponsetoCalendarEvent,
-} from "../../utils/reserving-mapping.ts";
+import { mapCalendarEventToRecurringValues } from "../../utils/reserving-mapping.ts";
 import type { Room } from "../../types/room.ts";
 import type { FullCalendarEvent } from "../../types/calendar-event.ts";
 import { showReservationToast } from "../../utils/show-reservation-toast.ts";
-import { useRecurrenceMap } from "../../hooks/use-recurrence-map.ts";
-import RecurringProposalForm, {type RecurringProposalFormValues} from "./reserving/recurring-proposal-form.tsx";
+import RecurringProposalForm, {
+  type RecurringProposalFormValues,
+} from "./reserving/recurring-proposal-form.tsx";
 import { usePostProposal } from "../../hooks/usePostProposal.ts";
-
 
 interface Props {
   userId: string;
@@ -40,6 +37,7 @@ interface Props {
   setType: (type: ReservationType) => void;
   editedEvent: FullCalendarEvent | null;
   onFinishedEditing: () => void;
+  onFinishedRequest: () => void;
 }
 const defaultValues: RecurringReservationFormValues = {
   type: "single",
@@ -66,6 +64,7 @@ const RecurringReservationForm: FC<Props> = ({
   setType,
   editedEvent,
   onFinishedEditing,
+  onFinishedRequest,
 }) => {
   const methods = useForm<RecurringReservationFormValues>({
     defaultValues,
@@ -77,7 +76,6 @@ const RecurringReservationForm: FC<Props> = ({
   }
   const { register, handleSubmit, reset } = methods;
   const roomsMap = useRoomsMap();
-  const { recurrenceMap } = useRecurrenceMap();
   const [showProposalForm, setShowProposalForm] = useState(false);
   const { postProposal } = usePostProposal();
 
@@ -87,7 +85,7 @@ const RecurringReservationForm: FC<Props> = ({
     editedEvent && editedEvent.extendedProps.recurrenceProps
       ? editedEvent.extendedProps.recurrenceProps?.recurrenceId
       : "";
-  console.log(recurrenceId);
+
   const submitLabel = isSubmitting
     ? mode === "create"
       ? "Rezerwuję..."
@@ -109,7 +107,7 @@ const RecurringReservationForm: FC<Props> = ({
             endTime: "",
             frequency: "DAILY",
             interval: 1,
-            byDays: [],      // empty array for WEEKLY option
+            byDays: [], // empty array for WEEKLY option
             byMonthDays: "", // empty string for MONTHLY option
           },
         },
@@ -137,12 +135,11 @@ const RecurringReservationForm: FC<Props> = ({
     setIsSubmitting(true);
 
     const isProposalMode =
-        mode === "edit" &&
-        showProposalForm &&
-        getProposalValues().additionalDates.length >= 1;
+      mode === "edit" &&
+      showProposalForm &&
+      getProposalValues().additionalDates.length >= 1;
 
     try {
-
       if (isProposalMode) {
         const proposal = getProposalValues();
         const recurringRequests = [
@@ -159,19 +156,19 @@ const RecurringReservationForm: FC<Props> = ({
             interval: data.interval,
             byDays: data.byDays,
           },
-            ...proposal.additionalDates.map((item) => ({
-              startDate: item.RecurringProposedDate.startDate,
-              endDate: item.RecurringProposedDate.endDate,
-              startTime: item.RecurringProposedDate.startTime,
-              endTime: item.RecurringProposedDate.endTime,
-              purpose: `${data.title} | ${proposal.comment}`,
-              minCapacity: data.atendees,
-              softwareIds: data.software,
-              equipmentIds: data.equipment,
-              frequency: item.RecurringProposedDate.frequency,
-              interval: item.RecurringProposedDate.interval,
-              byDays: item.RecurringProposedDate.byDays,
-            })),
+          ...proposal.additionalDates.map((item) => ({
+            startDate: item.RecurringProposedDate.startDate,
+            endDate: item.RecurringProposedDate.endDate,
+            startTime: item.RecurringProposedDate.startTime,
+            endTime: item.RecurringProposedDate.endTime,
+            purpose: `${data.title} | ${proposal.comment}`,
+            minCapacity: data.atendees,
+            softwareIds: data.software,
+            equipmentIds: data.equipment,
+            frequency: item.RecurringProposedDate.frequency,
+            interval: item.RecurringProposedDate.interval,
+            byDays: item.RecurringProposedDate.byDays,
+          })),
         ];
 
         const request = {
@@ -179,62 +176,25 @@ const RecurringReservationForm: FC<Props> = ({
           originalRecurrenceId: recurrenceId,
           recurringRequests,
           comment: proposal.comment,
-        }
-        console.log("Proposal request:", request);
+        };
 
         const response = await postProposal(request);
-        console.log("Response from /proposals:", response);
-
-        showToast("Propozycja wysłana!", { variant: "success" });
-
+        if (response.ok)
+          showToast("Propozycja wysłana!", { variant: "success" });
       } else {
-
         let response: RecurringReservationResponseDTO;
         response = await submitRecurringReservation(
-            data,
-            userId,
-            token,
-            mode,
-            recurrenceId
+          data,
+          userId,
+          token,
+          mode,
+          recurrenceId
         );
         const room: Room = roomsMap[response.roomId];
 
-        const recurrenceProps = {
-          recurrenceId: recurrenceId,
-          startDate: response.startDate,
-          endDate: response.endDate,
-          frequency: response.frequency,
-          interval: response.interval,
-          byMonthDays: response.byMonthDays,
-          byDays: response.byDays,
-        };
         response.reservations.forEach((singleReservation) => {
-          const newCalendarEvent = mapSingleReservationResponsetoCalendarEvent(
-              singleReservation,
-              room,
-              recurrenceProps
-          );
-
-          if (mode === "create")
-            dispatch({type: "addEvent", payload: newCalendarEvent});
-          else
-            dispatch({
-              type: "addEvent",
-              payload: newCalendarEvent,
-            });
           showReservationToast(singleReservation, room, mode);
         });
-        if (mode === "edit") {
-          const previousSingleReservations =
-              recurrenceMap[recurrenceId].reservations;
-
-          previousSingleReservations.forEach((singleReservation) =>
-              dispatch({
-                type: "removeEvent",
-                payload: singleReservation.reservationId,
-              })
-          );
-        }
       }
     } catch (error) {
       showToast("Rezerwacja nieudana", {
@@ -243,7 +203,7 @@ const RecurringReservationForm: FC<Props> = ({
         variant: "destructive",
       });
     } finally {
-      onFinishedEditing();
+      await onFinishedRequest();
       setIsSubmitting(false);
     }
   };
@@ -274,9 +234,8 @@ const RecurringReservationForm: FC<Props> = ({
             <DeleteReservationButton
               reservationId={recurrenceId}
               reservationType={type}
-              onFinishedEditing={onFinishedEditing}
-              dispatch={dispatch}
               resetForm={() => reset(defaultValues)}
+              onFinishedRequest={onFinishedRequest}
             />
           )}
         </div>
@@ -303,29 +262,28 @@ const RecurringReservationForm: FC<Props> = ({
         <RecurringOptions />
 
         <div className="flex flex-col gap-2 mb-4">
-        {mode === "edit" && (
+          {mode === "edit" && (
             <label className="text-sm flex items-center gap-2 mt-2">
               <input
-                  type="checkbox"
-                  className="checkbox"
-                  onChange={(e) => setShowProposalForm(e.target.checked)}
-                  checked={showProposalForm}
+                type="checkbox"
+                className="checkbox"
+                onChange={(e) => setShowProposalForm(e.target.checked)}
+                checked={showProposalForm}
               />
               Wyślij jako propozycję innej osobie
             </label>
-        )}
+          )}
 
-        {showProposalForm && mode === "edit" && (
+          {showProposalForm && mode === "edit" && (
             <FormProvider {...recurringProposalMethods}>
-              <RecurringProposalForm/>
+              <RecurringProposalForm />
             </FormProvider>
-        )}
+          )}
         </div>
 
-
         <button
-            type="submit"
-            className="btn btn-primary rounded-[6px]"
+          type="submit"
+          className="btn btn-primary rounded-[6px]"
           disabled={isSubmitting}
         >
           {submitLabel}
