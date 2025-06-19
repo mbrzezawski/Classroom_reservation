@@ -32,7 +32,6 @@ const SignUpForm: FC = () => {
   const password = methods.watch("password");
 
   const onSubmit = async (data: SignUpFormValues) => {
-    console.log("Form submitted:", data);
     const adminCode = "ADMIN_CODE";
     const deansCode = "DEANS_CODE";
     const body = {
@@ -80,7 +79,7 @@ const SignUpForm: FC = () => {
     <FormProvider {...methods}>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col bg-base-200border px-6 py-8 gap-8 rounded-[8px] w-full max-w-4xl mx-auto shadow-xs w-[400px]"
+        className="flex flex-col bg-base-200 px-6 py-8 gap-8 rounded-[8px] w-full max-w-4xl mx-auto shadow-xs w-[400px]"
       >
         <h2 className="text-3xl font-bold text-center">Załóż konto</h2>
 

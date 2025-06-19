@@ -12,6 +12,7 @@ interface ReservationFormWrapperProps {
   dispatch: Dispatch<Action>;
   editedEvent: FullCalendarEvent | null;
   onFinishedEditing: () => void;
+  onFinishedRequest: () => void;
 }
 
 const ReservationFormWrapper: FC<ReservationFormWrapperProps> = ({
@@ -20,6 +21,7 @@ const ReservationFormWrapper: FC<ReservationFormWrapperProps> = ({
   dispatch,
   editedEvent,
   onFinishedEditing,
+  onFinishedRequest,
 }) => {
   const [type, setType] = useState<ReservationType>("single");
 
@@ -34,6 +36,7 @@ const ReservationFormWrapper: FC<ReservationFormWrapperProps> = ({
           setType={setType}
           editedEvent={editedEvent}
           onFinishedEditing={onFinishedEditing}
+          onFinishedRequest={onFinishedRequest}
         />
       ) : (
         <RecurringReservationForm
@@ -44,6 +47,7 @@ const ReservationFormWrapper: FC<ReservationFormWrapperProps> = ({
           setType={setType}
           editedEvent={editedEvent}
           onFinishedEditing={onFinishedEditing}
+          onFinishedRequest={onFinishedRequest}
         />
       )}
     </div>

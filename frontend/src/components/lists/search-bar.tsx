@@ -12,9 +12,7 @@ function SearchBar({
     name: `${user.name} | ${user.surname} | ${user.email} | ${user.role}`,
   }));
 
-
   const handleOnSelect = (item: any) => {
-    console.log("Selected:", item);
     onSelectUser(item.id);
   };
 

@@ -39,6 +39,7 @@ interface Props {
   setType: (type: ReservationType) => void;
   editedEvent: FullCalendarEvent | null;
   onFinishedEditing: () => void;
+  onFinishedRequest: () => void;
 }
 
 const defaultValues: SingleReservationFormValues = {
@@ -61,6 +62,7 @@ const SingleReservationForm: FC<Props> = ({
   setType,
   editedEvent,
   onFinishedEditing,
+  onFinishedRequest,
 }) => {
   const methods = useForm<SingleReservationFormValues>({
     defaultValues,
@@ -125,8 +127,6 @@ const SingleReservationForm: FC<Props> = ({
   const onSubmit = async (data: SingleReservationFormValues) => {
     setIsSubmitting(true);
 
-    console.log("data on the start of onSubmit:", data);
-
     const isProposalMode =
       mode === "edit" &&
       showProposalForm &&
@@ -163,14 +163,7 @@ const SingleReservationForm: FC<Props> = ({
           comment: proposal.comment,
         };
 
-        // console.log("proposal comment:");
-        // console.log(proposal.comment);
-        // console.log("proposalRequests:");
-        // console.log(proposalRequest);
-        console.log("Proposal request:", proposalRequest);
-
         const response = await postProposal(proposalRequest);
-        console.log("Response from /proposals:", response);
 
         showToast("Propozycja wysłana!", { variant: "success" });
       } else {
@@ -184,19 +177,6 @@ const SingleReservationForm: FC<Props> = ({
 
         const room: Room = roomsMap[response.roomId];
 
-        const newCalendarEvent = mapSingleReservationResponsetoCalendarEvent(
-          response,
-          room
-        );
-
-        if (mode === "create")
-          dispatch({ type: "addEvent", payload: newCalendarEvent });
-        else
-          dispatch({
-            type: "updateEvent",
-            payload: { oldId: reservationId, newEvent: newCalendarEvent },
-          });
-
         showReservationToast(response, room, mode);
       }
     } catch (error) {
@@ -205,7 +185,7 @@ const SingleReservationForm: FC<Props> = ({
         variant: "destructive",
       });
     } finally {
-      onFinishedEditing();
+      await onFinishedRequest();
       setIsSubmitting(false);
     }
   };
@@ -237,9 +217,8 @@ const SingleReservationForm: FC<Props> = ({
             <DeleteReservationButton
               reservationId={reservationId}
               reservationType={type}
-              onFinishedEditing={onFinishedEditing}
-              dispatch={dispatch}
               resetForm={() => reset(defaultValues)}
+              onFinishedRequest={onFinishedRequest}
             />
           )}
         </div>

@@ -11,7 +11,6 @@ function formatTime(date?: Date | null) {
 
 function renderEventContent(eventArg: EventContentArg) {
   const { event } = eventArg;
-  console.log(event);
   const isPending = event.extendedProps.status === "PENDING";
   const color = isPending ? "btn-secondary" : "btn-primary";
   return (

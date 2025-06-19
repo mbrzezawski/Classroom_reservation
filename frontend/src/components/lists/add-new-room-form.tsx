@@ -40,6 +40,8 @@ const AddNewRoomForm = () => {
     control,
     formState: { errors },
     reset,
+    setValue,
+    watch,
   } = methods;
 
   const [showCustomSoftware, setShowCustomSoftware] = useState(false);
@@ -48,6 +50,9 @@ const AddNewRoomForm = () => {
   const { createRoom } = useRoomService();
   const { createSoftware } = useSoftwareService();
   const { createEquipment } = useEquipmentService();
+
+  const watchEquipment = watch("customEquipment");
+  const watchSoftware = watch("customSoftware");
 
   const onSubmit = async (formData: any) => {
     try {
@@ -172,7 +177,10 @@ const AddNewRoomForm = () => {
           <label className="text-sm flex items-center gap-2 mt-2">
             <input
               type="checkbox"
-              onChange={(e) => setShowCustomSoftware(e.target.checked)}
+              onChange={(e) => {
+                setShowCustomSoftware(e.target.checked);
+                if (!e.target.checked) setValue("customSoftware", "");
+              }}
               checked={showCustomSoftware}
             />
             Nowe oprogramowanie
@@ -221,7 +229,11 @@ const AddNewRoomForm = () => {
           <label className="text-sm flex items-center gap-2 mt-2">
             <input
               type="checkbox"
-              onChange={(e) => setShowCustomEquipment(e.target.checked)}
+              onChange={(e) => {
+                setShowCustomEquipment(e.target.checked);
+
+                if (!e.target.checked) setValue("customEquipment", "");
+              }}
               checked={showCustomEquipment}
             />
             Nowe wyposażenie

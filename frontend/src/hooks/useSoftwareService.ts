@@ -10,7 +10,6 @@ export const useSoftwareService = () => {
                     Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },
             });
-            console.log("response: ", response);
             return response.data;
         },
     });
