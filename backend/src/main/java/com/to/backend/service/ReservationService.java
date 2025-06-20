@@ -128,6 +128,10 @@ public class ReservationService {
         if (!reservationRepo.existsById(id)) {
             throw new NotFoundException("Reservation", id);
         }
+        if (proposalRepo.existsByOriginalReservationIdAndStatus(id, ProposalStatus.PENDING)) {
+            throw new ConflictException(
+                    "Nie można usunąć rezerwacji — istnieje dla niej propozycja, która oczekuje na potwierdzenie");
+        }
         reservationRepo.deleteById(id);
     }
 
@@ -377,6 +381,9 @@ public class ReservationService {
             throw new ConflictException("Proposal is not PENDING");
         }
 
+        proposal.setStatus(ProposalStatus.CONFIRMED);
+        proposalRepo.save(proposal);
+
         int chosen = confirmDto.getChosenIndex();
         ReservationResponse savedRes;
         if (proposal.getOriginalReservationId() != null) {
@@ -389,8 +396,6 @@ public class ReservationService {
             savedRes = resp.getReservations().getFirst();
         }
 
-        proposal.setStatus(ProposalStatus.CONFIRMED);
-        proposalRepo.save(proposal);
 
         if (proposal.getGeneratedReservationIds() != null) {
             reservationRepo.deleteAllById(proposal.getGeneratedReservationIds());
@@ -479,9 +484,7 @@ public class ReservationService {
 
 
 
-    /**
-     * 4. (Opcjonalnie) Student odrzuca całą propozycję --> status = REJECTED
-     */
+    @Transactional
     public void rejectProposal(String proposalId, String studentEmail) {
         User student = userRepo.findByEmail(studentEmail)
                 .orElseThrow(() -> new NotFoundException("User by email", studentEmail));
@@ -498,7 +501,19 @@ public class ReservationService {
 
         proposal.setStatus(ProposalStatus.REJECTED);
         proposalRepo.save(proposal);
+
+        List<String> genIds = proposal.getGeneratedReservationIds();
+        if (genIds != null && !genIds.isEmpty()) {
+            List<Reservation> generated = reservationRepo.findAllById(genIds);
+            for (Reservation r : generated) {
+                if (r.getStatus() == ReservationStatus.PENDING) {
+                    r.setStatus(ReservationStatus.CANCELLED);
+                }
+            }
+            reservationRepo.saveAll(generated);
+        }
     }
+
     @Transactional(readOnly = true)
     public List<CalendarReservationDto> getUserCalendar(
             String userId,
