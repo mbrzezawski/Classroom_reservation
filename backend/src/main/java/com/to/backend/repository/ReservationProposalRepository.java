@@ -1,6 +1,7 @@
 package com.to.backend.repository;
 
 import com.to.backend.model.ReservationProposal;
+import com.to.backend.model.utils.ProposalStatus;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
@@ -22,4 +23,6 @@ public interface ReservationProposalRepository extends MongoRepository<Reservati
     Optional<Object> findByTeacherIdAndStudentIdAndOriginalReservationIdIsNull(String teacherId, String studentId);
 
     List<ReservationProposal> findByOriginalRecurrenceId(String originalRecurrenceId);
+
+    boolean existsByOriginalReservationIdAndStatus(String id, ProposalStatus proposalStatus);
 }
