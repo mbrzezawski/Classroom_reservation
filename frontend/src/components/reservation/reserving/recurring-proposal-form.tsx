@@ -7,7 +7,7 @@ import HourPicker from "./hour-picker.tsx";
 import Delete from "../../icons/delete.tsx";
 import Plus from "../../icons/plus.tsx";
 import {useEffect} from "react";
-import RecurringOptions from "./recurring-options.tsx";
+import RecurringOptionsFormProposal from "./recurring-options-form-proposal.tsx";
 
 export type RecurringProposedDates = {
     startDate: string;
@@ -98,7 +98,7 @@ const RecurringProposalForm = () => {
                                 field={`additionalDates.${index}.RecurringProposedDate.endTime`}
                             />
                             </div>
-                            <RecurringOptions
+                            <RecurringOptionsFormProposal
                                 fieldPrefix={`additionalDates.${index}.RecurringProposedDate`}
                             />
 

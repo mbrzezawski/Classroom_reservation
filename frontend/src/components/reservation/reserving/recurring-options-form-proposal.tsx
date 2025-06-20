@@ -13,20 +13,18 @@ type RecurringOptionsFormProposalProps = {
     fieldPrefix: string; // e.g. "additionalDates.0.RecurringProposedDate"
 };
 
-
-const RecurringOptionsFormProposal: FC<RecurringOptionsFormProposalProps> = ( {fieldPrefix}) => {
+const RecurringOptionsFormProposal: FC<RecurringOptionsFormProposalProps> = ({ fieldPrefix }) => {
     const { register, watch } = useFormContext();
     const frequency = watch(`${fieldPrefix}.frequency`);
 
-
     return (
-        <div className="flex flex-col gap-2 p-4 ">
+        <div className="flex flex-col gap-2 p-4">
             <div className="flex gap-2">
                 <label className="flex flex-col text-xs">
                     Częstotliwość
                     <select
                         className="select focus:outline-none"
-                        {...register("frequency", { required: true })}
+                        {...register(`${fieldPrefix}.frequency`, { required: true })}
                     >
                         <option value="DAILY">Dziennie</option>
                         <option value="WEEKLY">Tygodniowo</option>
@@ -41,7 +39,7 @@ const RecurringOptionsFormProposal: FC<RecurringOptionsFormProposalProps> = ( {f
                         className="input"
                         min={1}
                         defaultValue={1}
-                        {...register("interval", { required: true, min: 1 })}
+                        {...register(`${fieldPrefix}.interval`, { required: true, min: 1 })}
                     />
                 </label>
             </div>
@@ -55,7 +53,7 @@ const RecurringOptionsFormProposal: FC<RecurringOptionsFormProposalProps> = ( {f
                                 type="checkbox"
                                 className="checkbox w-5 h-5"
                                 value={day.value}
-                                {...register("byDays")}
+                                {...register(`${fieldPrefix}.byDays`)}
                             />
                             {day.label}
                         </label>
@@ -65,14 +63,13 @@ const RecurringOptionsFormProposal: FC<RecurringOptionsFormProposalProps> = ( {f
 
             {frequency === "MONTHLY" && (
                 <div className="flex flex-col gap-2">
-                    <label>
+                    <label className="text-xs">
                         Dni miesiąca (przedzielone przecinkiem):
-                        <br />
                         <input
                             type="text"
                             className="input"
                             placeholder="np.: 1,15,28"
-                            {...register("byMonthDays")}
+                            {...register(`${fieldPrefix}.byMonthDays`)}
                         />
                     </label>
                 </div>
