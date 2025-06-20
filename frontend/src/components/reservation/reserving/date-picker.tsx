@@ -7,11 +7,10 @@ interface DatePickerProps {
 
 const DatePicker: React.FC<DatePickerProps> = ({ field = "date" }) => {
   const { register } = useFormContext();
-  let label = "";
-  if (field === "date") label = "Data";
-  else if (field === "startDate") label = "Data początkowa";
-  else label = "Data końcowa";
-
+  let label = "Data";
+  if (field.endsWith("startDate")) label = "Data początkowa";
+  else if (field.endsWith("endDate")) label = "Data końcowa";
+  
   return (
     <div className="flex flex-col flex-1">
       <label className="text-xs font-medium mb-1" htmlFor={field}>

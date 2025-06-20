@@ -26,12 +26,15 @@ function useCalendarEvents(userId: string) {
 
       const eventData: CalendarReservationDto[] = await resEvents.json();
       const mappedEvents: FullCalendarEvent[] = eventData
-        .filter((event) => event.reservationStatus !== "CANCELLED")
+        .filter(
+          (event) =>
+            event.reservationStatus !== "CANCELLED" &&
+            !(event.reservationStatus === "PENDING" && event.recurrenceId)
+        )
         .map((event) => {
           const recurrenceData = event.recurrenceId
             ? recurrenceMap[event.recurrenceId]
             : undefined;
-
           const recurrenceProps = recurrenceData
             ? {
                 recurrenceId: event.recurrenceId,
@@ -79,4 +82,4 @@ function useCalendarEvents(userId: string) {
   return { events, dispatch, refetch };
 }
 
-export default useCalendarEvents
+export default useCalendarEvents;

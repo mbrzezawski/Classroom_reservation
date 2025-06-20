@@ -16,7 +16,7 @@ const TypePicker: React.FC<TypePickerProps> = ({ type, setType }) => (
       className="select border p-2 rounded w-35 focus:outline-none"
     >
       <option value="single">Zwykła</option>
-      <option value="recurring">Rekurencyjna</option>
+      <option value="recurring">Cykliczna</option>
     </select>
   </div>
 );
